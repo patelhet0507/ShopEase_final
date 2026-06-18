@@ -53,13 +53,13 @@ export default function ProductCard({ product, index = 0, onQuickView }) {
   const [imageLoaded, setImageLoaded] = useState(false)
   const [particles, setParticles] = useState([])
   
-  // 🟢 IMAGE SLIDER TRACKER STATE
+  // IMAGE SLIDER TRACKER STATE
   const [currentImgIndex, setCurrentImgIndex] = useState(0)
   const cardRef = useRef(null)
 
   const wishlisted = isWishlisted ? (isWishlisted(product.slug) || isWishlisted(product.id)) : false
 
-  // 🟢 PARSE COMPREHENSIVE IMAGES ARRAY PAYLOAD (Array strings vs fallback URLs)
+  // PARSE COMPREHENSIVE IMAGES ARRAY PAYLOAD (Array strings vs fallback URLs)
   const productImages = product?.images?.length > 0 
     ? product.images 
     : product?.image_url 
@@ -100,7 +100,7 @@ export default function ProductCard({ product, index = 0, onQuickView }) {
     y.set(0)
   }
 
-  // 🟢 NAVIGATION INTERCEPT HANDLERS (Stop propagation prevents card flipping)
+  // NAVIGATION INTERCEPT HANDLERS (Stop propagation prevents card flipping)
   const handlePrevImage = (e) => {
     e.preventDefault()
     e.stopPropagation()
@@ -115,10 +115,16 @@ export default function ProductCard({ product, index = 0, onQuickView }) {
     setCurrentImgIndex((prev) => (prev === productImages.length - 1 ? 0 : prev + 1))
   }
 
+  // 🟢 FIXED: Removed context properties payload to prevent parsing crashes
   const handleAddToCart = async (e) => {
     e.preventDefault()
     e.stopPropagation()
-    if (!user) return
+    
+    if (!user) {
+      alert("Please log in to manage your cart items.")
+      return
+    }
+
     setAdding(true)
 
     if (cardRef.current) {
@@ -139,15 +145,17 @@ export default function ProductCard({ product, index = 0, onQuickView }) {
     }))
     setParticles(generatedParticles)
     
-    // 🟢 FIXED: Pass parameters systematically to avoid Context crashes
-    await addToCart(
-      product.id, 
-      1, 
-      product.name || 'Product', 
-      product.price || 0
-    )
-    setAdding(false)
-    setTimeout(() => setParticles([]), 800)
+    try {
+      const cleanId = parseInt(product.id, 10)
+      if (!isNaN(cleanId)) {
+        await addToCart(cleanId, 1)
+      }
+    } catch (err) {
+      console.error("Cart card submission dispatch crash:", err)
+    } finally {
+      setAdding(false)
+      setTimeout(() => setParticles([]), 800)
+    }
   }
 
   const handleWishlist = async (e) => {
@@ -216,7 +224,7 @@ export default function ProductCard({ product, index = 0, onQuickView }) {
             <div className="relative h-40 overflow-hidden bg-surface-raised flex-shrink-0">
               {!imageLoaded && <div className="absolute inset-0 shimmer" />}
               
-              {/* 🟢 DYNAMIC IMAGE DISPLAY */}
+              {/* DYNAMIC IMAGE DISPLAY */}
               <motion.img
                 key={currentImgIndex}
                 src={activeImageUrl}
@@ -228,7 +236,7 @@ export default function ProductCard({ product, index = 0, onQuickView }) {
                 onLoad={() => setImageLoaded(true)}
               />
 
-              {/* 🟢 CARD INTERACTION NAVIGATION LAYERS */}
+              {/* CARD INTERACTION NAVIGATION LAYERS */}
               {productImages.length > 1 && (
                 <>
                   <button
@@ -366,21 +374,19 @@ export default function ProductCard({ product, index = 0, onQuickView }) {
                   </AnimatePresence>
                 </div>
 
-                {user && (
-                  <motion.button
-                    onClick={handleAddToCart}
-                    disabled={adding}
-                    className="btn-primary flex-1 justify-center text-xs py-2 relative overflow-visible"
-                    whileHover={{ y: -2 }}
-                    whileTap={{ y: 0, scale: 0.98 }}
-                  >
-                    {adding ? (
-                      <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                    ) : (
-                      <><ShoppingCart size={13} /> Add</>
-                    )}
-                  </motion.button>
-                )}
+                <motion.button
+                  onClick={handleAddToCart}
+                  disabled={adding}
+                  className="btn-primary flex-1 justify-center text-xs py-2 relative overflow-visible"
+                  whileHover={{ y: -2 }}
+                  whileTap={{ y: 0, scale: 0.98 }}
+                >
+                  {adding ? (
+                    <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  ) : (
+                    <><ShoppingCart size={13} /> Add to Cart</>
+                  )}
+                </motion.button>
                 
                 <motion.div className="flex-1" whileHover={{ y: -2 }} whileTap={{ y: 0, scale: 0.98 }}>
                   <Link

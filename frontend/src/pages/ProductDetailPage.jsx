@@ -60,17 +60,17 @@ export default function ProductDetailPage() {
     }
   }, [idFromSlug, productSlug])
 
-  // 🟢 FIXED: Maps parameters exactly to what CartContext expects to ensure guest-cart safety
+  // 🟢 FIXED: Maps parameters exactly to what CartContext expects (productId, quantity)
   const handleAddToCart = async () => {
     if (!product) return
     setAdding(true)
     try {
-      await addToCart(
-        product.id, 
-        1, 
-        product.name || product.product_name || 'Product', 
-        product.price || product.product_price || 0
-      )
+      const cleanId = parseInt(product.id, 10)
+      if (isNaN(cleanId)) {
+        console.error("❌ Add to cart failed: product.id is missing or invalid numerical form")
+        return
+      }
+      await addToCart(cleanId, 1)
     } catch (err) {
       console.error("Failed to add item to context layer:", err)
     } finally {
