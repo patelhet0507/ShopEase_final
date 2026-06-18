@@ -3,7 +3,10 @@ import { cartApi, wishlistApi } from '../api'
 import { useAuth } from './AuthContext'
 
 const CartContext = createContext(null)
+const { data } = await cartApi.get(user.id)
 
+console.log("FULL CART RESPONSE")
+console.log(JSON.stringify(data, null, 2))
 export function CartProvider({ children }) {
   const { user } = useAuth()
   const [cart, setCart] = useState({ items: [], total_quantity: 0, subtotal: 0 })
@@ -12,16 +15,25 @@ export function CartProvider({ children }) {
   const [cartLoading, setCartLoading] = useState(false)
 
   const fetchCart = useCallback(async () => {
-    if (!user?.id) return
-    try {
-      console.log("Adding to cart:", payload)
-      const { data } = await cartApi.get(user.id)
-      console.log("Cart API response:", data)
-      setCart(data || { items: [], total_quantity: 0, subtotal: 0 })
-    } catch (err) {
-      console.error("Error fetching cart data:", err.response?.data || err.message)
-    }
-  }, [user])
+  if (!user?.id) return
+
+  try {
+    const { data } = await cartApi.get(user.id)
+
+    console.log("Cart API response:", data)
+
+    setCart(data || {
+      items: [],
+      total_quantity: 0,
+      subtotal: 0
+    })
+  } catch (err) {
+    console.error(
+      "Error fetching cart data:",
+      err.response?.data || err.message
+    )
+  }
+}, [user])
 
   const fetchWishlist = useCallback(async () => {
     if (!user?.id) return
