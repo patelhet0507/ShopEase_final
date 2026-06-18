@@ -7,18 +7,12 @@ import { FadeIn, StaggerChildren, StaggerItem, EmptyState } from '../components/
 import { useState } from 'react'
 import { generateSlug } from '../components/product/ProductCard'
 
-
-const product = item.product || {}
-
-const productName = product.name || 'Product'
-const productPrice = Number(product.price || 0)
-
 function WishlistCard({ item, onRemove, onAddToCart }) {
   const [adding, setAdding] = useState(false)
 
   // Calculate historical dynamic price parameters if present
   const regularPrice = item.old_price || item.product_old_price || null
-  const currentPrice = productPrice
+  const currentPrice = item.product_price
   const hasPriceDropped = regularPrice && regularPrice > currentPrice
   
   const priceDropPercentage = hasPriceDropped 
@@ -75,14 +69,13 @@ function WishlistCard({ item, onRemove, onAddToCart }) {
       {/* Image area */}
       <div className="relative h-44 flex items-center justify-center font-bold text-4xl text-white select-none"
         style={{ background: 'linear-gradient(135deg, rgba(168,85,247,0.2), rgba(236,72,153,0.12))' }}>
-        {productName[0]}
+        {item.product_name[0]}
 
         {/* Hover overlay */}
         <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2"
           style={{ background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(4px)' }}>
           <Link
-            to={`/products/${generateSlug(productName, item.product_id)}`}
-          
+            to={`/products/${generateSlug(item.product_name, item.product_id)}`}
             className="w-10 h-10 rounded-xl flex items-center justify-center bg-white/20 hover:bg-white/30 transition-colors text-white"
           >
             <Eye size={16} />
@@ -114,14 +107,14 @@ function WishlistCard({ item, onRemove, onAddToCart }) {
       {/* Info Container */}
       <div className="p-4 flex flex-col flex-1 h-full justify-between">
         <div>
-          <Link to={`/products/${generateSlug(productName, item.product_id)}`}>
+          <Link to={`/products/${generateSlug(item.product_name, item.product_id)}`}>
             <h3 className="font-semibold text-sm leading-tight hover:text-purple-500 transition-colors line-clamp-2 mb-2"
               style={{ color: 'var(--text-primary)' }}>
-              {productName}
+              {item.product_name}
             </h3>
           </Link>
           <div className="flex items-baseline gap-2 mb-1">
-            <span className="font-bold text-gradient text-base">₹{productPrice.toLocaleString()}</span>
+            <span className="font-bold text-gradient text-base">₹{item.product_price.toLocaleString()}</span>
             {hasPriceDropped && (
               <span className="text-xs line-through opacity-40" style={{ color: 'var(--text-muted)' }}>
                 ₹{regularPrice.toLocaleString()}
