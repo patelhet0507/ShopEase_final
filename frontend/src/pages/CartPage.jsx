@@ -32,15 +32,22 @@ export default function CartPage() {
     )
   }
 
+  // 🟢 SAFE ACCUMULATION PARSING: Fallback default values prevent initialization crashes
+  const cartItems = cart?.items || []
+  const totalQuantity = cart?.total_quantity || 0
+  
+  // Dynamically calculate subtotal if backend values are temporarily undefined
+  const subtotalValue = cart?.subtotal || cartItems.reduce((acc, item) => acc + (Number(item.product_price || 0) * item.quantity), 0)
+
   const SHIPPING_THRESHOLD = 2500
-  const isFreeShippingEligible = cart.subtotal >= SHIPPING_THRESHOLD
-  const amountNeededForFreeShipping = Math.max(SHIPPING_THRESHOLD - cart.subtotal, 0)
-  const shippingProgressBarPercentage = Math.min((cart.subtotal / SHIPPING_THRESHOLD) * 100, 100)
+  const isFreeShippingEligible = subtotalValue >= SHIPPING_THRESHOLD
+  const amountNeededForFreeShipping = Math.max(SHIPPING_THRESHOLD - subtotalValue, 0)
+  const shippingProgressBarPercentage = Math.min((subtotalValue / SHIPPING_THRESHOLD) * 100, 100)
   const shippingCost = isFreeShippingEligible ? 0 : 150
 
   const handleSaveCartToSandbox = () => {
-    if (cart.items.length === 0) return
-    const updatedSandbox = [...savedSandbox, ...cart.items]
+    if (cartItems.length === 0) return
+    const updatedSandbox = [...savedSandbox, ...cartItems]
     setSavedSandbox(updatedSandbox)
     localStorage.setItem(`shopease_sandbox_items_${user.id}`, JSON.stringify(updatedSandbox))
     clearCart()
@@ -61,12 +68,12 @@ export default function CartPage() {
             <div>
               <h1 className="section-heading text-3xl md:text-4xl">Your Cart</h1>
               <p className="text-sm mt-0.5" style={{ color: 'var(--text-muted)' }}>
-                {cart.total_quantity} {cart.total_quantity === 1 ? 'item' : 'items'} in active workspace
+                {totalQuantity} {totalQuantity === 1 ? 'item' : 'items'} in active workspace
               </p>
             </div>
           </div>
 
-          {cart.items.length > 0 && (
+          {cartItems.length > 0 && (
             <motion.button
               whileHover={{ scale: 1.02 }}
               whileTap={{ scale: 0.98 }}
@@ -85,7 +92,7 @@ export default function CartPage() {
         </div>
       </FadeIn>
 
-      {cart.items.length === 0 ? (
+      {cartItems.length === 0 ? (
         <div className="space-y-12">
           <EmptyState
             icon={ShoppingCart}
@@ -115,7 +122,7 @@ export default function CartPage() {
                 {savedSandbox.map((sbItem, index) => (
                   <div key={index} className="flex justify-between items-center text-xs p-2 rounded-xl bg-[var(--bg-secondary)]">
                     <span className="font-medium truncate max-w-[70%] text-[var(--text-primary)]">{sbItem.product_name}</span>
-                    <span className="font-bold text-purple-400">â‚¹{Number(sbItem.product_price || 0).toLocaleString()}</span>
+                    <span className="font-bold text-purple-400">₹{Number(sbItem.product_price || 0).toLocaleString()}</span>
                   </div>
                 ))}
               </div>
@@ -127,7 +134,7 @@ export default function CartPage() {
           <div className="lg:col-span-2 space-y-3">
             <div className="flex items-center justify-between mb-2">
               <span className="text-sm font-semibold" style={{ color: 'var(--text-secondary)' }}>
-                {cart.items.length} unique arrays matching layout weights
+                {cartItems.length} unique items matching layout weights
               </span>
               <button
                 onClick={clearCart}
@@ -138,7 +145,7 @@ export default function CartPage() {
             </div>
 
             <AnimatePresence initial={false}>
-              {cart.items.map((item) => (
+              {cartItems.map((item) => (
                 <motion.div
                   key={item.id}
                   layout
@@ -163,7 +170,7 @@ export default function CartPage() {
                           {item.product_name}
                         </h3>
                         <p className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>
-                          â‚¹{Number(item.product_price || 0).toLocaleString()} each
+                          ₹{Number(item.product_price || 0).toLocaleString()} each
                         </p>
                       </div>
                       <button
@@ -195,7 +202,7 @@ export default function CartPage() {
                         </button>
                       </div>
                       <span className="font-bold text-gradient">
-                        â‚¹{Number((item.product_price || 0) * item.quantity).toLocaleString()}
+                        ₹{Number((item.product_price || 0) * item.quantity).toLocaleString()}
                       </span>
                     </div>
                   </div>
@@ -203,11 +210,11 @@ export default function CartPage() {
               ))}
             </AnimatePresence>
 
-            <FadeIn className="mt-6">
-              <Link to="/products" className="btn-ghost text-sm gap-2">
+            <div className="mt-6">
+              <Link to="/products" className="btn-ghost text-sm gap-2 inline-flex items-center">
                 <ArrowLeft size={14} /> Continue Shopping
               </Link>
-            </FadeIn>
+            </div>
           </div>
 
           <FadeIn direction="left">
@@ -225,7 +232,7 @@ export default function CartPage() {
                       {isFreeShippingEligible ? (
                         <span className="text-green-500 font-semibold">You unlocked Free Next-Day Delivery!</span>
                       ) : (
-                        <>Add <span className="font-bold text-purple-500">â‚¹{amountNeededForFreeShipping.toLocaleString()}</span> more to unlock Free Next-Day Delivery!</>
+                        <>Add <span className="font-bold text-purple-500">₹{amountNeededForFreeShipping.toLocaleString()}</span> more to unlock Free Next-Day Delivery!</>
                       )}
                     </p>
                   </div>
@@ -252,13 +259,13 @@ export default function CartPage() {
                 </div>
 
                 <div className="p-5 space-y-3" style={{ background: 'var(--surface)' }}>
-                  {cart.items.map(item => (
+                  {cartItems.map(item => (
                     <div key={item.id} className="flex justify-between text-sm">
                       <span className="truncate max-w-[160px]" style={{ color: 'var(--text-secondary)' }}>
                         {item.product_name} <span style={{ color: 'var(--text-muted)' }}>×{item.quantity}</span>
                       </span>
                       <span className="font-medium flex-shrink-0 ml-2" style={{ color: 'var(--text-primary)' }}>
-                        â‚¹{Number((item.product_price || 0) * item.quantity).toLocaleString()}
+                        ₹{Number((item.product_price || 0) * item.quantity).toLocaleString()}
                       </span>
                     </div>
                   ))}
@@ -267,24 +274,24 @@ export default function CartPage() {
                 <div className="p-5 space-y-3 border-t" style={{ borderColor: 'var(--border)', background: 'var(--bg-secondary)' }}>
                   <div className="flex justify-between text-sm" style={{ color: 'var(--text-secondary)' }}>
                     <span>Subtotal</span>
-                    <span className="font-semibold" style={{ color: 'var(--text-primary)' }}>â‚¹{cart.subtotal.toLocaleString()}</span>
+                    <span className="font-semibold" style={{ color: 'var(--text-primary)' }}>₹{subtotalValue.toLocaleString()}</span>
                   </div>
                   <div className="flex justify-between text-sm" style={{ color: 'var(--text-secondary)' }}>
                     <span>Shipping</span>
                     {isFreeShippingEligible ? (
                       <span className="text-green-500 font-semibold flex items-center gap-1">Free</span>
                     ) : (
-                      <span style={{ color: 'var(--text-primary)' }}>â‚¹{shippingCost.toLocaleString()}</span>
+                      <span style={{ color: 'var(--text-primary)' }}>₹{shippingCost.toLocaleString()}</span>
                     )}
                   </div>
                   <div className="flex justify-between text-sm" style={{ color: 'var(--text-secondary)' }}>
                     <span>Tax (18% GST)</span>
-                    <span style={{ color: 'var(--text-primary)' }}>â‚¹{Math.round(cart.subtotal * 0.18).toLocaleString()}</span>
+                    <span style={{ color: 'var(--text-primary)' }}>₹{Math.round(subtotalValue * 0.18).toLocaleString()}</span>
                   </div>
                   <div className="flex justify-between font-bold text-base pt-3 border-t" style={{ borderColor: 'var(--border)', color: 'var(--text-primary)' }}>
                     <span>Total</span>
                     <span className="text-gradient text-lg">
-                      â‚¹{Math.round((cart.subtotal + shippingCost) * 1.18).toLocaleString()}
+                      ₹{Math.round((subtotalValue + shippingCost) * 1.18).toLocaleString()}
                     </span>
                   </div>
                 </div>
@@ -298,7 +305,7 @@ export default function CartPage() {
                     Proceed to Checkout <ArrowRight size={16} />
                   </motion.button>
                   <p className="text-center text-xs mt-3" style={{ color: 'var(--text-muted)' }}>
-                    Secure checkout â€¢ 256-bit SSL
+                    Secure checkout • 256-bit SSL
                   </p>
                 </div>
               </div>
