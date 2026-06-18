@@ -5,6 +5,7 @@ import { useCart } from '../context/CartContext'
 import { useAuth } from '../context/AuthContext'
 import { FadeIn, StaggerChildren, StaggerItem, EmptyState } from '../components/ui'
 import { useState } from 'react'
+import { generateSlug } from '../components/product/ProductCard'
 
 function WishlistCard({ item, onRemove, onAddToCart }) {
   const [adding, setAdding] = useState(false)
@@ -74,7 +75,7 @@ function WishlistCard({ item, onRemove, onAddToCart }) {
         <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2"
           style={{ background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(4px)' }}>
           <Link
-            to={`/products/${item.product_id}`}
+            to={`/products/${generateSlug(item.product_name, item.product_id)}`}
             className="w-10 h-10 rounded-xl flex items-center justify-center bg-white/20 hover:bg-white/30 transition-colors text-white"
           >
             <Eye size={16} />
@@ -106,7 +107,7 @@ function WishlistCard({ item, onRemove, onAddToCart }) {
       {/* Info Container */}
       <div className="p-4 flex flex-col flex-1 h-full justify-between">
         <div>
-          <Link to={`/products/${item.product_id}`}>
+          <Link to={`/products/${generateSlug(item.product_name, item.product_id)}`}>
             <h3 className="font-semibold text-sm leading-tight hover:text-purple-500 transition-colors line-clamp-2 mb-2"
               style={{ color: 'var(--text-primary)' }}>
               {item.product_name}

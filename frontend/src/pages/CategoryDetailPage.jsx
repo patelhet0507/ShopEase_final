@@ -50,19 +50,20 @@ export default function CategoryDetailPage() {
     />
   )
 
+  const activeSubcategory = category.subcategories?.find(
+    sub => String(sub.slug || sub.id) === String(activeSubSlug)
+  )
+
   // FIXED: Bypasses subcategory loops if the state trace is pointing to 'all'
   const filteredProducts = !category.products ? [] : category.products.filter(product => {
     // If no specific subcategory pill is highlighted, display all products by default
     if (activeSubSlug === 'all') return true
     
-    // Otherwise, match explicitly against subcategory slug identifiers or relational IDs
-    return String(product.subcategory_slug || product.subcategory_id) === String(activeSubSlug)
+    // Otherwise, match explicitly against the selected subcategory record id
+    return String(product.subcategory_id) === String(activeSubcategory?.id || activeSubSlug)
   })
 
-  // Locate active subcategory metadata via slug matching
-  const activeSubcategoryName = category.subcategories?.find(
-    sub => String(sub.slug || sub.id) === String(activeSubSlug)
-  )?.name
+  const activeSubcategoryName = activeSubcategory?.name
 
   // Handles SEO parameter mutations on standard location history arrays
   const handleSubcategoryToggle = (subSlug) => {
