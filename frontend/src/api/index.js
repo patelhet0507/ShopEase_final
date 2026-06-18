@@ -48,10 +48,10 @@ export const usersApi = {
   list: () => api.get('/api/users/'),
   updateRole: (userId, role) =>
     api.put(`/api/users/${userId}/role/`, { role }),
-  getProfile: () => 
-    api.get('/api/users/me'),
-  updateProfile: (profileData) =>
-    api.put('/api/users/me', profileData),
+  getProfile: (userId) =>
+    api.get('/api/users/me', { params: { user_id: userId } }),
+  updateProfile: (userId, profileData) =>
+    api.put('/api/users/me', profileData, { params: { user_id: userId } }),
 }
 
 // Categories (Slug Support)
@@ -127,8 +127,8 @@ export const reviewsApi = {
 
 // Orders
 export const ordersApi = {
-  list: () => api.get('/api/orders/'),
-  get: (orderId) => api.get(`/api/orders/${orderId}/`),
+  list: (userId) => api.get('/api/orders/', { params: { user_id: userId } }),
+  get: (orderId, userId) => api.get(`/api/orders/${orderId}/`, { params: { user_id: userId } }),
   create: (userId, data) =>
     api.post('/api/orders/', data, {
       params: { user_id: userId }

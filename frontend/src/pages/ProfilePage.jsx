@@ -34,15 +34,22 @@ export default function ProfilePage() {
     setLoading(true)
     setSuccess(false)
     try {
-      const response = await usersApi.updateProfile(formData)
+      const stored = localStorage.getItem('shopease_user')
+      const parsed = stored ? JSON.parse(stored) : null
+      const id = user?.id || parsed?.id
+      if (!id) { alert('User not found. Please log in again.'); setLoading(false); return }
+
+      const response = await usersApi.updateProfile(id, formData)
       if (response.data) {
         setUser(response.data)
+        localStorage.setItem('shopease_user', JSON.stringify(response.data))
         setSuccess(true)
         setTimeout(() => setSuccess(false), 3000)
       }
     } catch (error) {
       console.error('Profile update failed:', error)
-      alert('Failed to update profile')
+      const detail = error.response?.data?.detail || error.message
+      alert(`Failed to update profile: ${detail}`)
     } finally {
       setLoading(false)
     }

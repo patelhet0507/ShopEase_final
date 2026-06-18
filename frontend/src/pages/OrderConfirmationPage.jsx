@@ -3,10 +3,12 @@ import { useParams, Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { CheckCircle, Download, ShoppingBag, Home, ArrowRight, Package } from 'lucide-react'
 import { useCart } from '../context/CartContext'
+import { useAuth } from '../context/AuthContext'
 import { ordersApi } from '../api'
 
 export default function OrderConfirmationPage() {
   const { orderNumber } = useParams()
+  const { user } = useAuth()
   const { clearCart } = useCart()
   const [order, setOrder] = useState(() => {
     try {
@@ -28,12 +30,15 @@ export default function OrderConfirmationPage() {
       return
     }
 
+    if (!user?.id) { setLoading(false); return }
+
     async function fetchOrder() {
       try {
-        const { data } = await ordersApi.list()
-        const foundOrder = data.find(o => o.order_number === orderNumber)
-        if (foundOrder) {
-          setOrder(foundOrder)
+        const { data: orders } = await ordersApi.list(user.id)
+        const match = orders.find(o => o.order_number === orderNumber)
+        if (match) {
+          const { data: fullOrder } = await ordersApi.get(match.id, user.id)
+          setOrder(fullOrder)
           await clearCart()
         }
       } catch (error) {
@@ -43,7 +48,7 @@ export default function OrderConfirmationPage() {
       }
     }
     fetchOrder()
-  }, [orderNumber, clearCart, order])
+  }, [orderNumber, user?.id, clearCart, order])
 
   const generateReceiptContent = () => {
     if (!order) return ''
