@@ -1,9 +1,9 @@
 import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
-import { ShoppingCart, Heart, ArrowLeft, Star, ShieldCheck, Truck, RotateCcw, ChevronLeft, ChevronRight } from 'lucide-react'
+import { ShoppingCart, Heart, ArrowLeft, Star, ShieldCheck, Truck, RotateCcw, ChevronLeft, ChevronRight, MessageSquare } from 'lucide-react'
 import { useCart } from '../context/CartContext'
 import { useAuth } from '../context/AuthContext'
-import { productsApi } from '../api'
+import { productsApi, reviewsApi } from '../api'
 
 export default function ProductDetailPage() {
   const { productSlug } = useParams()
@@ -15,6 +15,11 @@ export default function ProductDetailPage() {
   const [error, setError] = useState(null)
   const [adding, setAdding] = useState(false)
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
+  const [reviews, setReviews] = useState([])
+  const [reviewStats, setReviewStats] = useState(null)
+  const [showReviewForm, setShowReviewForm] = useState(false)
+  const [newReview, setNewReview] = useState({ rating: 5, title: '', comment: '' })
+  const [submittingReview, setSubmittingReview] = useState(false)
 
   // BULLETPROOF REGEX: Extract ONLY the database ID digits (\d+) found at the very end ($) of the slug string
   const match = productSlug ? productSlug.match(/\d+$/) : null
@@ -60,6 +65,23 @@ export default function ProductDetailPage() {
     }
   }, [idFromSlug, productSlug])
 
+  useEffect(() => {
+    async function fetchReviews() {
+      if (!idFromSlug || isNaN(idFromSlug)) return
+      try {
+        const [reviewsRes, statsRes] = await Promise.all([
+          reviewsApi.list(idFromSlug),
+          reviewsApi.getStats(idFromSlug)
+        ])
+        setReviews(reviewsRes.data || [])
+        setReviewStats(statsRes.data || null)
+      } catch (err) {
+        console.error('Error fetching reviews:', err)
+      }
+    }
+    fetchReviews()
+  }, [idFromSlug])
+
   // 🟢 FIXED: Maps parameters exactly to what CartContext expects (productId, quantity)
   const handleAddToCart = async () => {
     if (!product) return
@@ -91,6 +113,34 @@ export default function ProductDetailPage() {
 
   const handleNextImage = () => {
     setCurrentImageIndex(prev => prev === productImages.length - 1 ? 0 : prev + 1)
+  }
+
+  const handleSubmitReview = async (e) => {
+    e.preventDefault()
+    if (!user || !product) return
+    
+    setSubmittingReview(true)
+    try {
+      await reviewsApi.create(product.id, {
+        rating: newReview.rating,
+        title: newReview.title,
+        comment: newReview.comment
+      })
+      // Refresh reviews
+      const [reviewsRes, statsRes] = await Promise.all([
+        reviewsApi.list(product.id),
+        reviewsApi.getStats(product.id)
+      ])
+      setReviews(reviewsRes.data || [])
+      setReviewStats(statsRes.data || null)
+      setNewReview({ rating: 5, title: '', comment: '' })
+      setShowReviewForm(false)
+    } catch (err) {
+      console.error('Error submitting review:', err)
+      alert('Failed to submit review. Please try again.')
+    } finally {
+      setSubmittingReview(false)
+    }
   }
 
   if (loading) {
@@ -188,10 +238,10 @@ export default function ProductDetailPage() {
             <div className="flex items-center gap-4 mt-3">
               <div className="flex items-center gap-0.5">
                 {[1, 2, 3, 4, 5].map(s => (
-                  <Star key={s} size={16} className="fill-amber-500 text-amber-500" />
+                  <Star key={s} size={16} className={s <= (reviewStats?.average_rating || 4.8) ? 'fill-amber-500 text-amber-500' : 'text-gray-300'} />
                 ))}
               </div>
-              <span className="text-xs text-muted font-medium">(4.8 / 5.0 Rating)</span>
+              <span className="text-xs text-muted font-medium">({reviewStats?.average_rating?.toFixed(1) || '4.8'} / 5.0 Rating, {reviewStats?.total_reviews || reviews.length} reviews)</span>
             </div>
 
             <div className="mt-6 text-3xl font-display font-bold text-gradient">
@@ -243,6 +293,114 @@ export default function ProductDetailPage() {
               <div className="flex items-center gap-2"><ShieldCheck size={14} className="text-purple-500" /> Safe Checkout</div>
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* Reviews Section */}
+      <div className="max-w-6xl mx-auto px-4 py-8 mt-8">
+        <div className="bg-surface rounded-2xl p-6 md:p-8 border border-subtle">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="text-2xl font-bold text-primary flex items-center gap-2">
+              <MessageSquare size={24} className="text-purple-500" />
+              Customer Reviews
+            </h2>
+            {user && (
+              <button
+                onClick={() => setShowReviewForm(!showReviewForm)}
+                className="btn-primary px-4 py-2 rounded-xl text-sm font-semibold"
+              >
+                {showReviewForm ? 'Cancel' : 'Write a Review'}
+              </button>
+            )}
+          </div>
+
+          {showReviewForm && user && (
+            <form onSubmit={handleSubmitReview} className="mb-8 p-6 bg-surface-raised rounded-xl border border-subtle">
+              <h3 className="font-semibold text-primary mb-4">Write Your Review</h3>
+              <div className="mb-4">
+                <label className="block text-sm text-secondary mb-2">Rating</label>
+                <div className="flex gap-2">
+                  {[1, 2, 3, 4, 5].map(star => (
+                    <button
+                      key={star}
+                      type="button"
+                      onClick={() => setNewReview(prev => ({ ...prev, rating: star }))}
+                      className="text-2xl transition-transform hover:scale-110"
+                    >
+                      <Star
+                        size={24}
+                        className={star <= newReview.rating ? 'fill-amber-500 text-amber-500' : 'text-gray-300'}
+                      />
+                    </button>
+                  ))}
+                </div>
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm text-secondary mb-2">Review Title</label>
+                <input
+                  type="text"
+                  value={newReview.title}
+                  onChange={(e) => setNewReview(prev => ({ ...prev, title: e.target.value }))}
+                  required
+                  className="w-full px-4 py-3 border-2 border-slate-300 rounded-lg focus:border-purple-500 focus:outline-none transition font-medium text-primary placeholder-slate-500 bg-background"
+                  placeholder="Great product!"
+                />
+              </div>
+              <div className="mb-4">
+                <label className="block text-sm text-secondary mb-2">Your Review</label>
+                <textarea
+                  value={newReview.comment}
+                  onChange={(e) => setNewReview(prev => ({ ...prev, comment: e.target.value }))}
+                  rows="4"
+                  required
+                  className="w-full px-4 py-3 border-2 border-slate-300 rounded-lg focus:border-purple-500 focus:outline-none transition font-medium text-primary placeholder-slate-500 bg-background"
+                  placeholder="Share your experience with this product..."
+                />
+              </div>
+              <button
+                type="submit"
+                disabled={submittingReview}
+                className="btn-primary px-6 py-3 rounded-xl font-semibold"
+              >
+                {submittingReview ? 'Submitting...' : 'Submit Review'}
+              </button>
+            </form>
+          )}
+
+          {reviews.length === 0 ? (
+            <div className="text-center py-12">
+              <MessageSquare size={48} className="text-muted mx-auto mb-4" />
+              <p className="text-secondary">No reviews yet. Be the first to review this product!</p>
+            </div>
+          ) : (
+            <div className="space-y-4">
+              {reviews.map(review => (
+                <div key={review.id} className="p-4 bg-surface-raised rounded-xl border border-subtle">
+                  <div className="flex items-center justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 font-bold">
+                        {review.user_email?.[0]?.toUpperCase() || 'U'}
+                      </div>
+                      <div>
+                        <p className="font-semibold text-primary">{review.user_email?.split('@')[0] || 'User'}</p>
+                        <p className="text-xs text-muted">{new Date(review.created_at).toLocaleDateString()}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-0.5">
+                      {[1, 2, 3, 4, 5].map(star => (
+                        <Star
+                          key={star}
+                          size={14}
+                          className={star <= review.rating ? 'fill-amber-500 text-amber-500' : 'text-gray-300'}
+                        />
+                      ))}
+                    </div>
+                  </div>
+                  <p className="text-secondary mt-2">{review.comment}</p>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>

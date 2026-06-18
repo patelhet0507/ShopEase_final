@@ -1,6 +1,6 @@
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { useState, useEffect } from 'react'
-import { ShoppingBag, Heart, Sun, Moon, Menu, X, LayoutDashboard, LogOut, Zap } from 'lucide-react'
+import { ShoppingBag, Heart, Sun, Moon, Menu, X, LayoutDashboard, LogOut, Zap, User } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { useCart } from '../../context/CartContext'
 import { useTheme } from '../../context/ThemeContext'
@@ -16,7 +16,7 @@ export default function Navbar() {
   const { user, logout } = useAuth()
   
   // 🟢 FIXED: Grab cartCount from your unified context hooks layer safely
-  const { cart, setCartOpen, cartCount } = useCart()
+  const { cart, setCartOpen } = useCart()
   const { dark, toggle } = useTheme()
   const navigate = useNavigate()
   const location = useLocation()
@@ -37,7 +37,7 @@ export default function Navbar() {
   }, [location.pathname])
 
   // 🟢 FIXED: Fallback safely using optional chaining to avoid crashing when cart is null
-  const currentQuantity = cart?.total_quantity || cartCount || 0
+  const currentQuantity = cart?.total_quantity || 0
 
   // Trigger brief micro-bounce when context quantity scales up
   useEffect(() => {
@@ -174,6 +174,10 @@ export default function Navbar() {
                             Admin Dashboard
                           </Link>
                         )}
+                        <Link to="/profile" className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-secondary hover:text-primary hover:bg-surface-raised transition-all">
+                          <User size={15} />
+                          Profile
+                        </Link>
                         <Link to="/wishlist" className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-secondary hover:text-primary hover:bg-surface-raised transition-all">
                           <Heart size={15} />
                           Wishlist

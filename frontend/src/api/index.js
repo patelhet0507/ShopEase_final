@@ -11,21 +11,23 @@ const api = axios.create({
 // Automatically attach Bearer token or user_id safely to requests
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('token')
-  const userId = localStorage.getItem('userId')
+  const storedUser = localStorage.getItem('shopease_user')
   
   if (token) {
     config.headers.Authorization = `Bearer ${token}`
   }
   
   // Safe URL Search Params Injection
-  if (userId) {
-    const parsedUserId = parseInt(userId, 10)
-    if (!isNaN(parsedUserId)) {
-      config.params = {
-        ...config.params,
-        user_id: parsedUserId
+  if (storedUser) {
+    try {
+      const user = JSON.parse(storedUser)
+      if (user?.id) {
+        config.params = {
+          ...config.params,
+          user_id: Number(user.id)
+        }
       }
-    }
+    } catch {}
   }
   
   return config

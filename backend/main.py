@@ -15,8 +15,6 @@ import uuid
 
 print("Initialising....")
 
-app = FastAPI()
-
 print("Database Connected Successfully")
 
 # Create tables

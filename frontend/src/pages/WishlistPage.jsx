@@ -69,7 +69,7 @@ function WishlistCard({ item, onRemove, onAddToCart }) {
       {/* Image area */}
       <div className="relative h-44 flex items-center justify-center font-bold text-4xl text-white select-none"
         style={{ background: 'linear-gradient(135deg, rgba(168,85,247,0.2), rgba(236,72,153,0.12))' }}>
-        {item.product_name[0]}
+        {item.product_name?.[0] || '?'}
 
         {/* Hover overlay */}
         <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2"
@@ -114,7 +114,7 @@ function WishlistCard({ item, onRemove, onAddToCart }) {
             </h3>
           </Link>
           <div className="flex items-baseline gap-2 mb-1">
-            <span className="font-bold text-gradient text-base">₹{item.product_price.toLocaleString()}</span>
+            <span className="font-bold text-gradient text-base">₹{(item.product_price || 0).toLocaleString()}</span>
             {hasPriceDropped && (
               <span className="text-xs line-through opacity-40" style={{ color: 'var(--text-muted)' }}>
                 ₹{regularPrice.toLocaleString()}
