@@ -17,13 +17,12 @@ api.interceptors.request.use((config) => {
     config.headers.Authorization = `Bearer ${token}`
   }
 
-  // Only run automatic appending if it's a valid integer ID and not already appended manually
-  if (userId && userId !== 'undefined' && userId !== '[object Object]' && !config.url?.includes('user_id=')) {
-    // Apply safely to context routes that are NOT explicitly handled manually
+  // Interceptor only runs on cart, wishlist, and orders to prevent breaking reviews
+  if (userId && userId !== 'undefined' && userId !== '[object Object]') {
     const autoContextRoutes = ['/cart', '/wishlist', '/orders']
     const matchesRoute = autoContextRoutes.some(route => config.url?.includes(route))
 
-    if (matchesRoute) {
+    if (matchesRoute && !config.url.includes('user_id=')) {
       if (!config.url.includes('?')) {
         config.url += `?user_id=${userId}`
       } else {
@@ -54,7 +53,7 @@ export const usersApi = {
     api.put('/api/users/me', profileData),
 }
 
-// Categories (Slug Support)
+// Categories
 export const categoriesApi = {
   list: () => api.get('/api/categories/'),
   listWithStructure: () => api.get('/api/categories/with-structure'),
@@ -65,7 +64,7 @@ export const categoriesApi = {
   delete: (id) => api.delete(`/api/categories/${id}/`),
 }
 
-// Subcategories (Slug Support)
+// Subcategories
 export const subcategoriesApi = {
   list: () => api.get('/api/subcategories/'),
   getBySlug: (slug) => api.get(`/api/subcategories/slug/${slug}`),
@@ -75,7 +74,7 @@ export const subcategoriesApi = {
   delete: (id) => api.delete(`/api/subcategories/${id}/`),
 }
 
-// Products (Slug Support + Multiple Images + Variants)
+// Products
 export const productsApi = {
   list: (filters = {}) => api.get('/api/products/', { params: filters }),
   getBySlug: (slug) => api.get(`/api/products/slug/${slug}`),
@@ -83,30 +82,19 @@ export const productsApi = {
   create: (data) => api.post('/api/products/', data),
   update: (id, data) => api.put(`/api/products/${id}/`, data),
   delete: (id) => api.delete(`/api/products/${id}/`),
-  
-  // Image management
-  updateImages: (id, images) => 
-    api.put(`/api/products/${id}/`, { images }),
-  
-  // Variants management
-  getVariants: (productId) => 
-    api.get(`/api/products/${productId}/variants/`),
-  createVariant: (productId, data) => 
-    api.post(`/api/products/${productId}/variants/`, data),
-  updateVariant: (productId, variantId, data) => 
-    api.put(`/api/products/${productId}/variants/${variantId}/`, data),
-  deleteVariant: (productId, variantId) => 
-    api.delete(`/api/products/${productId}/variants/${variantId}/`),
+  updateImages: (id, images) => api.put(`/api/products/${id}/`, { images }),
+  getVariants: (productId) => api.get(`/api/products/${productId}/variants/`),
+  createVariant: (productId, data) => api.post(`/api/products/${productId}/variants/`, data),
+  updateVariant: (productId, variantId, data) => api.put(`/api/products/${productId}/variants/${variantId}/`, data),
+  deleteVariant: (productId, variantId) => api.delete(`/api/products/${productId}/variants/${variantId}/`),
 }
 
 // Cart
 export const cartApi = {
   get: (userId) => api.get(`/api/users/${userId}/cart/`),
   add: (userId, data) => api.post(`/api/users/${userId}/cart/`, data),
-  update: (userId, itemId, data) => 
-    api.put(`/api/users/${userId}/cart/${itemId}/`, data),
-  remove: (userId, itemId) => 
-    api.delete(`/api/users/${userId}/cart/${itemId}/`),
+  update: (userId, itemId, data) => api.put(`/api/users/${userId}/cart/${itemId}/`, data),
+  remove: (userId, itemId) => api.delete(`/api/users/${userId}/cart/${itemId}/`),
   clear: (userId) => api.delete(`/api/users/${userId}/cart/`),
 }
 
@@ -114,8 +102,7 @@ export const cartApi = {
 export const wishlistApi = {
   get: (userId) => api.get(`/api/users/${userId}/wishlist/`),
   add: (userId, data) => api.post(`/api/users/${userId}/wishlist/`, data),
-  remove: (userId, itemId) => 
-    api.delete(`/api/users/${userId}/wishlist/${itemId}/`),
+  remove: (userId, itemId) => api.delete(`/api/users/${userId}/wishlist/${itemId}/`),
 }
 
 // Reviews
@@ -123,22 +110,22 @@ export const reviewsApi = {
   list: (productId) => api.get(`/api/products/${productId}/reviews/`),
   getStats: (productId) => api.get(`/api/products/${productId}/reviews/stats`),
   
-  // 🟢 EXPLICIT FIX: Accepts both parameters to explicitly build the query URL string 
-  // without relying on or clashing with the global interceptor logic.
-  create: (productId, userId, data) => 
-    api.post(`/api/products/${productId}/reviews/?user_id=${userId}`, data),
-  
+  // 🟢 BALANCED FIX: Explicitly pass user_id via query params to avoid interceptor clashes
+  create: (productId, userId, payload) => 
+    api.post(`/api/products/${productId}/reviews/`, payload, {
+      params: { user_id: userId }
+    }),
+    
   update: (reviewId, data) => api.put(`/api/reviews/${reviewId}/`, data),
   delete: (reviewId) => api.delete(`/api/reviews/${reviewId}/`),
 }
 
-// Orders (NEW - Checkout)
+// Orders
 export const ordersApi = {
   list: (userId) => api.get(`/api/orders/`),
   get: (orderId, userId) => api.get(`/api/orders/${orderId}/`),
   create: (userId, data) => api.post('/api/orders/', data),
-  updateStatus: (orderId, status) => 
-    api.put(`/api/orders/${orderId}/status`, null, { params: { status } }),
+  updateStatus: (orderId, status) => api.put(`/api/orders/${orderId}/status`, null, { params: { status } }),
 }
 
 export default api
