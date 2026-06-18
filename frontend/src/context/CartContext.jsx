@@ -3,10 +3,7 @@ import { cartApi, wishlistApi } from '../api'
 import { useAuth } from './AuthContext'
 
 const CartContext = createContext(null)
-const { data } = await cartApi.get(user.id)
 
-console.log("FULL CART RESPONSE")
-console.log(JSON.stringify(data, null, 2))
 export function CartProvider({ children }) {
   const { user } = useAuth()
   const [cart, setCart] = useState({ items: [], total_quantity: 0, subtotal: 0 })
