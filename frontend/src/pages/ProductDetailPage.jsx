@@ -6,7 +6,7 @@ import {
 } from 'lucide-react'
 import { useCart } from '../context/CartContext'
 import { useAuth } from '../context/AuthContext'
-import { productsApi, reviewsApi } from '../api' // 🟢 Ensure reviewsApi is exported from your api client folder
+import { productsApi, reviewsApi } from '../api'
 
 export default function ProductDetailPage() {
   const { productSlug } = useParams()
@@ -19,23 +19,23 @@ export default function ProductDetailPage() {
   const [adding, setAdding] = useState(false)
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
 
-  // 🟢 State Variables for Live Reviews Layout Trackers
+  // Reviews & Feedback System Tracking State Layers
   const [reviews, setReviews] = useState([])
   const [stats, setStats] = useState({ average_rating: 0, total_reviews: 0, rating_distribution: {1:0, 2:0, 3:0, 4:0, 5:0} })
   const [showReviewModal, setShowReviewModal] = useState(false)
   const [submittingReview, setSubmittingReview] = useState(false)
   const [reviewForm, setReviewForm] = useState({ rating: 5, title: '', comment: '' })
 
-  // 🟢 Zoom Magnifier Tracking Coordinates
+  // Hover Magnifying Glass Lens Tracker Properties
   const [zoomStyle, setZoomStyle] = useState({ display: 'none', backgroundPosition: '0% 0%' })
   const imageContainerRef = useRef(null)
 
+  // Extract ONLY the database ID digits found at the very end ($) of the slug string
   const match = productSlug ? productSlug.match(/\d+$/) : null
   const idFromSlug = match ? parseInt(match[0], 10) : null
 
-  // 🟢 Combined Side Effect Engine: Fetches Product Meta alongside Review Datasets
   useEffect(() => {
-    async function fetchCompleteProductData() {
+    async function fetchProductDetailsAndReviews() {
       try {
         setLoading(true)
         setError(null)
@@ -46,7 +46,7 @@ export default function ProductDetailPage() {
 
         const { data } = await productsApi.get(idFromSlug)
         let activeProduct = Array.isArray(data) ? data[0] : data
-
+        
         if (!activeProduct) {
           throw new Error('The product collection response returned empty.')
         }
@@ -54,11 +54,11 @@ export default function ProductDetailPage() {
         setProduct(activeProduct)
         setCurrentImageIndex(0)
 
-        // Parallel processing safety fallback hooks hitting your FastAPI backend server
+        // Parallel processing review downloads down from your live REST endpoint layer
         try {
           const [reviewsRes, statsRes] = await Promise.all([
-            reviewsApi.getProductReviews(activeProduct.id),
-            reviewsApi.getReviewStats(activeProduct.id)
+            reviewsApi.list(activeProduct.id),
+            reviewsApi.getStats(activeProduct.id)
           ])
           setReviews(reviewsRes.data || [])
           setStats(statsRes.data || { average_rating: 0, total_reviews: 0, rating_distribution: {1:0, 2:0, 3:0, 4:0, 5:0} })
@@ -74,7 +74,12 @@ export default function ProductDetailPage() {
       }
     }
 
-    if (idFromSlug) fetchCompleteProductData()
+    if (idFromSlug) {
+      fetchProductDetailsAndReviews()
+    } else {
+      setLoading(false)
+      setError("No visible application identification index supplied inside routing sequence.")
+    }
   }, [idFromSlug, productSlug])
 
   const handleAddToCart = async () => {
@@ -84,6 +89,7 @@ export default function ProductDetailPage() {
     setAdding(false)
   }
 
+  // Fallback avatar handling for items lacking explicit image assets
   const productImages = product?.images?.length > 0 
     ? product.images 
     : product?.image_url 
@@ -98,7 +104,7 @@ export default function ProductDetailPage() {
     setCurrentImageIndex(prev => prev === productImages.length - 1 ? 0 : prev + 1)
   }
 
-  // 🟢 Magnifying Lens Logic Controller
+  // Dynamic coordinates compiler processing mouse movements inside zoom scope boundary maps
   const handleMouseMove = (e) => {
     if (!imageContainerRef.current) return
     const { left, top, width, height } = imageContainerRef.current.getBoundingClientRect()
@@ -109,7 +115,7 @@ export default function ProductDetailPage() {
       display: 'block',
       backgroundImage: `url(${productImages[currentImageIndex]})`,
       backgroundPosition: `${x}% ${y}%`,
-      backgroundSize: '250%' // Zoom factor
+      backgroundSize: '220%'
     })
   }
 
@@ -117,27 +123,33 @@ export default function ProductDetailPage() {
     setZoomStyle({ display: 'none', backgroundPosition: '0% 0%' })
   }
 
-  // 🟢 Submit Review Logic
+  // Clean submission routine directly routing variables down to your reviews API setup
   const handleReviewSubmit = async (e) => {
     e.preventDefault()
     if (!user) return
     setSubmittingReview(true)
+    
     try {
-      await reviewsApi.createReview(product.id, user.id, {
-        ...reviewForm,
+      await reviewsApi.create(product.id, {
+        rating: Number(reviewForm.rating),
+        title: reviewForm.title,
+        comment: reviewForm.comment,
         verified_purchase: true
       })
       
-      // Refresh list upon successful commit
+      // Pull updated data sheets to re-sync stats values without refreshing the page
       const [reviewsRes, statsRes] = await Promise.all([
-        reviewsApi.getProductReviews(product.id),
-        reviewsApi.getReviewStats(product.id)
+        reviewsApi.list(product.id),
+        reviewsApi.getStats(product.id)
       ])
+      
       setReviews(reviewsRes.data || [])
-      setStats(statsRes.data || stats)
+      setStats(statsRes.data || { average_rating: 0, total_reviews: 0, rating_distribution: {1:0, 2:0, 3:0, 4:0, 5:0} })
       setShowReviewModal(false)
       setReviewForm({ rating: 5, title: '', comment: '' })
+      
     } catch (err) {
+      console.error(err)
       alert(err.response?.data?.detail || "Failed to commit your experience rating record.")
     } finally {
       setSubmittingReview(false)
@@ -167,46 +179,46 @@ export default function ProductDetailPage() {
   const wishlisted = isWishlisted ? isWishlisted(product.id) : false
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8 bg-background min-h-screen text-primary relative">
+    <div className="max-w-6xl mx-auto px-4 py-8 bg-background min-h-screen text-primary">
       <Link to="/products" className="inline-flex items-center gap-2 text-sm text-muted hover:text-primary mb-8 transition-colors">
         <ArrowLeft size={16} /> Back to Products
       </Link>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-12 bg-surface border border-border rounded-[24px] p-6 md:p-8 shadow-sm">
         
-        {/* Left: Product Image Stage (No white borders, built-in zoom panel lens) */}
+        {/* Left: Product Image Stage (No white borders, built-in magnification tracking glass) */}
         <div className="flex flex-col gap-4">
           <div 
             ref={imageContainerRef}
             onMouseMove={handleMouseMove}
             onMouseLeave={handleMouseLeave}
-            className="bg-surface-raised rounded-2xl p-4 flex items-center justify-center border border-subtle min-h-[350px] max-h-[450px] overflow-hidden relative cursor-zoom-in"
+            className="bg-surface-raised rounded-2xl p-6 flex items-center justify-center border border-subtle min-h-[350px] max-h-[450px] overflow-hidden relative cursor-zoom-in"
           >
             {productImages.length > 1 && (
               <>
                 <button
                   onClick={handlePreviousImage}
-                  className="absolute left-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-surface border border-border flex items-center justify-center hover:bg-surface-raised transition-all shadow-lg z-10"
+                  className="absolute left-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-surface border border-border flex items-center justify-center hover:bg-surface-raised transition-all shadow-lg z-10 cursor-pointer"
                 >
                   <ChevronLeft size={20} className="text-primary" />
                 </button>
                 <button
                   onClick={handleNextImage}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-surface border border-border flex items-center justify-center hover:bg-surface-raised transition-all shadow-lg z-10"
+                  className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-surface border border-border flex items-center justify-center hover:bg-surface-raised transition-all shadow-lg z-10 cursor-pointer"
                 >
                   <ChevronRight size={20} className="text-primary" />
                 </button>
               </>
             )}
 
-            {/* Main Image Layer (Filtered transparent background mixin applied) */}
+            {/* Main Image Layer (Transparent background rendering enabled) */}
             <img 
               src={productImages[currentImageIndex]} 
               alt={product.name} 
-              className="max-h-[380px] max-w-full object-contain select-none mix-blend-lighten pointer-events-none" 
+              className="max-h-[360px] max-w-full object-contain select-none mix-blend-lighten pointer-events-none" 
             />
 
-            {/* 🟢 Live Hover Magnifying Lens Panel */}
+            {/* Hover Lens Zoom Mirror Surface Panel */}
             <div 
               className="absolute inset-0 pointer-events-none rounded-2xl transition-opacity duration-150 border-2 border-purple-500/20 bg-no-repeat"
               style={{
@@ -216,13 +228,15 @@ export default function ProductDetailPage() {
             />
 
             {productImages.length > 1 && (
-              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
+              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2 z-10">
                 {productImages.map((_, index) => (
                   <button
                     key={index}
                     onClick={() => setCurrentImageIndex(index)}
-                    className={`w-2.5 h-2.5 rounded-full transition-all ${
-                      index === currentImageIndex ? 'bg-purple-500 scale-125' : 'bg-surface border border-border hover:bg-surface-raised'
+                    className={`w-2.5 h-2.5 rounded-full transition-all cursor-pointer ${
+                      index === currentImageIndex 
+                        ? 'bg-purple-500 scale-125' 
+                        : 'bg-surface border border-border hover:bg-surface-raised'
                     }`}
                   />
                 ))}
@@ -257,7 +271,9 @@ export default function ProductDetailPage() {
                   />
                 ))}
               </div>
-              <span className="text-xs text-muted font-medium">({stats.average_rating || '4.8'} / 5.0 Rating • {stats.total_reviews} global reviews)</span>
+              <span className="text-xs text-muted font-medium">
+                ({stats.average_rating || '4.8'} / 5.0 Rating • {stats.total_reviews || 0} global reflections)
+              </span>
             </div>
 
             <div className="mt-6 text-3xl font-display font-bold text-gradient">
@@ -265,16 +281,17 @@ export default function ProductDetailPage() {
             </div>
 
             <p className="mt-6 text-sm text-secondary leading-relaxed border-t border-subtle pt-6">
-              {product.description || 'No specialized description payload has been provided for this product row.'}
+              {product.description || 'No specialized description payload has been provided for this product row configuration inside the database system.'}
             </p>
           </div>
 
+          {/* Action Interface Controls Row */}
           <div className="mt-8 border-t border-subtle pt-6">
             <div className="flex gap-4">
               <button
                 onClick={handleAddToCart}
                 disabled={adding}
-                className="btn-primary flex-1 py-3 justify-center text-sm font-semibold rounded-xl shadow-lg shadow-purple-500/20 transition-all"
+                className="btn-primary flex-1 py-3 justify-center text-sm font-semibold rounded-xl shadow-lg shadow-purple-500/20 transition-all cursor-pointer"
               >
                 {adding ? (
                   <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
@@ -286,7 +303,7 @@ export default function ProductDetailPage() {
               {user && (
                 <button
                   onClick={() => toggleWishlist(product.id)}
-                  className="w-12 h-12 rounded-xl border border-border flex items-center justify-center transition-all hover:bg-surface-raised group"
+                  className="w-12 h-12 rounded-xl border border-border flex items-center justify-center transition-all hover:bg-surface-raised group cursor-pointer"
                 >
                   <Heart 
                     size={20} 
@@ -298,6 +315,7 @@ export default function ProductDetailPage() {
               )}
             </div>
 
+            {/* Value Propositions */}
             <div className="grid grid-cols-3 gap-4 mt-6 text-[11px] text-muted font-medium">
               <div className="flex items-center gap-2"><Truck size={14} className="text-purple-500" /> Free Delivery</div>
               <div className="flex items-center gap-2"><RotateCcw size={14} className="text-purple-500" /> 7-Day Replacement</div>
@@ -307,19 +325,28 @@ export default function ProductDetailPage() {
         </div>
       </div>
 
-      {/* 🟢 Dark Theme Product Review Feed Framework Section */}
-      <div className="mt-12 bg-surface border border-border rounded-[24px] p-6 md:p-8">
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-subtle pb-6 mb-6">
+      {/* Review Management Metric Interface Layer */}
+      <div className="mt-12 bg-surface border border-border rounded-[24px] p-6 md:p-8 shadow-sm">
+        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-subtle pb-6 mb-6 gap-4">
           <div>
-            <h2 className="text-xl font-bold tracking-tight inline-flex items-center gap-2">
+            <h2 className="text-xl font-bold font-display inline-flex items-center gap-2">
               <MessageSquare size={20} className="text-purple-500" /> Customer Reflections
             </h2>
-            <p className="text-xs text-muted mt-1">Feedback aggregated directly from authentic transactions</p>
+            <div className="flex items-center gap-2 mt-1">
+              <div className="flex items-center gap-0.5">
+                {[1, 2, 3, 4, 5].map((s) => (
+                  <Star key={s} size={14} className={s <= (stats?.average_rating || 0) ? "fill-amber-500 text-amber-500" : "text-border"} />
+                ))}
+              </div>
+              <span className="text-xs font-medium text-secondary">
+                {stats?.average_rating || 0} out of 5 ({stats?.total_reviews || 0} global ratings)
+              </span>
+            </div>
           </div>
           {user ? (
             <button 
-              onClick={() => setShowReviewModal(true)}
-              className="inline-flex items-center gap-2 px-4 py-2.5 bg-purple-600 hover:bg-purple-700 text-white rounded-xl text-xs font-semibold tracking-wide transition-all shadow-md cursor-pointer"
+              onClick={() => setShowReviewModal(true)} 
+              className="btn-primary text-xs font-semibold py-2.5 px-4 rounded-xl cursor-pointer inline-flex items-center gap-1"
             >
               <Plus size={14} /> Leave a Review
             </button>
@@ -328,15 +355,16 @@ export default function ProductDetailPage() {
           )}
         </div>
 
+        {/* Individual Review Feeds */}
         {reviews.length === 0 ? (
-          <div className="text-center py-12 text-muted text-sm bg-surface-raised rounded-2xl border border-dashed border-border">
-            No reviews have been published for this workspace variation yet. Be the first to express feedback!
-          </div>
+          <p className="text-xs text-muted text-center py-8 bg-surface-raised rounded-2xl border border-dashed border-border">
+            No customer reflections filed for this product workspace variation yet. Be the first to express feedback!
+          </p>
         ) : (
-          <div className="space-y-4 max-h-[500px] overflow-y-auto pr-2">
+          <div className="space-y-4 max-h-[450px] overflow-y-auto pr-2">
             {reviews.map((rev) => (
               <div key={rev.id} className="p-5 rounded-2xl bg-surface-raised border border-subtle flex flex-col gap-2">
-                <div className="flex items-center justify-between">
+                <div className="flex justify-between items-center">
                   <div className="flex items-center gap-2">
                     <div className="w-7 h-7 rounded-full bg-purple-500/10 flex items-center justify-center text-xs text-purple-400 font-bold">
                       U{rev.user_id}
@@ -344,12 +372,8 @@ export default function ProductDetailPage() {
                     <span className="text-xs font-semibold text-secondary">Verified Buyer</span>
                   </div>
                   <div className="flex gap-0.5">
-                    {[1, 2, 3, 4, 5].map((star) => (
-                      <Star 
-                        key={star} 
-                        size={12} 
-                        className={`${star <= rev.rating ? 'fill-amber-500 text-amber-500' : 'text-border'}`} 
-                      />
+                    {[1, 2, 3, 4, 5].map((s) => (
+                      <Star key={s} size={12} className={s <= rev.rating ? "fill-amber-500 text-amber-500" : "text-border"} />
                     ))}
                   </div>
                 </div>
@@ -361,70 +385,71 @@ export default function ProductDetailPage() {
         )}
       </div>
 
-      {/* 🟢 Seamless Review Overlay Modal Dialog */}
+      {/* Write Product Review Glassmorphism Overlay Modal Context */}
       {showReviewModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm animate-fadeIn">
-          <div className="w-full max-w-md bg-surface border border-border rounded-2xl p-6 shadow-2xl">
-            <div className="flex items-center justify-between pb-4 border-b border-subtle">
-              <h3 className="text-base font-bold text-primary">Write Product Review</h3>
-              <button 
-                onClick={() => setShowReviewModal(false)}
-                className="p-1.5 rounded-lg hover:bg-surface-raised text-muted hover:text-primary transition-colors cursor-pointer"
-              >
-                <X size={16} />
-              </button>
-            </div>
-
-            <form onSubmit={handleReviewSubmit} className="space-y-4 mt-4">
+        <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+          <div className="bg-surface border border-border w-full max-w-md rounded-[24px] p-6 shadow-2xl relative">
+            <button 
+              onClick={() => setShowReviewModal(false)} 
+              className="absolute right-4 top-4 text-muted hover:text-primary transition-colors cursor-pointer"
+            >
+              <X size={18} />
+            </button>
+            
+            <h3 className="text-base font-bold font-display border-b border-subtle pb-3 mb-4">Write Product Review</h3>
+            
+            <form onSubmit={handleReviewSubmit} className="space-y-4 text-sm">
               <div>
-                <label className="block text-xs font-semibold text-secondary mb-1.5">Rating Score</label>
+                <label className="block text-xs font-semibold mb-1.5 text-secondary">Rating Score</label>
                 <div className="flex gap-1.5">
-                  {[1, 2, 3, 4, 5].map((num) => (
-                    <button
-                      type="button"
-                      key={num}
-                      onClick={() => setReviewForm(p => ({ ...p, rating: num }))}
-                      className="text-amber-500 transition-transform active:scale-95 cursor-pointer"
+                  {[1, 2, 3, 4, 5].map((star) => (
+                    <button 
+                      type="button" 
+                      key={star} 
+                      onClick={() => setReviewForm(p => ({ ...p, rating: star }))} 
+                      className="transition-transform active:scale-90 cursor-pointer"
                     >
-                      <Star size={24} className={num <= reviewForm.rating ? 'fill-amber-500' : 'text-border'} />
+                      <Star size={24} className={star <= reviewForm.rating ? "fill-amber-500 text-amber-500" : "text-border"} />
                     </button>
                   ))}
                 </div>
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-secondary mb-1">Headline Summary</label>
+                <label className="block text-xs font-semibold mb-1.5 text-secondary">Headline Summary</label>
                 <input 
                   type="text" 
-                  required
-                  placeholder="e.g., Absolute powerhouse device"
-                  value={reviewForm.title}
-                  onChange={e => setReviewForm(p => ({ ...p, title: e.target.value }))}
-                  className="w-full text-xs px-3 py-2.5 bg-surface-raised border border-border rounded-xl focus:outline-none focus:border-purple-500 transition-colors text-primary"
+                  required 
+                  value={reviewForm.title} 
+                  onChange={e => setReviewForm(p => ({ ...p, title: e.target.value }))} 
+                  placeholder="e.g., Absolute powerhouse device" 
+                  className="w-full text-xs bg-surface-raised border border-border rounded-xl px-4 py-2.5 outline-none focus:border-purple-500 transition-colors text-primary" 
                 />
               </div>
 
               <div>
-                <label className="block text-xs font-semibold text-secondary mb-1">Elaborate Feedback Experience</label>
+                <label className="block text-xs font-semibold mb-1.5 text-secondary">Elaborate Feedback Experience</label>
                 <textarea 
-                  rows={4}
-                  required
-                  placeholder="What did you like or dislike about this asset configuration?"
-                  value={reviewForm.comment}
-                  onChange={e => setReviewForm(p => ({ ...p, comment: e.target.value }))}
-                  className="w-full text-xs px-3 py-2.5 bg-surface-raised border border-border rounded-xl focus:outline-none focus:border-purple-500 transition-colors text-primary resize-none"
+                  required 
+                  rows={4} 
+                  value={reviewForm.comment} 
+                  onChange={e => setReviewForm(p => ({ ...p, comment: e.target.value }))} 
+                  placeholder="What did you like or dislike about this asset configuration?" 
+                  className="w-full text-xs bg-surface-raised border border-border rounded-xl px-4 py-2.5 outline-none focus:border-purple-500 transition-colors text-primary resize-none" 
                 />
               </div>
 
-              <div className="pt-2">
-                <button
-                  type="submit"
-                  disabled={submittingReview}
-                  className="w-full py-2.5 bg-purple-600 hover:bg-purple-700 disabled:opacity-50 text-white rounded-xl text-xs font-semibold transition-all shadow-md cursor-pointer flex justify-center items-center"
-                >
-                  {submittingReview ? <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" /> : "Publish Feedback Metrics"}
-                </button>
-              </div>
+              <button 
+                type="submit" 
+                disabled={submittingReview} 
+                className="w-full btn-primary py-3 rounded-xl font-semibold mt-2 justify-center shadow-md cursor-pointer"
+              >
+                {submittingReview ? (
+                  <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                ) : (
+                  "Publish Feedback Metrics"
+                )}
+              </button>
             </form>
           </div>
         </div>
