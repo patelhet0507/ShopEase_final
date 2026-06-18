@@ -135,24 +135,24 @@ class CartItem(Base):
         return f"CartItem(user={self.user_id}, product={self.product_id}, qty={self.quantity})"
 
 
-class WishlistItem(Base):
-    __tablename__ = "wishlist_items"
+    class WishlistItem(Base):
+        __tablename__ = "wishlist_items"
 
-    id = Column(Integer, primary_key=True, index=True)
-    user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
-    product_id = Column(Integer, ForeignKey("products.id", ondelete="CASCADE"), nullable=False, index=True)
-    price_at_save = Column(Integer, nullable=True)  # To track price drops
-    created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+        id = Column(Integer, primary_key=True, index=True)
+        user_id = Column(Integer, ForeignKey("users.id", ondelete="CASCADE"), nullable=False, index=True)
+        product_id = Column(Integer, ForeignKey("products.id", ondelete="CASCADE"), nullable=False, index=True)
+        price_at_save = Column(Integer, nullable=True)  # To track price drops
+        created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 
-    user = relationship("User", back_populates="wishlist_items")
-    product = relationship("Product", back_populates="wishlist_items")
+        user = relationship("User", back_populates="wishlist_items")
+        product = relationship("Product", back_populates="wishlist_items")
 
-    __table_args__ = (
-        UniqueConstraint("user_id", "product_id", name="uq_wishlist_user_product"),
-    )
+        __table_args__ = (
+            UniqueConstraint("user_id", "product_id", name="uq_wishlist_user_product"),
+        )
 
-    def __repr__(self):
-        return f"WishlistItem(user={self.user_id}, product={self.product_id})"
+        def __repr__(self):
+            return f"WishlistItem(user={self.user_id}, product={self.product_id})"
 
 
 class Review(Base):

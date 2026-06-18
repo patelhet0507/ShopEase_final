@@ -564,7 +564,7 @@ def clear_cart(user_id: int, db: Session = Depends(get_db)):
 
 # ===== Wishlist =====
 
-@app.get("/api/users/{user_id}/wishlist/")
+@app.get("/api/users/{user_id}/wishlist/", response_model=list[schemas.WishlistItemOut])
 def get_wishlist(user_id: int, db: Session = Depends(get_db)):
     items = db.query(models.WishlistItem).filter(models.WishlistItem.user_id == user_id).all()
     return items

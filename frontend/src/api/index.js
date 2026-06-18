@@ -116,7 +116,7 @@ export const wishlistApi = {
 
 // Reviews
 export const reviewsApi = {
-  list: (productId) => api.get('/api/products/${productId}/reviews/'),
+  list: (productId) => api.get(`/api/products/${productId}/reviews/`),
   getStats: (productId) => api.get(`/api/products/${productId}/reviews/stats`),
   create: (productId, data) => api.post(`/api/products/${productId}/reviews/`, data),
   update: (reviewId, data) => api.put(`/api/reviews/${reviewId}/`, data),

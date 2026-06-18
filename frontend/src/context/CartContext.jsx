@@ -101,30 +101,48 @@ export function CartProvider({ children }) {
   }, [user])
 
   const toggleWishlist = useCallback(async (productId) => {
-    if (!user?.id) {
-      setModalMessage('Please log in to manage your wishlist.')
-      setShowLoginModal(true)
-      return
+  if (!user?.id) {
+    setModalMessage('Please log in to manage your wishlist.')
+    setShowLoginModal(true)
+    return
+  }
+
+  const targetId = Number(productId)
+
+  const existingItem = wishlist.find(
+    item => item.product_id === targetId
+  )
+
+  try {
+    if (existingItem) {
+      await wishlistApi.remove(
+        user.id,
+        existingItem.id
+      )
+
+      setWishlist(prev =>
+        prev.filter(item => item.id !== existingItem.id)
+      )
+    } else {
+      const { data } = await wishlistApi.add(user.id, {
+        product_id: targetId
+      })
+
+      setWishlist(prev => [...prev, data])
     }
-    const targetId = parseInt(productId, 10)
-    const isWishlisted = wishlist.some(w => w.product_id === targetId)
-    try {
-      if (isWishlisted) {
-        await wishlistApi.remove(user.id, targetId)
-        setWishlist(prev => prev.filter(w => w.product_id !== targetId))
-      } else {
-        const { data } = await wishlistApi.add(user.id, { product_id: targetId })
-        if (data) setWishlist(prev => [data, ...prev])
-      }
-    } catch (err) {
-      console.error("Wishlist conversion toggle error:", err.response?.data || err.message)
-    }
-  }, [user, wishlist])
+  } catch (err) {
+    console.error(
+      'Wishlist toggle error:',
+      err.response?.data || err.message
+    )
+  }
+}, [user, wishlist])
 
   const isWishlisted = useCallback((productId) => {
-    const targetId = parseInt(productId, 10)
-    return wishlist.some(w => w.product_id === targetId)
-  }, [wishlist])
+  return wishlist.some(
+    item => Number(item.product_id) === Number(productId)
+  )
+}, [wishlist])
 
   return (
     <CartContext.Provider
