@@ -11,16 +11,6 @@ import { useState, useEffect } from 'react'
 
 export default function CartPage() {
   const navigate = useNavigate()
-  const handleCheckout = () => {
-  console.log("Checkout clicked")
-
-  if (!cartItems.length) {
-    alert("Your cart is empty")
-    return
-  }
-
-  navigate('/checkout')
-}
   const { cart, updateCartItem, removeFromCart, clearCart } = useCart()
   const { user } = useAuth()
   const [savedSandbox, setSavedSandbox] = useState([])
@@ -334,7 +324,7 @@ export default function CartPage() {
                   <motion.button
   whileHover={{ scale: 1.01 }}
   whileTap={{ scale: 0.99 }}
-  onClick={() => alert("Checkout button works")}
+  onClick={() => navigate('/checkout')}
   className="btn-primary w-full justify-center py-3.5 text-base cursor-pointer"
 >
   Proceed to Checkout <ArrowRight size={16} />
