@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useParams, Link, useLocation } from 'react-router-dom'
+import { useParams, Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { CheckCircle, Download, ShoppingBag, Home, ArrowRight, Package } from 'lucide-react'
 import { useCart } from '../context/CartContext'
@@ -7,14 +7,23 @@ import { ordersApi } from '../api'
 
 export default function OrderConfirmationPage() {
   const { orderNumber } = useParams()
-  const location = useLocation()
   const { clearCart } = useCart()
-  const [order, setOrder] = useState(location.state?.order || null)
+  const [order, setOrder] = useState(() => {
+    try {
+      const stored = sessionStorage.getItem('last_order')
+      if (stored) {
+        const parsed = JSON.parse(stored)
+        if (parsed?.order_number === orderNumber) return parsed
+      }
+    } catch {}
+    return null
+  })
   const [loading, setLoading] = useState(!order)
   const [downloading, setDownloading] = useState(false)
 
   useEffect(() => {
     if (order) {
+      sessionStorage.removeItem('last_order')
       clearCart().catch(() => {})
       return
     }
@@ -158,16 +167,18 @@ export default function OrderConfirmationPage() {
             </h2>
 
             <div className="space-y-4">
-              <div>
-                <p className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>Shipping To</p>
-                <p className="font-semibold" style={{ color: 'var(--text-primary)' }}>{order.shipping_name}</p>
-                <p style={{ color: 'var(--text-secondary)' }}>{order.shipping_mobile}</p>
-                <p style={{ color: 'var(--text-secondary)' }}>{order.shipping_address}</p>
-              </div>
+              {order.shipping_name && (
+                <div>
+                  <p className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>Shipping To</p>
+                  <p className="font-semibold" style={{ color: 'var(--text-primary)' }}>{order.shipping_name}</p>
+                  <p style={{ color: 'var(--text-secondary)' }}>{order.shipping_mobile}</p>
+                  <p style={{ color: 'var(--text-secondary)' }}>{order.shipping_address}</p>
+                </div>
+              )}
 
-              <div className="pt-4" style={{ borderTop: '1px solid var(--border)' }}>
-                <p className="text-sm font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>Items Ordered</p>
-                {order.order_items && order.order_items.length > 0 ? (
+              {order.order_items && order.order_items.length > 0 ? (
+                <div className="pt-4" style={{ borderTop: '1px solid var(--border)' }}>
+                  <p className="text-sm font-medium mb-2" style={{ color: 'var(--text-secondary)' }}>Items Ordered</p>
                   <div className="space-y-2">
                     {order.order_items.map((item, index) => (
                       <div key={index} className="flex justify-between text-sm">
@@ -180,10 +191,10 @@ export default function OrderConfirmationPage() {
                       </div>
                     ))}
                   </div>
-                ) : (
-                  <p style={{ color: 'var(--text-muted)' }}>No items found</p>
-                )}
-              </div>
+                </div>
+              ) : (
+                <p style={{ color: 'var(--text-muted)' }}>No items found</p>
+              )}
 
               <div className="pt-4" style={{ borderTop: '1px solid var(--border)' }}>
                 <div className="flex justify-between items-center">

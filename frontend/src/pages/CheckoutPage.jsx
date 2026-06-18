@@ -59,9 +59,8 @@ export default function CheckoutPage() {
     console.log("ORDER RESPONSE:", response.data)
 
     if (response.data?.order_number) {
-      navigate(`/order-confirmation/${response.data.order_number}`, {
-        state: { order: response.data }
-      })
+      sessionStorage.setItem('last_order', JSON.stringify(response.data))
+      navigate(`/order-confirmation/${response.data.order_number}`)
     }
   } catch (error) {
     console.error("FULL ORDER ERROR:", error)

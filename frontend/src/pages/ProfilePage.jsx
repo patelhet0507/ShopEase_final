@@ -173,19 +173,7 @@ export default function ProfilePage() {
             </button>
           </form>
 
-          <div className="mt-8 pt-8" style={{ borderTop: '1px solid var(--border)' }}>
-            <h3 className="text-lg font-bold mb-4" style={{ color: 'var(--text-primary)' }}>Account Information</h3>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <div className="rounded-lg p-4" style={{ background: 'var(--surface-raised)' }}>
-                <p className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>User ID</p>
-                <p className="text-lg font-bold" style={{ color: 'var(--text-primary)' }}>{user?.id}</p>
-              </div>
-              <div className="rounded-lg p-4" style={{ background: 'var(--surface-raised)' }}>
-                <p className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>Role</p>
-                <p className="text-lg font-bold capitalize" style={{ color: 'var(--text-primary)' }}>{user?.role}</p>
-              </div>
-            </div>
-          </div>
+
         </motion.div>
       </div>
     </motion.div>

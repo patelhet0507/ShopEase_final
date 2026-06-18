@@ -10,20 +10,17 @@ import { generateSlug } from '../components/product/ProductCard'
 function WishlistCard({ item, onRemove, onAddToCart }) {
   const [adding, setAdding] = useState(false)
 
-  // Calculate historical dynamic price parameters if present
-  const regularPrice = item.old_price || item.product_old_price || null
-  const currentPrice = item.product_price
+  const product = item?.product || {}
+  const currentPrice = product.price || 0
+  const regularPrice = item.price_at_save || null
   const hasPriceDropped = regularPrice && regularPrice > currentPrice
   
   const priceDropPercentage = hasPriceDropped 
     ? Math.round(((regularPrice - currentPrice) / regularPrice) * 100) 
     : 0
 
-  // Fallback assessment for out-of-stock validation
-  const isItemInStock = item.in_stock !== false && item.inventory !== 0
-
   const handleAdd = async () => {
-    if (!isItemInStock) return
+    if (!product.id) return
     setAdding(true)
     await onAddToCart(item.product_id)
     setAdding(false)
@@ -37,11 +34,10 @@ function WishlistCard({ item, onRemove, onAddToCart }) {
       exit={{ opacity: 0, scale: 0.9, transition: { duration: 0.2 } }}
       whileHover={{ y: -4 }}
       transition={{ duration: 0.3 }}
-      className={`rounded-2xl overflow-hidden group relative ${!isItemInStock ? 'opacity-60' : ''}`}
+      className="rounded-2xl overflow-hidden group relative"
       style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}
     >
-      {/* Dynamic Drop-in Price Monitoring Indicator */}
-      {hasPriceDropped && isItemInStock && (
+      {hasPriceDropped && (
         <motion.div 
           initial={{ opacity: 0, x: -10 }}
           animate={{ opacity: 1, x: 0 }}
@@ -55,32 +51,25 @@ function WishlistCard({ item, onRemove, onAddToCart }) {
           }}
         >
           <TrendingDown size={11} className="animate-bounce" />
-          <span>Price dropped {priceDropPercentage}% last night!</span>
+          <span>Price dropped {priceDropPercentage}%</span>
         </motion.div>
-      )}
-
-      {/* Out of stock gray visual lock overlay */}
-      {!isItemInStock && (
-        <div className="absolute top-3 left-3 z-20 px-2.5 py-1 rounded-lg text-[10px] font-bold tracking-wide bg-neutral-500/10 border border-neutral-500/30 text-neutral-400 backdrop-blur-sm">
-          Out of Stock
-        </div>
       )}
 
       {/* Image area */}
       <div className="relative h-44 flex items-center justify-center font-bold text-4xl text-white select-none"
         style={{ background: 'linear-gradient(135deg, rgba(168,85,247,0.2), rgba(236,72,153,0.12))' }}>
-        {item.product_name?.[0] || '?'}
+        {product.name?.[0] || '?'}
 
         {/* Hover overlay */}
         <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2"
           style={{ background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(4px)' }}>
           <Link
-            to={`/products/${generateSlug(item.product_name, item.product_id)}`}
+            to={`/products/${generateSlug(product.name || 'Product', item.product_id)}`}
             className="w-10 h-10 rounded-xl flex items-center justify-center bg-white/20 hover:bg-white/30 transition-colors text-white"
           >
             <Eye size={16} />
           </Link>
-          {isItemInStock && (
+          {product.id && (
             <button
               onClick={handleAdd}
               disabled={adding}
@@ -107,14 +96,14 @@ function WishlistCard({ item, onRemove, onAddToCart }) {
       {/* Info Container */}
       <div className="p-4 flex flex-col flex-1 h-full justify-between">
         <div>
-          <Link to={`/products/${generateSlug(item.product_name, item.product_id)}`}>
+          <Link to={`/products/${generateSlug(product.name || 'Product', item.product_id)}`}>
             <h3 className="font-semibold text-sm leading-tight hover:text-purple-500 transition-colors line-clamp-2 mb-2"
               style={{ color: 'var(--text-primary)' }}>
-              {item.product_name}
+              {product.name}
             </h3>
           </Link>
           <div className="flex items-baseline gap-2 mb-1">
-            <span className="font-bold text-gradient text-base">₹{(item.product_price || 0).toLocaleString()}</span>
+            <span className="font-bold text-gradient text-base">₹{(currentPrice).toLocaleString()}</span>
             {hasPriceDropped && (
               <span className="text-xs line-through opacity-40" style={{ color: 'var(--text-muted)' }}>
                 ₹{regularPrice.toLocaleString()}
@@ -130,18 +119,18 @@ function WishlistCard({ item, onRemove, onAddToCart }) {
           
           <motion.button
             onClick={handleAdd}
-            disabled={adding || !isItemInStock}
-            whileHover={isItemInStock ? { scale: 1.05 } : {}}
-            whileTap={isItemInStock ? { scale: 0.95 } : {}}
+            disabled={adding || !product.id}
+            whileHover={product.id ? { scale: 1.05 } : {}}
+            whileTap={product.id ? { scale: 0.95 } : {}}
             className={`text-xs px-3 py-1.5 rounded-xl font-medium flex items-center gap-1.5 transition-all ${
-              isItemInStock 
+              product.id 
                 ? 'btn-primary cursor-pointer' 
                 : 'bg-neutral-500/10 text-neutral-400 border border-transparent cursor-not-allowed'
             }`}
           >
             {adding ? (
               <span className="w-3 h-3 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-            ) : isItemInStock ? (
+            ) : product.id ? (
               <><ShoppingCart size={12} /> Add</>
             ) : (
               'Unavailable'
@@ -167,8 +156,7 @@ export default function WishlistPage() {
     </div>
   )
 
-  // Extract count of available inventory segments
-  const inStockItems = wishlist.filter(item => item.in_stock !== false && item.inventory !== 0)
+  const inStockItems = wishlist.filter(item => item.product?.id)
 
   // Particle generation engine logic triggered on master migration match
   const triggerSparkExplosion = (e) => {
