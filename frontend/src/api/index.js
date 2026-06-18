@@ -8,18 +8,32 @@ const api = axios.create({
   headers: { 'Content-Type': 'application/json' },
 })
 
-// Automatically attach Bearer token or user_id to requests
+// Automatically attach Bearer token or user_id to requests safely
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('token')
-  const userId = localStorage.getItem('userId')
+  let userId = localStorage.getItem('userId')
   
   if (token) {
     config.headers.Authorization = `Bearer ${token}`
   }
-  if (userId && !config.url?.includes('?')) {
-    config.url += `?user_id=${userId}`
-  } else if (userId && config.url?.includes('?')) {
-    config.url += `&user_id=${userId}`
+
+  // 🟢 FIXED: Only append user_id if it exists, is a valid number/string, 
+  // and isn't accidentally writing broken object string artifacts down onto global routes
+  if (userId && userId !== 'undefined' && userId !== '[object Object]') {
+    // Only automatically append for routes that explicitly manage user contexts
+    const needsUserContext = 
+      config.url?.includes('/cart') || 
+      config.url?.includes('/wishlist') || 
+      config.url?.includes('/orders') ||
+      config.url?.includes('/reviews/')
+
+    if (needsUserContext) {
+      if (!config.url.includes('?')) {
+        config.url += `?user_id=${userId}`
+      } else if (!config.url.includes(`user_id=`)) {
+        config.url += `&user_id=${userId}`
+      }
+    }
   }
   
   return config
@@ -113,10 +127,10 @@ export const reviewsApi = {
   list: (productId) => api.get(`/api/products/${productId}/reviews/`),
   getStats: (productId) => api.get(`/api/products/${productId}/reviews/stats`),
   
-  // 🟢 FIXED: Accepts userId and explicitly appends it to satisfy FastAPI's Query parameter requirements
-  create: (productId, userId, data) => 
-    api.post(`/api/products/${productId}/reviews/?user_id=${userId}`, data),
-    
+  // 🟢 CLEAN: Keeps the standard parameter mapping. 
+  // The safer interceptor will only append user_id query properties if valid integers exist.
+  create: (productId, data) => api.post(`/api/products/${productId}/reviews/`, data),
+  
   update: (reviewId, data) => api.put(`/api/reviews/${reviewId}/`, data),
   delete: (reviewId) => api.delete(`/api/reviews/${reviewId}/`),
 }
