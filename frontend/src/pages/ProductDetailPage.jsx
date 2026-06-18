@@ -15,11 +15,6 @@ export default function ProductDetailPage() {
   const [error, setError] = useState(null)
   const [adding, setAdding] = useState(false)
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
-  const [reviews, setReviews] = useState([])
-  const [stats, setStats] = useState({ average_rating: 0, total_reviews: 0, rating_distribution: {1:0,2:0,3:0,4:0,5:0} })
-  const [showReviewModal, setShowReviewModal] = useState(false)
-  const [submittingReview, setSubmittingReview] = useState(false)
-  const [reviewForm, setReviewForm] = useState({ rating: 5, title: '', comment: '' })
 
   // BULLETPROOF REGEX: Extract ONLY the database ID digits (\d+) found at the very end ($) of the slug string
   const match = productSlug ? productSlug.match(/\d+$/) : null
@@ -30,10 +25,6 @@ export default function ProductDetailPage() {
       try {
         setLoading(true)
         setError(null)
-
-        // Console diagnostic to verify extraction path during deployment troubleshooting
-        console.log("Captured Router Parameter:", productSlug)
-        console.log("Parsed Target Database ID Number:", idFromSlug)
 
         if (!idFromSlug || isNaN(idFromSlug)) {
           throw new Error('Could not resolve a valid numerical record ID from the web path.')
@@ -69,14 +60,25 @@ export default function ProductDetailPage() {
     }
   }, [idFromSlug, productSlug])
 
+  // 🟢 FIXED: Maps parameters exactly to what CartContext expects to ensure guest-cart safety
   const handleAddToCart = async () => {
     if (!product) return
     setAdding(true)
-    await addToCart(product.id, 1, product.name, product.price)
-    setAdding(false)
+    try {
+      await addToCart(
+        product.id, 
+        1, 
+        product.name || product.product_name || 'Product', 
+        product.price || product.product_price || 0
+      )
+    } catch (err) {
+      console.error("Failed to add item to context layer:", err)
+    } finally {
+      setAdding(false)
+    }
   }
 
-  // Get all images for the product
+  // Get all images for the product safely
   const productImages = product?.images?.length > 0 
     ? product.images 
     : product?.image_url 
@@ -103,7 +105,7 @@ export default function ProductDetailPage() {
     return (
       <div className="max-w-6xl mx-auto px-4 py-12 text-center min-h-[50vh] flex flex-col justify-center items-center bg-background">
         <h2 className="text-xl font-bold mb-2 text-primary">Product Not Found</h2>
-        <p className="text-muted max-w-md mb-6">{error || 'This item structure may have been removed or the path mapping code is parsing outdated routing arrays.'}</p>
+        <p className="text-muted max-w-md mb-6">{error || 'This item structure may have been removed or modified.'}</p>
         <Link to="/products" className="btn-secondary inline-flex items-center gap-2">
           <ArrowLeft size={16} /> Browse Products
         </Link>
@@ -111,7 +113,8 @@ export default function ProductDetailPage() {
     )
   }
 
-  const wishlisted = isWishlisted ? isWishlisted(product.id) : false
+  // 🟢 SAFE FALLBACK: Avoid runtime failure if isWishlisted isn't loaded/ready
+  const wishlisted = typeof isWishlisted === 'function' ? isWishlisted(product.id) : false
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8 bg-background min-h-screen text-primary">
@@ -205,16 +208,19 @@ export default function ProductDetailPage() {
               <button
                 onClick={handleAddToCart}
                 disabled={adding}
-                className="btn-primary flex-1 py-3 justify-center text-sm font-semibold rounded-xl shadow-lg shadow-purple-500/20 transition-all"
+                className="btn-primary flex-1 py-3 justify-center text-sm font-semibold rounded-xl shadow-lg shadow-purple-500/20 transition-all flex items-center gap-2"
               >
                 {adding ? (
                   <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                 ) : (
-                  <><ShoppingCart size={18} /> Add to Shopping Cart</>
+                  <>
+                    <ShoppingCart size={18} /> 
+                    Add to Shopping Cart
+                  </>
                 )}
               </button>
 
-              {user && (
+              {user && typeof toggleWishlist === 'function' && (
                 <button
                   onClick={() => toggleWishlist(product.id)}
                   className="w-12 h-12 rounded-xl border border-border flex items-center justify-center transition-all hover:bg-surface-raised group"
