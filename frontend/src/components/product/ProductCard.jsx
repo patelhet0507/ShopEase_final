@@ -1,5 +1,5 @@
 import { Link } from 'react-router-dom'
-import { ShoppingCart, Heart, Eye, Star, Maximize2, Sparkles } from 'lucide-react'
+import { ShoppingCart, Heart, Eye, Star, Maximize2, Sparkles, ChevronLeft, ChevronRight } from 'lucide-react'
 import { motion, useMotionValue, useTransform, useSpring, AnimatePresence } from 'framer-motion'
 import { useAuth } from '../../context/AuthContext'
 import { useCart } from '../../context/CartContext'
@@ -52,10 +52,21 @@ export default function ProductCard({ product, index = 0, onQuickView }) {
   const [hovering, setHovering] = useState(false)
   const [imageLoaded, setImageLoaded] = useState(false)
   const [particles, setParticles] = useState([])
+  
+  // 🟢 IMAGE SLIDER TRACKER STATE
+  const [currentImgIndex, setCurrentImgIndex] = useState(0)
   const cardRef = useRef(null)
 
   const wishlisted = isWishlisted ? (isWishlisted(product.slug) || isWishlisted(product.id)) : false
-  const activeImageUrl = product.image_url || productImage(product.id, product.name)
+
+  // 🟢 PARSE COMPREHENSIVE IMAGES ARRAY PAYLOAD (Array strings vs fallback URLs)
+  const productImages = product?.images?.length > 0 
+    ? product.images 
+    : product?.image_url 
+      ? [product.image_url] 
+      : [productImage(product.id, product.name || 'Product')]
+
+  const activeImageUrl = productImages[currentImgIndex]
 
   const spotlightX = useMotionValue(0)
   const spotlightY = useMotionValue(0)
@@ -89,6 +100,21 @@ export default function ProductCard({ product, index = 0, onQuickView }) {
     y.set(0)
   }
 
+  // 🟢 NAVIGATION INTERCEPT HANDLERS (Stop propagation prevents card flipping)
+  const handlePrevImage = (e) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setImageLoaded(false)
+    setCurrentImgIndex((prev) => (prev === 0 ? productImages.length - 1 : prev - 1))
+  }
+
+  const handleNextImage = (e) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setImageLoaded(false)
+    setCurrentImgIndex((prev) => (prev === productImages.length - 1 ? 0 : prev + 1))
+  }
+
   const handleAddToCart = async (e) => {
     e.preventDefault()
     e.stopPropagation()
@@ -113,7 +139,13 @@ export default function ProductCard({ product, index = 0, onQuickView }) {
     }))
     setParticles(generatedParticles)
     
-    await addToCart(product.id, 1)
+    // 🟢 FIXED: Pass parameters systematically to avoid Context crashes
+    await addToCart(
+      product.id, 
+      1, 
+      product.name || 'Product', 
+      product.price || 0
+    )
     setAdding(false)
     setTimeout(() => setParticles([]), 800)
   }
@@ -183,7 +215,10 @@ export default function ProductCard({ product, index = 0, onQuickView }) {
 
             <div className="relative h-40 overflow-hidden bg-surface-raised flex-shrink-0">
               {!imageLoaded && <div className="absolute inset-0 shimmer" />}
+              
+              {/* 🟢 DYNAMIC IMAGE DISPLAY */}
               <motion.img
+                key={currentImgIndex}
                 src={activeImageUrl}
                 alt={product.name}
                 className={`w-full h-full object-contain p-4 transition-opacity duration-300 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
@@ -192,6 +227,35 @@ export default function ProductCard({ product, index = 0, onQuickView }) {
                 animate={hovering ? "hover" : "rest"}
                 onLoad={() => setImageLoaded(true)}
               />
+
+              {/* 🟢 CARD INTERACTION NAVIGATION LAYERS */}
+              {productImages.length > 1 && (
+                <>
+                  <button
+                    onClick={handlePrevImage}
+                    className="absolute left-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-surface/80 border border-border flex items-center justify-center opacity-0 group-hover/card:opacity-100 transition-opacity duration-200 hover:bg-surface z-30 shadow-md"
+                  >
+                    <ChevronLeft size={14} className="text-primary" />
+                  </button>
+                  <button
+                    onClick={handleNextImage}
+                    className="absolute right-2 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-surface/80 border border-border flex items-center justify-center opacity-0 group-hover/card:opacity-100 transition-opacity duration-200 hover:bg-surface z-30 shadow-md"
+                  >
+                    <ChevronRight size={14} className="text-primary" />
+                  </button>
+
+                  {/* Slider Indicators dot matrix */}
+                  <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1 z-30 opacity-0 group-hover/card:opacity-100 transition-opacity duration-200">
+                    {productImages.map((_, dotIdx) => (
+                      <span 
+                        key={dotIdx}
+                        className={`w-1.5 h-1.5 rounded-full transition-all ${dotIdx === currentImgIndex ? 'bg-purple-500 scale-110' : 'bg-neutral-400/50'}`}
+                      />
+                    ))}
+                  </div>
+                </>
+              )}
+
               <motion.div
                 className="absolute inset-0 bg-gradient-to-t from-black/[0.04] to-transparent pointer-events-none"
                 initial={{ opacity: 0 }}
@@ -208,7 +272,7 @@ export default function ProductCard({ product, index = 0, onQuickView }) {
               </div>
 
               <button
-                onClick={(e) => { e.stopPropagation(); onQuickView?.(product); }}
+                onClick={(e) => { e.stopPropagation(); e.preventDefault(); onQuickView?.(product); }}
                 className="absolute bottom-3 left-3 w-8 h-8 rounded-full glass opacity-0 group-hover/card:opacity-100 shadow-sm flex items-center justify-center transition-opacity duration-200 hover:scale-105 z-20"
               >
                 <Maximize2 size={13} className="text-text-secondary" />
@@ -227,7 +291,7 @@ export default function ProductCard({ product, index = 0, onQuickView }) {
               
               <div className="flex items-center justify-between mt-2 pt-1 border-t border-dashed border-subtle">
                 <span className="font-display font-bold text-base text-gradient">
-                  ₹{product.price.toLocaleString()}
+                  ₹{Number(product?.price || 0).toLocaleString()}
                 </span>
                 <div className="flex items-center gap-0.5">
                   {[1, 2, 3, 4, 5].map(s => (
@@ -280,7 +344,7 @@ export default function ProductCard({ product, index = 0, onQuickView }) {
 
             <div className="flex flex-col gap-2 pt-2 border-t border-subtle flex-shrink-0 relative z-20">
               <div className="text-center">
-                <span className="font-display font-bold text-lg text-gradient">₹{product.price.toLocaleString()}</span>
+                <span className="font-display font-bold text-lg text-gradient">₹{Number(product?.price || 0).toLocaleString()}</span>
               </div>
               
               <div className="flex gap-2 relative overflow-visible">
@@ -319,7 +383,6 @@ export default function ProductCard({ product, index = 0, onQuickView }) {
                 )}
                 
                 <motion.div className="flex-1" whileHover={{ y: -2 }} whileTap={{ y: 0, scale: 0.98 }}>
-                  {/* GENERATED SLUG INTEGRATION HERE */}
                   <Link
                     to={`/products/${generateSlug(product.name, product.id)}`}
                     className="btn-secondary flex items-center justify-center gap-1.5 text-xs py-2 w-full relative z-20"
