@@ -57,8 +57,7 @@ export default function ProductCard({ product, index = 0, onQuickView }) {
   const [currentImgIndex, setCurrentImgIndex] = useState(0)
   const cardRef = useRef(null)
 
-  const wishlisted = isWishlisted ? (isWishlisted(product.slug) || isWishlisted(product.id)) : false
-
+  const wishlisted = isWishlisted?.(Number(product.id)) || false
   // 🟢 PARSE COMPREHENSIVE IMAGES ARRAY PAYLOAD (Array strings vs fallback URLs)
   const productImages = product?.images?.length > 0 
     ? product.images 
@@ -116,16 +115,23 @@ export default function ProductCard({ product, index = 0, onQuickView }) {
   }
 
   const handleAddToCart = async (e) => {
-    e.preventDefault()
-    e.stopPropagation()
-    if (!user) return
-    setAdding(true)
+  e.preventDefault()
+  e.stopPropagation()
 
+  if (!user) return
+
+  setAdding(true)
+
+  try {
     if (cardRef.current) {
       const rect = cardRef.current.getBoundingClientRect()
+
       window.dispatchEvent(
         new CustomEvent('trigger-fly-cart', {
-          detail: { startRect: rect, image: activeImageUrl }
+          detail: {
+            startRect: rect,
+            image: activeImageUrl
+          }
         })
       )
     }
@@ -137,18 +143,18 @@ export default function ProductCard({ product, index = 0, onQuickView }) {
       scale: Math.random() * 0.4 + 0.6,
       color: ['#a855f7', '#7c3aed', '#ec4899', '#22c55e', '#3b82f6'][i % 5]
     }))
+
     setParticles(generatedParticles)
-    
-    // 🟢 FIXED: Pass parameters systematically to avoid Context crashes
-    await addToCart(
-      product.id, 
-      1, 
-      product.name || 'Product', 
-      product.price || 0
-    )
-    setAdding(false)
+
+    await addToCart(Number(product.id), 1)
+
     setTimeout(() => setParticles([]), 800)
+  } catch (err) {
+    console.error(err)
+  } finally {
+    setAdding(false)
   }
+}
 
   const handleWishlist = async (e) => {
     e.preventDefault()

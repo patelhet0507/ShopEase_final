@@ -14,7 +14,9 @@ export function CartProvider({ children }) {
   const fetchCart = useCallback(async () => {
     if (!user?.id) return
     try {
+      console.log("Adding to cart:", payload)
       const { data } = await cartApi.get(user.id)
+      console.log("Cart API response:", data)
       setCart(data || { items: [], total_quantity: 0, subtotal: 0 })
     } catch (err) {
       console.error("Error fetching cart data:", err.response?.data || err.message)
