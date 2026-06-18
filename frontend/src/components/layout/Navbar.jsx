@@ -14,7 +14,9 @@ const NAV_LINKS = [
 
 export default function Navbar() {
   const { user, logout } = useAuth()
-  const { cart, setCartOpen } = useCart()
+  
+  // 🟢 FIXED: Grab cartCount from your unified context hooks layer safely
+  const { cart, setCartOpen, cartCount } = useCart()
   const { dark, toggle } = useTheme()
   const navigate = useNavigate()
   const location = useLocation()
@@ -34,13 +36,16 @@ export default function Navbar() {
     setUserMenuOpen(false)
   }, [location.pathname])
 
+  // 🟢 FIXED: Fallback safely using optional chaining to avoid crashing when cart is null
+  const currentQuantity = cart?.total_quantity || cartCount || 0
+
   // Trigger brief micro-bounce when context quantity scales up
   useEffect(() => {
-    if (cart.total_quantity === 0) return
+    if (currentQuantity === 0) return
     setBounceBadge(true)
     const t = setTimeout(() => setBounceBadge(false), 300)
     return () => clearTimeout(t)
-  }, [cart.total_quantity])
+  }, [currentQuantity])
 
   const handleLogout = () => {
     logout()
@@ -117,14 +122,14 @@ export default function Navbar() {
                   transition={{ duration: 0.3, ease: "easeInOut" }}
                 >
                   <ShoppingBag size={18} />
-                  {cart.total_quantity > 0 && (
+                  {currentQuantity > 0 && (
                     <motion.span
                       initial={{ scale: 0 }}
                       animate={{ scale: 1 }}
                       className="absolute -top-1 -right-1 w-5 h-5 rounded-full text-white text-[10px] font-bold flex items-center justify-center"
                       style={{ background: 'linear-gradient(135deg, #a855f7, #7c3aed)' }}
                     >
-                      {cart.total_quantity > 9 ? '9+' : cart.total_quantity}
+                      {currentQuantity > 9 ? '9+' : currentQuantity}
                     </motion.span>
                   )}
                 </motion.button>
@@ -140,9 +145,11 @@ export default function Navbar() {
                 >
                   <div className="w-7 h-7 rounded-full flex items-center justify-center text-white text-xs font-bold"
                     style={{ background: 'linear-gradient(135deg, #a855f7, #7c3aed)' }}>
-                    {user.email[0].toUpperCase()}
+                    {user?.email ? user.email[0].toUpperCase() : 'U'}
                   </div>
-                  <span className="hidden sm:block max-w-[120px] truncate">{user.email.split('@')[0]}</span>
+                  <span className="hidden sm:block max-w-[120px] truncate">
+                    {user?.email ? user.email.split('@')[0] : 'user'}
+                  </span>
                 </button>
 
                 <AnimatePresence>
@@ -155,13 +162,13 @@ export default function Navbar() {
                       className="absolute right-0 top-full mt-2 w-52 rounded-2xl glass-strong shadow-2xl overflow-hidden"
                     >
                       <div className="p-3 border-b" style={{ borderColor: 'var(--border)' }}>
-                        <p className="text-xs text-muted truncate">{user.email}</p>
-                        <span className={`badge-${user.role === 'admin' ? 'purple' : 'green'} mt-1`}>
-                          {user.role}
+                        <p className="text-xs text-muted truncate">{user?.email}</p>
+                        <span className={`badge-${user?.role === 'admin' ? 'purple' : 'green'} mt-1`}>
+                          {user?.role || 'customer'}
                         </span>
                       </div>
                       <div className="p-1.5">
-                        {user.role === 'admin' && (
+                        {user?.role === 'admin' && (
                           <Link to="/admin" className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-secondary hover:text-primary hover:bg-surface-raised transition-all">
                             <LayoutDashboard size={15} />
                             Admin Dashboard
