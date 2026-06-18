@@ -7,7 +7,7 @@ import { FadeIn, Skeleton, EmptyState } from '../components/ui'
 import { AnimatePresence, motion } from 'framer-motion'
 
 export default function CategoryDetailPage() {
-  const { slug } = useParams() // Captures routing parameter (e.g. "12" or "electronics-id-12")
+  const { categorySlug } = useParams()
   const [searchParams, setSearchParams] = useSearchParams()
   const [category, setCategory] = useState(null)
   const [loading, setLoading] = useState(true)
@@ -15,20 +15,10 @@ export default function CategoryDetailPage() {
   // Track selected subcategory code slug without refreshing pages
   const activeSubSlug = searchParams.get('sub') || 'all'
 
-  // BULLETPROOF REGEX: Extract ONLY the database ID digits (\d+) from the end of the slug parameter
-  const match = slug ? String(slug).match(/\d+$/) : null
-  const cleanCategoryId = match ? parseInt(match[0], 10) : null
-
   useEffect(() => {
-    if (!cleanCategoryId || isNaN(cleanCategoryId)) {
-      setLoading(false)
-      return
-    }
-
     setLoading(true)
     
-    // Invoke your backend API using the isolated numeric category primary key integer
-    categoriesApi.get(cleanCategoryId)
+    categoriesApi.getBySlug(categorySlug)
       .then(({ data }) => {
         setCategory(data)
         setLoading(false)
@@ -37,7 +27,7 @@ export default function CategoryDetailPage() {
         console.error("Category data sync failure:", err)
         setLoading(false)
       })
-  }, [cleanCategoryId]) // Dependent on parsed clean integer id change
+  }, [categorySlug])
 
   if (loading) {
     return (
@@ -108,103 +98,3 @@ export default function CategoryDetailPage() {
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -10 }}
               >
-                <ChevronRight size={12} />
-                <span className="font-semibold text-purple-500 px-2 py-0.5 rounded-md bg-purple-500/10">
-                  {activeSubcategoryName}
-                </span>
-              </motion.div>
-            )}
-          </AnimatePresence>
-        </nav>
-
-        {/* Header Display */}
-        <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-6 border-b" style={{ borderColor: 'var(--border)' }}>
-          <div className="flex items-center gap-4">
-            <Link to="/categories" className="btn-ghost p-2 rounded-lg">
-              <ArrowLeft size={16} />
-            </Link>
-            <div>
-              <h1 className="section-heading text-3xl md:text-4xl">
-                {activeSubSlug !== 'all' ? activeSubcategoryName : category.name}
-              </h1>
-              <p className="text-sm mt-1" style={{ color: 'var(--text-secondary)' }}>
-                {filteredProducts.length} {filteredProducts.length === 1 ? 'product' : 'products'} visible
-              </p>
-            </div>
-          </div>
-        </div>
-
-        {/* Subcategory Nesting Maps Panel Using Slugs */}
-        {category.subcategories && category.subcategories.length > 0 && (
-          <div className="mt-8 p-1.5 rounded-2xl bg-[var(--bg-secondary)] border flex flex-wrap gap-1.5 items-center max-w-full overflow-x-auto scrollbar-none" style={{ borderColor: 'var(--border)' }}>
-            <button
-              onClick={() => handleSubcategoryToggle('all')}
-              className={`px-4 py-2 rounded-xl text-xs font-medium transition-all cursor-pointer ${
-                activeSubSlug === 'all'
-                  ? 'bg-[var(--surface)] text-purple-500 shadow-sm font-semibold'
-                  : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-raised)]'
-              }`}
-            >
-              All Products ({category.products?.length || 0})
-            </button>
-            
-            {category.subcategories.map(sub => {
-              const isSelected = String(sub.slug || sub.id) === String(activeSubSlug)
-              return (
-                <button
-                  key={sub.slug || sub.id}
-                  onClick={() => handleSubcategoryToggle(sub.slug || sub.id)}
-                  className={`px-4 py-2 rounded-xl text-xs font-medium transition-all inline-flex items-center gap-2 cursor-pointer ${
-                    isSelected
-                      ? 'bg-[var(--surface)] text-purple-500 shadow-sm font-semibold border-purple-500/20'
-                      : 'text-[var(--text-secondary)] hover:text-[var(--text-primary)] hover:bg-[var(--surface-raised)]'
-                  }`}
-                >
-                  <span>{sub.name}</span>
-                  <span className={`px-1.5 py-0.5 rounded-full text-[10px] ${isSelected ? 'bg-purple-500/10 text-purple-500' : 'bg-[var(--surface-raised)] text-[var(--text-muted)]'}`}>
-                    {sub.product_count || 0}
-                  </span>
-                </button>
-              )
-            })}
-          </div>
-        )}
-      </FadeIn>
-
-      {/* Grid State Renderer */}
-      <div className="mt-10">
-        {filteredProducts.length === 0 ? (
-          <EmptyState 
-            icon={Layers} 
-            title="No subcategory items found" 
-            description="There are currently no products mapped inside this slice filter."
-            action={
-              activeSubSlug !== 'all' ? (
-                <button onClick={() => handleSubcategoryToggle('all')} className="btn-primary">
-                  Reset Filter Trace
-                </button>
-              ) : null
-            } 
-          />
-        ) : (
-          <motion.div layout className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
-            <AnimatePresence mode="popLayout">
-              {filteredProducts.map((product, i) => (
-                <motion.div
-                  key={product.slug || product.id}
-                  layout
-                  initial={{ opacity: 0, scale: 0.92 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.92 }}
-                  transition={{ type: "spring", stiffness: 400, damping: 30 }}
-                >
-                  <ProductCard product={{ ...product, category_name: category.name }} index={i} />
-                </motion.div>
-              ))}
-            </AnimatePresence>
-          </motion.div>
-        )}
-      </div>
-    </div>
-  )
-}

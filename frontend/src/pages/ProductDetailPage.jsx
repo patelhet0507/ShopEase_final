@@ -6,7 +6,7 @@ import { useAuth } from '../context/AuthContext'
 import { productsApi } from '../api'
 
 export default function ProductDetailPage() {
-  const { slug } = useParams() // Captures the full dynamic URL string (e.g., "apple-iphone-17-pro-max-182")
+  const { productSlug } = useParams()
   const { user } = useAuth()
   const { addToCart, toggleWishlist, isWishlisted } = useCart()
 
@@ -16,7 +16,7 @@ export default function ProductDetailPage() {
   const [adding, setAdding] = useState(false)
 
   // BULLETPROOF REGEX: Extract ONLY the database ID digits (\d+) found at the very end ($) of the slug string
-  const match = slug ? slug.match(/\d+$/) : null
+  const match = productSlug ? productSlug.match(/\d+$/) : null
   const idFromSlug = match ? parseInt(match[0], 10) : null
 
   useEffect(() => {
@@ -26,7 +26,7 @@ export default function ProductDetailPage() {
         setError(null)
 
         // Console diagnostic to verify extraction path during deployment troubleshooting
-        console.log("Captured Router Parameter:", slug)
+        console.log("Captured Router Parameter:", productSlug)
         console.log("Parsed Target Database ID Number:", idFromSlug)
 
         if (!idFromSlug || isNaN(idFromSlug)) {
@@ -59,7 +59,7 @@ export default function ProductDetailPage() {
       setLoading(false)
       setError("No visible application identification index supplied inside routing sequence.")
     }
-  }, [idFromSlug, slug])
+  }, [idFromSlug, productSlug])
 
   const handleAddToCart = async () => {
     if (!product || !user) return
