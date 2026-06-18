@@ -7,6 +7,7 @@ import {
 } from 'lucide-react'
 import { categoriesApi, subcategoriesApi, productsApi, usersApi } from '../api'
 import { FadeIn, StaggerChildren, StaggerItem, Skeleton, Modal } from '../components/ui'
+import { generateSlug } from '../components/product/ProductCard'
 
 // ─── Mock Sales Data Engine for Analytics ──────────────────────────
 const ANALYTICS_DATA = {
@@ -520,7 +521,15 @@ export default function AdminDashboard() {
       return setError('All fields are required')
     setSaving(true)
     try {
-      const payload = { name, price: Number(price), description, category_id: Number(category_id), subcategory_id: Number(subcategory_id), gallery }
+      const payload = {
+        name,
+        slug: form.slug?.trim() || generateSlug(name, modal.data?.id || Date.now()),
+        price: Number(price),
+        description,
+        category_id: Number(category_id),
+        subcategory_id: Number(subcategory_id),
+        gallery,
+      }
       if (modal.data) {
         const { data } = await productsApi.update(modal.data.id, payload)
         setProducts(prev => prev.map(p => p.id === data.id ? { ...data, gallery } : p))

@@ -14,6 +14,8 @@ export default function CategoryDetailPage() {
   
   // Track selected subcategory code slug without refreshing pages
   const activeSubSlug = searchParams.get('sub') || 'all'
+  const activeSubIdMatch = activeSubSlug ? String(activeSubSlug).match(/\d+$/) : null
+  const activeSubId = activeSubIdMatch ? parseInt(activeSubIdMatch[0], 10) : null
 
   useEffect(() => {
     setLoading(true)
@@ -51,7 +53,7 @@ export default function CategoryDetailPage() {
   )
 
   const activeSubcategory = category.subcategories?.find(
-    sub => String(sub.slug || sub.id) === String(activeSubSlug)
+    sub => String(sub.slug) === String(activeSubSlug) || (activeSubId && Number(sub.id) === activeSubId)
   )
 
   // FIXED: Bypasses subcategory loops if the state trace is pointing to 'all'
@@ -60,7 +62,7 @@ export default function CategoryDetailPage() {
     if (activeSubSlug === 'all') return true
     
     // Otherwise, match explicitly against the selected subcategory record id
-    return String(product.subcategory_id) === String(activeSubcategory?.id || activeSubSlug)
+    return String(product.subcategory_id) === String(activeSubcategory?.id || activeSubId || activeSubSlug)
   })
 
   const activeSubcategoryName = activeSubcategory?.name
@@ -140,11 +142,11 @@ export default function CategoryDetailPage() {
             </button>
             
             {category.subcategories.map(sub => {
-              const isSelected = String(sub.slug || sub.id) === String(activeSubSlug)
+              const isSelected = String(sub.slug) === String(activeSubSlug)
               return (
                 <button
-                  key={sub.slug || sub.id}
-                  onClick={() => handleSubcategoryToggle(sub.slug || sub.id)}
+                  key={sub.slug}
+                  onClick={() => handleSubcategoryToggle(sub.slug)}
                   className={`px-4 py-2 rounded-xl text-xs font-medium transition-all inline-flex items-center gap-2 cursor-pointer ${
                     isSelected
                       ? 'bg-[var(--surface)] text-purple-500 shadow-sm font-semibold border-purple-500/20'

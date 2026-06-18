@@ -119,7 +119,7 @@ export default function CategoriesPage() {
                       {cat.subcategories?.slice(0, 4).map(sub => (
                         <Link
                           key={sub.id}
-                          to={`/categories/${cat.slug}?sub=${sub.slug || sub.id}`}
+                          to={`/categories/${cat.slug}?sub=${sub.slug}`}
                           className="flex items-center justify-between px-3 py-2 rounded-xl transition-colors hover:bg-[var(--surface-raised)]"
                         >
                           <span className="text-sm font-medium transition-colors group-hover/sub:text-[var(--text-primary)]" style={{ color: 'var(--text-secondary)' }}>

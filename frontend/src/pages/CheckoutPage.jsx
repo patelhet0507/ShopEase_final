@@ -1,9 +1,9 @@
 import { useState } from 'react'
-import { useNavigate } from 'react-router-dom'
+import { useNavigate, Link } from 'react-router-dom'
+import { motion } from 'framer-motion'
 import { useCart } from '../context/CartContext'
 import { useAuth } from '../context/AuthContext'
 import { ordersApi } from '../api/index'
-import { motion } from 'framer-motion'
 
 export default function CheckoutPage() {
   const navigate = useNavigate()
@@ -18,15 +18,15 @@ export default function CheckoutPage() {
 
   if (!cart.items || cart.items.length === 0) {
     return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
+      <div className="min-h-screen flex items-center justify-center px-4">
+        <div className="text-center max-w-md">
           <h1 className="text-2xl font-bold mb-4">Your cart is empty</h1>
-          <button 
-            onClick={() => navigate('/products')}
-            className="px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition"
+          <Link
+            to="/products"
+            className="px-6 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition inline-flex"
           >
             Continue Shopping
-          </button>
+          </Link>
         </div>
       </div>
     )
@@ -47,14 +47,13 @@ export default function CheckoutPage() {
         shipping_mobile: formData.shipping_mobile,
         shipping_address: formData.shipping_address,
         order_items: cart.items.map(item => ({
-          product_id: item.product_id,
-          quantity: item.quantity
-        }))
+          product_id: item.product_id || item.id,
+          quantity: item.quantity,
+        })),
       }
 
       const response = await ordersApi.create(user.id, orderPayload)
-      
-      if (response.data) {
+      if (response.data?.order_number) {
         navigate(`/order-confirmation/${response.data.order_number}`)
       }
     } catch (error) {
@@ -66,7 +65,7 @@ export default function CheckoutPage() {
   }
 
   return (
-    <motion.div 
+    <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 py-12 px-4"
@@ -75,17 +74,16 @@ export default function CheckoutPage() {
         <h1 className="text-4xl font-bold mb-12 text-slate-900">Checkout</h1>
 
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Order Summary */}
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, x: -20 }}
             animate={{ opacity: 1, x: 0 }}
             className="lg:col-span-2 bg-white rounded-xl shadow-lg p-8"
           >
             <h2 className="text-2xl font-bold mb-6 text-slate-900">Order Summary</h2>
-            
+
             <div className="space-y-4 mb-6 border-b pb-6">
               {cart.items.map((item, idx) => (
-                <motion.div 
+                <motion.div
                   key={item.id}
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
@@ -93,16 +91,18 @@ export default function CheckoutPage() {
                   className="flex justify-between items-center p-4 bg-slate-50 rounded-lg"
                 >
                   <div>
-                    <p className="font-semibold text-slate-900">{item.product?.name}</p>
+                    <p className="font-semibold text-slate-900">{item.product_name || item.product?.name}</p>
                     <p className="text-sm text-slate-600">Qty: {item.quantity}</p>
                   </div>
-                  <p className="font-bold text-slate-900">₹{(item.product?.price * item.quantity).toLocaleString()}</p>
+                  <p className="font-bold text-slate-900">
+                    â‚¹{((item.product_price || item.product?.price || 0) * item.quantity).toLocaleString()}
+                  </p>
                 </motion.div>
               ))}
             </div>
 
             <h2 className="text-2xl font-bold mb-6 text-slate-900">Shipping Information</h2>
-            
+
             <form onSubmit={handleSubmit} className="space-y-6">
               <div>
                 <label className="block text-sm font-semibold text-slate-900 mb-2">Full Name *</label>
@@ -145,7 +145,7 @@ export default function CheckoutPage() {
 
               <div className="bg-blue-50 border-2 border-blue-200 rounded-lg p-4">
                 <p className="text-sm font-semibold text-blue-900">Payment Method</p>
-                <p className="text-lg font-bold text-blue-900 mt-2">💳 Cash on Delivery (COD)</p>
+                <p className="text-lg font-bold text-blue-900 mt-2">Cash on Delivery (COD)</p>
                 <p className="text-sm text-blue-700 mt-2">Pay when your order arrives at your doorstep</p>
               </div>
 
@@ -159,18 +159,17 @@ export default function CheckoutPage() {
             </form>
           </motion.div>
 
-          {/* Price Summary */}
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, x: 20 }}
             animate={{ opacity: 1, x: 0 }}
             className="bg-white rounded-xl shadow-lg p-6 h-fit sticky top-24"
           >
             <h3 className="text-xl font-bold mb-6 text-slate-900">Price Summary</h3>
-            
+
             <div className="space-y-4 border-b pb-4 mb-4">
               <div className="flex justify-between text-slate-700">
                 <span>Subtotal</span>
-                <span className="font-semibold">₹{cart.subtotal?.toLocaleString()}</span>
+                <span className="font-semibold">â‚¹{cart.subtotal?.toLocaleString()}</span>
               </div>
               <div className="flex justify-between text-slate-700">
                 <span>Shipping</span>
@@ -178,17 +177,17 @@ export default function CheckoutPage() {
               </div>
               <div className="flex justify-between text-slate-700">
                 <span>Tax</span>
-                <span className="font-semibold">₹0</span>
+                <span className="font-semibold">â‚¹0</span>
               </div>
             </div>
 
             <div className="flex justify-between text-xl font-bold text-slate-900 mb-6">
               <span>Total</span>
-              <span className="text-blue-600">₹{cart.subtotal?.toLocaleString()}</span>
+              <span className="text-blue-600">â‚¹{cart.subtotal?.toLocaleString()}</span>
             </div>
 
             <div className="bg-green-50 border-2 border-green-200 rounded-lg p-4 text-center">
-              <p className="text-sm font-semibold text-green-900">✓ Secure Checkout</p>
+              <p className="text-sm font-semibold text-green-900">Secure Checkout</p>
               <p className="text-xs text-green-700 mt-1">Your information is encrypted</p>
             </div>
           </motion.div>
