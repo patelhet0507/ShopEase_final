@@ -1,10 +1,9 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react'
 import { cartApi, wishlistApi } from '../api'
 import { useAuth } from './AuthContext'
+import Modal from '../components/ui/Modal' 
 
 const CartContext = createContext(null)
-const [showLoginModal, setShowLoginModal] = useState(false)
-const [modalMessage, setModalMessage] = useState('')
 
 export function CartProvider({ children }) {
   const { user } = useAuth()
@@ -12,27 +11,19 @@ export function CartProvider({ children }) {
   const [wishlist, setWishlist] = useState([])
   const [cartOpen, setCartOpen] = useState(false)
   const [cartLoading, setCartLoading] = useState(false)
+  
+  const [showLoginModal, setShowLoginModal] = useState(false)
+  const [modalMessage, setModalMessage] = useState('')
 
   const fetchCart = useCallback(async () => {
-  if (!user?.id) return
-
-  try {
-    const { data } = await cartApi.get(user.id)
-
-    console.log("Cart API response:", data)
-
-    setCart(data || {
-      items: [],
-      total_quantity: 0,
-      subtotal: 0
-    })
-  } catch (err) {
-    console.error(
-      "Error fetching cart data:",
-      err.response?.data || err.message
-    )
-  }
-}, [user])
+    if (!user?.id) return
+    try {
+      const { data } = await cartApi.get(user.id)
+      setCart(data || { items: [], total_quantity: 0, subtotal: 0 })
+    } catch (err) {
+      console.error("Error fetching cart data:", err.response?.data || err.message)
+    }
+  }, [user])
 
   const fetchWishlist = useCallback(async () => {
     if (!user?.id) return
@@ -49,72 +40,53 @@ export function CartProvider({ children }) {
       fetchCart()
       fetchWishlist()
     } else {
-      // Clear global contextual state on user sign out
       setCart({ items: [], total_quantity: 0, subtotal: 0 })
       setWishlist([])
     }
   }, [user, fetchCart, fetchWishlist])
 
   const addToCart = useCallback(async (productId, quantity = 1) => {
-  if (!user?.id) {
-  setModalMessage('Please log in to manage your cart items.')
-  setShowLoginModal(true)
-  return
-}
-
-  setCartLoading(true)
-
-  try {
-    const payload = {
-      product_id: Number(productId),
-      quantity: Number(quantity)
+    if (!user?.id) {
+      setModalMessage('Please log in to manage your cart items.')
+      setShowLoginModal(true)
+      return
     }
 
-    await cartApi.add(user.id, payload)
-
-    await fetchCart()
-
-    setCartOpen(true)
-  } catch (err) {
-    console.error(
-      "Add operation failure:",
-      err.response?.data || err.message
-    )
-  } finally {
-    setCartLoading(false)
+    setCartLoading(true)
+    try {
+      const payload = {
+        product_id: Number(productId),
+        quantity: Number(quantity)
+      }
+      await cartApi.add(user.id, payload)
+      await fetchCart()
+      setCartOpen(true)
+    } catch (err) {
+      console.error("Add operation failure:", err.response?.data || err.message)
+    } finally {
+      setCartLoading(false)
     }
   }, [user, fetchCart])
 
   const updateCartItem = useCallback(async (cartItemId, quantity) => {
-  if (!user?.id) return
-
-  try {
-    await cartApi.update(user.id, cartItemId, {
-      quantity: Number(quantity)
-    })
-
-    await fetchCart()
-  } catch (err) {
-    console.error(
-      "Update quantity operation failure:",
-      err.response?.data || err.message)
+    if (!user?.id) return
+    try {
+      await cartApi.update(user.id, cartItemId, { quantity: Number(quantity) })
+      await fetchCart()
+    } catch (err) {
+      console.error("Update quantity operation failure:", err.response?.data || err.message)
     }
   }, [user, fetchCart])
 
   const removeFromCart = useCallback(async (cartItemId) => {
-  if (!user?.id) return
-
-  try {
-    await cartApi.remove(user.id, cartItemId)
-
-    await fetchCart()
-  } catch (err) {
-    console.error(
-      "Remove operation failure:",
-      err.response?.data || err.message
-    )
-  }
-}, [user, fetchCart])
+    if (!user?.id) return
+    try {
+      await cartApi.remove(user.id, cartItemId)
+      await fetchCart()
+    } catch (err) {
+      console.error("Remove operation failure:", err.response?.data || err.message)
+    }
+  }, [user, fetchCart])
 
   const clearCart = useCallback(async () => {
     if (!user?.id) return
@@ -152,26 +124,48 @@ export function CartProvider({ children }) {
     return wishlist.some(w => w.product_id === targetId)
   }, [wishlist])
 
-  {showLoginModal && (
-  <div className="fixed inset-0 bg-black/60 flex items-center justify-center z-50">
-    <div className="bg-surface border border-border rounded-2xl p-6 w-[90%] max-w-md shadow-2xl">
-      <h3 className="text-xl font-bold text-primary mb-3">
-        Login Required
-      </h3>
+  return (
+    <CartContext.Provider
+      value={{
+        cart,
+        wishlist,
+        cartOpen,
+        setCartOpen,
+        cartLoading,
+        addToCart,
+        updateCartItem,
+        removeFromCart,
+        clearCart,
+        toggleWishlist,
+        isWishlisted,
+        fetchCart,
+        fetchWishlist,
+        setShowLoginModal,
+        setModalMessage
+      }}
+    >
+      {children}
 
-      <p className="text-muted mb-6">
-        {modalMessage}
-      </p>
-
-      <button
-        onClick={() => setShowLoginModal(false)}
-        className="btn-primary w-full"
+      <Modal 
+        isOpen={showLoginModal} 
+        onClose={() => setShowLoginModal(false)} 
+        title="Login Required"
       >
-        OK
-      </button>
-    </div>
-  </div>
-)}
+        <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
+          {modalMessage}
+        </p>
+        <div className="mt-6 flex flex-col gap-2">
+          <button
+            onClick={() => setShowLoginModal(false)}
+            className="btn-primary w-full py-2.5 justify-center rounded-xl font-semibold text-xs cursor-pointer"
+          >
+            OK
+          </button>
+        </div>
+      </Modal>
+    </CartContext.Provider>
+  )
+}
 
 export const useCart = () => {
   const ctx = useContext(CartContext)
