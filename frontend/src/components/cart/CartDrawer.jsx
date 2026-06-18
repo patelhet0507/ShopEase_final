@@ -1,243 +1,182 @@
-import { useState, useEffect } from 'react'
-import { useParams, Link } from 'react-router-dom'
-import { ShoppingCart, Heart, ArrowLeft, Star, ShieldCheck, Truck, RotateCcw, ChevronLeft, ChevronRight } from 'lucide-react'
-import { useCart } from '../context/CartContext'
-import { useAuth } from '../context/AuthContext'
-import { productsApi } from '../api'
+import { AnimatePresence, motion } from 'framer-motion'
+import { X, Minus, Plus, Trash2, ShoppingBag, ArrowRight } from 'lucide-react'
+import { Link } from 'react-router-dom'
+import { useCart } from '../../context/CartContext'
 
-export default function ProductDetailPage() {
-  const { productSlug } = useParams()
-  const { user } = useAuth()
-  const { addToCart, toggleWishlist, isWishlisted } = useCart()
-
-  const [product, setProduct] = useState(null)
-  const [loading, setLoading] = useState(true)
-  const [error, setError] = useState(null)
-  const [adding, setAdding] = useState(false)
-  const [currentImageIndex, setCurrentImageIndex] = useState(0)
-  const [reviews, setReviews] = useState([])
-  const [stats, setStats] = useState({ average_rating: 0, total_reviews: 0, rating_distribution: {1:0,2:0,3:0,4:0,5:0} })
-  const [showReviewModal, setShowReviewModal] = useState(false)
-  const [submittingReview, setSubmittingReview] = useState(false)
-  const [reviewForm, setReviewForm] = useState({ rating: 5, title: '', comment: '' })
-
-  // BULLETPROOF REGEX: Extract ONLY the database ID digits (\d+) found at the very end ($) of the slug string
-  const match = productSlug ? productSlug.match(/\d+$/) : null
-  const idFromSlug = match ? parseInt(match[0], 10) : null
-
-  useEffect(() => {
-    async function fetchProductDetails() {
-      try {
-        setLoading(true)
-        setError(null)
-
-        // Console diagnostic to verify extraction path during deployment troubleshooting
-        console.log("Captured Router Parameter:", productSlug)
-        console.log("Parsed Target Database ID Number:", idFromSlug)
-
-        if (!idFromSlug || isNaN(idFromSlug)) {
-          throw new Error('Could not resolve a valid numerical record ID from the web path.')
-        }
-
-        const { data } = await productsApi.get(idFromSlug)
-        
-        // Handle array wrap variations securely if your individual lookup endpoint wraps objects in an array structure
-        if (Array.isArray(data)) {
-          if (data.length > 0) {
-            setProduct(data[0])
-            setCurrentImageIndex(0)
-          } else {
-            throw new Error('The product collection response returned empty.')
-          }
-        } else {
-          setProduct(data)
-          setCurrentImageIndex(0)
-        }
-      } catch (err) {
-        console.error("Product fetch breakdown trace:", err.message)
-        setError(err.message)
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    if (idFromSlug) {
-      fetchProductDetails()
-    } else {
-      setLoading(false)
-      setError("No visible application identification index supplied inside routing sequence.")
-    }
-  }, [idFromSlug, productSlug])
-
-  const handleAddToCart = async () => {
-    if (!product) return
-    setAdding(true)
-    await addToCart(product.id, 1, product.name, product.price)
-    setAdding(false)
-  }
-
-  // Get all images for the product
-  const productImages = product?.images?.length > 0 
-    ? product.images 
-    : product?.image_url 
-      ? [product.image_url] 
-      : [`https://ui-avatars.com/api/?name=${encodeURIComponent(product?.name || 'Product')}&size=600&background=a855f7&color=fff&bold=true&font-size=0.2`]
-
-  const handlePreviousImage = () => {
-    setCurrentImageIndex(prev => prev === 0 ? productImages.length - 1 : prev - 1)
-  }
-
-  const handleNextImage = () => {
-    setCurrentImageIndex(prev => prev === productImages.length - 1 ? 0 : prev + 1)
-  }
-
-  if (loading) {
-    return (
-      <div className="min-h-[70vh] flex items-center justify-center bg-background">
-        <div className="w-10 h-10 border-4 border-purple-500/30 border-t-purple-600 rounded-full animate-spin" />
-      </div>
-    )
-  }
-
-  if (error || !product) {
-    return (
-      <div className="max-w-6xl mx-auto px-4 py-12 text-center min-h-[50vh] flex flex-col justify-center items-center bg-background">
-        <h2 className="text-xl font-bold mb-2 text-primary">Product Not Found</h2>
-        <p className="text-muted max-w-md mb-6">{error || 'This item structure may have been removed or the path mapping code is parsing outdated routing arrays.'}</p>
-        <Link to="/products" className="btn-secondary inline-flex items-center gap-2">
-          <ArrowLeft size={16} /> Browse Products
-        </Link>
-      </div>
-    )
-  }
-
-  const wishlisted = isWishlisted ? isWishlisted(product.id) : false
+export default function CartDrawer({ open, onClose }) {
+  const { cart, updateCartItem, removeFromCart, clearCart } = useCart()
 
   return (
-    <div className="max-w-6xl mx-auto px-4 py-8 bg-background min-h-screen text-primary">
-      <Link to="/products" className="inline-flex items-center gap-2 text-sm text-muted hover:text-primary mb-8 transition-colors">
-        <ArrowLeft size={16} /> Back to Products
-      </Link>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-12 bg-surface border border-border rounded-[24px] p-6 md:p-8 shadow-sm">
-        {/* Left: Product Image Stage */}
-        <div className="bg-surface-raised rounded-2xl p-8 flex items-center justify-center border border-subtle min-h-[350px] max-h-[450px] overflow-hidden relative">
-          {/* Navigation Buttons */}
-          {productImages.length > 1 && (
-            <>
-              <button
-                onClick={handlePreviousImage}
-                className="absolute left-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-surface border border-border flex items-center justify-center hover:bg-surface-raised transition-all shadow-lg z-10"
-              >
-                <ChevronLeft size={20} className="text-primary" />
-              </button>
-              <button
-                onClick={handleNextImage}
-                className="absolute right-2 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-surface border border-border flex items-center justify-center hover:bg-surface-raised transition-all shadow-lg z-10"
-              >
-                <ChevronRight size={20} className="text-primary" />
-              </button>
-            </>
-          )}
-
-          {/* Main Image */}
-          <img 
-            src={productImages[currentImageIndex]} 
-            alt={product.name} 
-            className="max-h-full max-w-full object-contain select-none transition-transform duration-300 hover:scale-105"
+    <AnimatePresence>
+      {open && (
+        <>
+          {/* Backdrop */}
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-40"
+            style={{ background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(6px)' }}
+            onClick={onClose}
           />
 
-          {/* Thumbnail Indicators */}
-          {productImages.length > 1 && (
-            <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
-              {productImages.map((_, index) => (
-                <button
-                  key={index}
-                  onClick={() => setCurrentImageIndex(index)}
-                  className={`w-2.5 h-2.5 rounded-full transition-all ${
-                    index === currentImageIndex 
-                      ? 'bg-purple-500 scale-125' 
-                      : 'bg-surface border border-border hover:bg-surface-raised'
-                  }`}
-                />
-              ))}
-            </div>
-          )}
-        </div>
-
-        {/* Right: Metadata Details Block */}
-        <div className="flex flex-col justify-between">
-          <div>
-            <span className="text-xs uppercase font-bold tracking-wider text-purple-500 bg-purple-500/10 px-3 py-1 rounded-full">
-              {product.category_name || 'Electronics'}
-            </span>
-            {product.subcategory_name && (
-              <span className="text-xs uppercase font-bold tracking-wider text-orange-500 bg-orange-500/10 px-3 py-1 rounded-full ml-2">
-                {product.subcategory_name}
-              </span>
-            )}
-            
-            <h1 className="font-display font-bold text-2xl md:text-3xl mt-4 text-primary leading-tight">
-              {product.name}
-            </h1>
-
-            <div className="flex items-center gap-4 mt-3">
-              <div className="flex items-center gap-0.5">
-                {[1, 2, 3, 4, 5].map(s => (
-                  <Star key={s} size={16} className="fill-amber-500 text-amber-500" />
-                ))}
+          {/* Drawer */}
+          <motion.div
+            initial={{ x: '100%', opacity: 0 }}
+            animate={{ x: 0, opacity: 1 }}
+            exit={{ x: '100%', opacity: 0 }}
+            transition={{ type: 'spring', damping: 28, stiffness: 300 }}
+            className="fixed right-0 top-0 bottom-0 z-50 w-full max-w-md flex flex-col shadow-2xl"
+            style={{ background: 'var(--surface)', borderLeft: '1.5px solid var(--border-warm)' }}
+          >
+            {/* Header */}
+            <div className="flex items-center justify-between px-6 py-4 border-b border-subtle">
+              <div className="flex items-center gap-3">
+                <div className="w-8 h-8 rounded-lg flex items-center justify-center bg-gold-gradient">
+                  <ShoppingBag size={18} className="text-white" />
+                </div>
+                <div>
+                  <h2 className="font-display font-bold text-lg" style={{ color: 'var(--text-primary)' }}>Your Cart</h2>
+                  {cart.total_quantity > 0 && (
+                    <p className="text-xs text-text-muted">{cart.total_quantity} item{cart.total_quantity !== 1 ? 's' : ''}</p>
+                  )}
+                </div>
               </div>
-              <span className="text-xs text-muted font-medium">(4.8 / 5.0 Rating)</span>
-            </div>
-
-            <div className="mt-6 text-3xl font-display font-bold text-gradient">
-              ₹{product.price ? product.price.toLocaleString() : '0'}
-            </div>
-
-            <p className="mt-6 text-sm text-secondary leading-relaxed border-t border-subtle pt-6">
-              {product.description || 'No specialized description payload has been provided for this product row configuration inside the database system.'}
-            </p>
-          </div>
-
-          {/* Action Interface Controls Row */}
-          <div className="mt-8 border-t border-subtle pt-6">
-            <div className="flex gap-4">
-              <button
-                onClick={handleAddToCart}
-                disabled={adding}
-                className="btn-primary flex-1 py-3 justify-center text-sm font-semibold rounded-xl shadow-lg shadow-purple-500/20 transition-all"
+              <motion.button 
+                onClick={onClose} 
+                className="btn-ghost p-2 rounded-lg hover:bg-surface-raised"
+                whileHover={{ rotate: 90 }}
+                whileTap={{ scale: 0.95 }}
               >
-                {adding ? (
-                  <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
-                ) : (
-                  <><ShoppingCart size={18} /> Add to Shopping Cart</>
-                )}
-              </button>
+                <X size={18} />
+              </motion.button>
+            </div>
 
-              {user && (
-                <button
-                  onClick={() => toggleWishlist(product.id)}
-                  className="w-12 h-12 rounded-xl border border-border flex items-center justify-center transition-all hover:bg-surface-raised group"
-                >
-                  <Heart 
-                    size={20} 
-                    fill={wishlisted ? 'var(--neon)' : 'none'} 
-                    stroke={wishlisted ? 'var(--neon)' : 'var(--text-primary)'}
-                    className="transition-transform group-hover:scale-110 active:scale-95"
-                  />
-                </button>
+            {/* Items */}
+            <div className="flex-1 overflow-y-auto px-6 py-4 space-y-3">
+              {cart.items.length === 0 ? (
+                <div className="flex flex-col items-center justify-center h-full text-center py-12">
+                  <motion.div
+                    initial={{ scale: 0 }}
+                    animate={{ scale: 1 }}
+                    transition={{ delay: 0.1, type: 'spring', stiffness: 200 }}
+                    className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4 bg-gold-gradient/20"
+                  >
+                    <ShoppingBag size={32} className="text-accent" />
+                  </motion.div>
+                  <p className="font-display font-semibold mb-1" style={{ color: 'var(--text-primary)' }}>Your cart is empty</p>
+                  <p className="text-sm mb-4 text-text-muted">Add items to get started</p>
+                  <Link to="/products" onClick={onClose} className="btn-primary text-xs px-4 py-2">
+                    Continue Shopping <ArrowRight size={13} />
+                  </Link>
+                </div>
+              ) : (
+                <AnimatePresence initial={false}>
+                  {cart.items.map((item, idx) => (
+                    <motion.div
+                      key={item.id}
+                      layout
+                      initial={{ opacity: 0, x: 30 }}
+                      animate={{ opacity: 1, x: 0 }}
+                      exit={{ opacity: 0, x: -30, height: 0 }}
+                      transition={{ duration: 0.25, delay: idx * 0.05 }}
+                      className="flex items-center gap-4 p-4 rounded-2xl card-premium"
+                    >
+                      {/* Product thumb */}
+                      <div className="w-14 h-14 rounded-xl overflow-hidden flex-shrink-0 bg-gold-gradient/20 flex items-center justify-center text-xs font-bold text-accent">
+                        {item.product_name[0]}
+                      </div>
+
+                      <div className="flex-1 min-w-0">
+                        <p className="font-semibold text-sm truncate" style={{ color: 'var(--text-primary)' }}>
+                          {item.product_name}
+                        </p>
+                        <p className="text-sm font-bold text-gradient mt-0.5">
+                          ₹{item.product_price.toLocaleString()}
+                        </p>
+                      </div>
+
+                      {/* Quantity */}
+                      <div className="flex items-center gap-1.5 bg-surface-raised rounded-lg p-1">
+                        <motion.button
+                          onClick={() => item.quantity > 1
+                            ? updateCartItem(item.id, item.quantity - 1)
+                            : removeFromCart(item.id)
+                          }
+                          className="w-7 h-7 rounded-md flex items-center justify-center transition-all hover:text-accent"
+                          style={{ border: '1px solid var(--border-warm)' }}
+                          whileHover={{ scale: 1.1 }}
+                          whileTap={{ scale: 0.9 }}
+                        >
+                          {item.quantity === 1 ? <Trash2 size={12} className="text-warm-700" /> : <Minus size={12} />}
+                        </motion.button>
+                        <span className="w-5 text-center text-xs font-bold" style={{ color: 'var(--text-primary)' }}>
+                          {item.quantity}
+                        </span>
+                        <motion.button
+                          onClick={() => updateCartItem(item.id, item.quantity + 1)}
+                          className="w-7 h-7 rounded-md flex items-center justify-center transition-all hover:text-accent"
+                          style={{ border: '1px solid var(--border-warm)' }}
+                          whileHover={{ scale: 1.1 }}
+                          whileTap={{ scale: 0.9 }}
+                        >
+                          <Plus size={12} />
+                        </motion.button>
+                      </div>
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
               )}
             </div>
 
-            {/* Value Propositions */}
-            <div className="grid grid-cols-3 gap-4 mt-6 text-[11px] text-muted font-medium">
-              <div className="flex items-center gap-2"><Truck size={14} className="text-purple-500" /> Free Delivery</div>
-              <div className="flex items-center gap-2"><RotateCcw size={14} className="text-purple-500" /> 7-Day Replacement</div>
-              <div className="flex items-center gap-2"><ShieldCheck size={14} className="text-purple-500" /> Safe Checkout</div>
-            </div>
-          </div>
-        </div>
-      </div>
-    </div>
+            {/* Footer summary */}
+            {cart.items.length > 0 && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                className="px-6 py-5 border-t border-subtle"
+                style={{ background: 'var(--surface-raised)' }}
+              >
+                <div className="space-y-3 mb-5">
+                  <div className="flex justify-between text-sm" style={{ color: 'var(--text-secondary)' }}>
+                    <span>Subtotal</span>
+                    <span className="font-semibold" style={{ color: 'var(--text-primary)' }}>
+                      ₹{cart.subtotal.toLocaleString()}
+                    </span>
+                  </div>
+                  <div className="flex justify-between text-sm" style={{ color: 'var(--text-secondary)' }}>
+                    <span>Shipping</span>
+                    <span className="text-sage-600 font-semibold">Free</span>
+                  </div>
+                  <div className="flex justify-between font-display font-bold text-base pt-3 border-t border-subtle" style={{ color: 'var(--text-primary)' }}>
+                    <span>Total</span>
+                    <span className="text-gradient">₹{cart.subtotal.toLocaleString()}</span>
+                  </div>
+                </div>
+                <div className="space-y-2.5">
+                  <motion.div whileHover={{ y: -2 }} whileTap={{ y: 0 }}>
+                    <Link
+                      to="/cart"
+                      onClick={onClose}
+                      className="btn-primary w-full justify-center flex items-center gap-2"
+                    >
+                      View Cart <ArrowRight size={14} />
+                    </Link>
+                  </motion.div>
+                  <motion.button
+                    onClick={clearCart}
+                    className="btn-secondary w-full justify-center text-xs transition-colors hover:text-warm-700"
+                    whileHover={{ y: -1 }}
+                    whileTap={{ y: 0 }}
+                  >
+                    Clear Cart
+                  </motion.button>
+                </div>
+              </motion.div>
+            )}
+          </motion.div>
+        </>
+      )}
+    </AnimatePresence>
   )
 }
