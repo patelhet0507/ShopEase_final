@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   ShoppingBag, Minus, Plus, Trash2, ArrowRight, ArrowLeft,
@@ -10,6 +10,17 @@ import { FadeIn, EmptyState } from '../components/ui'
 import { useState, useEffect } from 'react'
 
 export default function CartPage() {
+  const navigate = useNavigate()
+  const handleCheckout = () => {
+  console.log("Checkout clicked")
+
+  if (!cartItems.length) {
+    alert("Your cart is empty")
+    return
+  }
+
+  navigate('/checkout')
+}
   const { cart, updateCartItem, removeFromCart, clearCart } = useCart()
   const { user } = useAuth()
   const [savedSandbox, setSavedSandbox] = useState([])
@@ -321,12 +332,13 @@ export default function CartPage() {
 
                 <div className="p-5" style={{ background: 'var(--bg-secondary)' }}>
                   <motion.button
-                    whileHover={{ scale: 1.01 }}
-                    whileTap={{ scale: 0.99 }}
-                    className="btn-primary w-full justify-center py-3.5 text-base cursor-pointer"
-                  >
-                    Proceed to Checkout <ArrowRight size={16} />
-                  </motion.button>
+  whileHover={{ scale: 1.01 }}
+  whileTap={{ scale: 0.99 }}
+  onClick={() => alert("Checkout button works")}
+  className="btn-primary w-full justify-center py-3.5 text-base cursor-pointer"
+>
+  Proceed to Checkout <ArrowRight size={16} />
+</motion.button>
                   <p className="text-center text-xs mt-3" style={{ color: 'var(--text-muted)' }}>
                     Secure checkout • 256-bit SSL
                   </p>
