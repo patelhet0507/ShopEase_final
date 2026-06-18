@@ -38,31 +38,44 @@ export default function CheckoutPage() {
   }
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
-    setLoading(true)
+  e.preventDefault()
+  setLoading(true)
 
-    try {
-      const orderPayload = {
-        shipping_name: formData.shipping_name,
-        shipping_mobile: formData.shipping_mobile,
-        shipping_address: formData.shipping_address,
-        order_items: cart.items.map(item => ({
-          product_id: item.product_id || item.id,
-          quantity: item.quantity,
-        })),
-      }
-
-      const response = await ordersApi.create(user.id, orderPayload)
-      if (response.data?.order_number) {
-        navigate(`/order-confirmation/${response.data.order_number}`)
-      }
-    } catch (error) {
-      console.error('Order creation failed:', error)
-      alert('Failed to create order. Please try again.')
-    } finally {
-      setLoading(false)
+  try {
+    const orderPayload = {
+      shipping_name: formData.shipping_name,
+      shipping_mobile: formData.shipping_mobile,
+      shipping_address: formData.shipping_address,
+      order_items: cart.items.map(item => ({
+        product_id: item.product_id,
+        quantity: item.quantity,
+      })),
     }
+
+    console.log("ORDER PAYLOAD:", orderPayload)
+
+    const response = await ordersApi.create(user.id, orderPayload)
+
+    console.log("ORDER RESPONSE:", response.data)
+
+    if (response.data?.order_number) {
+      navigate(`/order-confirmation/${response.data.order_number}`)
+    }
+  } catch (error) {
+    console.error("FULL ORDER ERROR:", error)
+    console.error("RESPONSE:", error.response?.data)
+
+    alert(
+      JSON.stringify(
+        error.response?.data || error.message,
+        null,
+        2
+      )
+    )
+  } finally {
+    setLoading(false)
   }
+}
 
   return (
     <motion.div
