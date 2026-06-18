@@ -1,5 +1,6 @@
-import { motion } from 'framer-motion'
-import { Star } from 'lucide-react'
+import { motion, AnimatePresence } from 'framer-motion'
+import { Star, X } from 'lucide-react'
+import { useState } from 'react'
 
 // ─── Skeleton ────────────────────────────────────────────
 export function Skeleton({ className = '' }) {
@@ -104,9 +105,6 @@ export function EmptyState({ icon: Icon, title, description, action }) {
 }
 
 // ─── Modal ───────────────────────────────────────────────
-import { AnimatePresence } from 'framer-motion'
-import { X } from 'lucide-react'
-
 export function Modal({ open, onClose, title, children, size = 'md' }) {
   const sizes = { sm: 'max-w-sm', md: 'max-w-md', lg: 'max-w-2xl', xl: 'max-w-4xl' }
   return (
@@ -116,7 +114,7 @@ export function Modal({ open, onClose, title, children, size = 'md' }) {
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           exit={{ opacity: 0 }}
-          className="fixed inset-0 z-[100] flex items-center justify-center p-4"
+          className="fixed inset-0 z-[100] flex items-center justify-center p-4 shadow-2xl"
           style={{ background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(8px)' }}
           onClick={onClose}
         >
@@ -131,7 +129,7 @@ export function Modal({ open, onClose, title, children, size = 'md' }) {
           >
             <div className="flex items-center justify-between mb-4">
               <h2 className="text-lg font-bold" style={{ color: 'var(--text-primary)' }}>{title}</h2>
-              <button onClick={onClose} className="btn-ghost p-1.5 rounded-lg">
+              <button onClick={onClose} className="btn-ghost p-1.5 rounded-lg cursor-pointer">
                 <X size={18} />
               </button>
             </div>
@@ -167,8 +165,6 @@ export function Toast({ message, type = 'success', visible }) {
 }
 
 // ─── FloatingLabel Input ────────────────────────────────
-import { useState } from 'react'
-
 export function FloatingInput({ id, label, type = 'text', value, onChange, error, required }) {
   const [focused, setFocused] = useState(false)
   const floating = focused || value

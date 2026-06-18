@@ -1,7 +1,9 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react'
 import { cartApi, wishlistApi } from '../api'
 import { useAuth } from './AuthContext'
-import Modal from '../components/ui/Modal' 
+
+// 🟢 Uses the shared module file location
+import { Modal } from '../components/ui'
 
 const CartContext = createContext(null)
 
@@ -146,8 +148,9 @@ export function CartProvider({ children }) {
     >
       {children}
 
+      {/* 🟢 Fixed: Changed prop name to matching lowercase 'open' configuration */}
       <Modal 
-        isOpen={showLoginModal} 
+        open={showLoginModal} 
         onClose={() => setShowLoginModal(false)} 
         title="Login Required"
       >
