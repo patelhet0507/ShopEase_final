@@ -122,7 +122,8 @@ export default function ProductDetailPage() {
         <ArrowLeft size={16} /> Back to Products
       </Link>
 
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-12 bg-surface border border-border rounded-[24px] p-6 md:p-8 shadow-sm">
+      {/* 🟢 FIXED: 'border border-border' class removed from line below to drop outer outline border framework seamlessly */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-12 bg-surface rounded-[24px] p-6 md:p-8 shadow-sm">
         {/* Left: Product Image Stage */}
         <div className="bg-surface-raised rounded-2xl p-8 flex items-center justify-center border border-subtle min-h-[350px] max-h-[450px] overflow-hidden relative">
           {/* Navigation Buttons */}
