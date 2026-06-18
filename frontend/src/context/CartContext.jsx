@@ -12,84 +12,112 @@ export function CartProvider({ children }) {
   const [cartLoading, setCartLoading] = useState(false)
 
   const fetchCart = useCallback(async () => {
-    if (!user) return
+    if (!user?.id) return
     try {
       const { data } = await cartApi.get(user.id)
-      setCart(data)
-    } catch {}
+      setCart(data || { items: [], total_quantity: 0, subtotal: 0 })
+    } catch (err) {
+      console.error("Error fetching cart data:", err.response?.data || err.message)
+    }
   }, [user])
 
   const fetchWishlist = useCallback(async () => {
-    if (!user) return
+    if (!user?.id) return
     try {
       const { data } = await wishlistApi.get(user.id)
-      setWishlist(data)
-    } catch {}
+      setWishlist(data || [])
+    } catch (err) {
+      console.error("Error fetching wishlist data:", err.response?.data || err.message)
+    }
   }, [user])
 
   useEffect(() => {
-    fetchCart()
-    fetchWishlist()
-  }, [fetchCart, fetchWishlist])
+    if (user) {
+      fetchCart()
+      fetchWishlist()
+    } else {
+      // Clear global contextual state on user sign out
+      setCart({ items: [], total_quantity: 0, subtotal: 0 })
+      setWishlist([])
+    }
+  }, [user, fetchCart, fetchWishlist])
 
-  // Optimized to account for Fly-To-Cart Trajectory Timings
   const addToCart = useCallback(async (productId, quantity = 1) => {
-    if (!user) return
+    if (!user?.id) {
+      alert("Please log in to manage your cart items.")
+      return
+    }
     setCartLoading(true)
     try {
-      const { data } = await cartApi.add(user.id, { product_id: productId, quantity })
-      setCart(data)
+      const targetProductId = parseInt(productId, 10)
+      const payload = { product_id: targetProductId, quantity: parseInt(quantity, 10) }
       
-      // Delays drawer opening until the flying card particle animation lands (750ms)
+      const { data } = await cartApi.add(user.id, payload)
+      setCart(data || { items: [], total_quantity: 0, subtotal: 0 })
+      
       setTimeout(() => {
         setCartOpen(true)
       }, 750)
-
+    } catch (err) {
+      console.error("Add operation failure:", err.response?.data || err.message)
     } finally {
       setCartLoading(false)
     }
   }, [user])
 
   const updateCartItem = useCallback(async (cartItemId, quantity) => {
-    if (!user) return
+    if (!user?.id) return
     try {
-      const { data } = await cartApi.update(user.id, cartItemId, { quantity })
-      setCart(data)
-    } catch {}
+      const { data } = await cartApi.update(user.id, cartItemId, { quantity: parseInt(quantity, 10) })
+      setCart(data || { items: [], total_quantity: 0, subtotal: 0 })
+    } catch (err) {
+      console.error("Update quantity operation failure:", err.response?.data || err.message)
+    }
   }, [user])
 
   const removeFromCart = useCallback(async (cartItemId) => {
-    if (!user) return
+    if (!user?.id) return
     try {
       const { data } = await cartApi.remove(user.id, cartItemId)
-      setCart(data)
-    } catch {}
+      setCart(data || { items: [], total_quantity: 0, subtotal: 0 })
+    } catch (err) {
+      console.error("Remove operation failure:", err.response?.data || err.message)
+    }
   }, [user])
 
   const clearCart = useCallback(async () => {
-    if (!user) return
+    if (!user?.id) return
     try {
       await cartApi.clear(user.id)
       setCart({ items: [], total_quantity: 0, subtotal: 0 })
-    } catch {}
+    } catch (err) {
+      console.error("Clear cart sequence encountered error:", err.response?.data || err.message)
+    }
   }, [user])
 
   const toggleWishlist = useCallback(async (productId) => {
-    if (!user) return
-    const isWishlisted = wishlist.some(w => w.product_id === productId)
+    if (!user?.id) {
+      alert("Please log in to manage your wishlist.")
+      return
+    }
+    const targetId = parseInt(productId, 10)
+    const isWishlisted = wishlist.some(w => w.product_id === targetId)
     try {
       if (isWishlisted) {
-        await wishlistApi.remove(user.id, productId)
-        setWishlist(prev => prev.filter(w => w.product_id !== productId))
+        await wishlistApi.remove(user.id, targetId)
+        setWishlist(prev => prev.filter(w => w.product_id !== targetId))
       } else {
-        const { data } = await wishlistApi.add(user.id, { product_id: productId })
-        setWishlist(prev => [data, ...prev])
+        const { data } = await wishlistApi.add(user.id, { product_id: targetId })
+        if (data) setWishlist(prev => [data, ...prev])
       }
-    } catch {}
+    } catch (err) {
+      console.error("Wishlist conversion toggle error:", err.response?.data || err.message)
+    }
   }, [user, wishlist])
 
   const isWishlisted = useCallback((productId) => {
-    return wishlist.some(w => w.product_id === productId)
+    const targetId = parseInt(productId, 10)
+    return wishlist.some(w => w.product_id === targetId)
   }, [wishlist])
 
   return (

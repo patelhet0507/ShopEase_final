@@ -37,7 +37,7 @@ export default function CartDrawer({ open, onClose }) {
                 </div>
                 <div>
                   <h2 className="font-display font-bold text-lg" style={{ color: 'var(--text-primary)' }}>Your Cart</h2>
-                  {cart.total_quantity > 0 && (
+                  {cart?.total_quantity > 0 && (
                     <p className="text-xs text-text-muted">{cart.total_quantity} item{cart.total_quantity !== 1 ? 's' : ''}</p>
                   )}
                 </div>
@@ -52,9 +52,9 @@ export default function CartDrawer({ open, onClose }) {
               </motion.button>
             </div>
 
-            {/* Items */}
+            {/* Items Container */}
             <div className="flex-1 overflow-y-auto px-6 py-4 space-y-3">
-              {cart.items.length === 0 ? (
+              {!cart?.items || cart.items.length === 0 ? (
                 <div className="flex flex-col items-center justify-center h-full text-center py-12">
                   <motion.div
                     initial={{ scale: 0 }}
@@ -72,65 +72,82 @@ export default function CartDrawer({ open, onClose }) {
                 </div>
               ) : (
                 <AnimatePresence initial={false}>
-                  {cart.items.map((item, idx) => (
-                    <motion.div
-                      key={item.id}
-                      layout
-                      initial={{ opacity: 0, x: 30 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      exit={{ opacity: 0, x: -30, height: 0 }}
-                      transition={{ duration: 0.25, delay: idx * 0.05 }}
-                      className="flex items-center gap-4 p-4 rounded-2xl card-premium"
-                    >
-                      {/* Product thumb */}
-                      <div className="w-14 h-14 rounded-xl overflow-hidden flex-shrink-0 bg-gold-gradient/20 flex items-center justify-center text-xs font-bold text-accent">
-                        {item.product_name[0]}
-                      </div>
+                  {cart.items.map((item, idx) => {
+                    // Safe parsing of subnested database object structure
+                    const productData = item.product || {}
+                    const productName = productData.name || "Unknown Product"
+                    const productPrice = productData.price || 0
+                    const initialLetter = productName ? productName[0] : "?"
 
-                      <div className="flex-1 min-w-0">
-                        <p className="font-semibold text-sm truncate" style={{ color: 'var(--text-primary)' }}>
-                          {item.product_name}
-                        </p>
-                        <p className="text-sm font-bold text-gradient mt-0.5">
-                          ₹{item.product_price.toLocaleString()}
-                        </p>
-                      </div>
+                    return (
+                      <motion.div
+                        key={item.id}
+                        layout
+                        initial={{ opacity: 0, x: 30 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: -30, height: 0 }}
+                        transition={{ duration: 0.25, delay: idx * 0.05 }}
+                        className="flex items-center gap-4 p-4 rounded-2xl card-premium"
+                      >
+                        {/* Product Thumbnail */}
+                        <div className="w-14 h-14 rounded-xl overflow-hidden flex-shrink-0 bg-gold-gradient/20 flex items-center justify-center text-xs font-bold text-accent">
+                          {productData.images && productData.images.length > 0 ? (
+                            <img 
+                              src={productData.images[0]} 
+                              alt={productName} 
+                              className="w-full h-full object-cover" 
+                            />
+                          ) : (
+                            initialLetter
+                          )}
+                        </div>
 
-                      {/* Quantity */}
-                      <div className="flex items-center gap-1.5 bg-surface-raised rounded-lg p-1">
-                        <motion.button
-                          onClick={() => item.quantity > 1
-                            ? updateCartItem(item.id, item.quantity - 1)
-                            : removeFromCart(item.id)
-                          }
-                          className="w-7 h-7 rounded-md flex items-center justify-center transition-all hover:text-accent"
-                          style={{ border: '1px solid var(--border-warm)' }}
-                          whileHover={{ scale: 1.1 }}
-                          whileTap={{ scale: 0.9 }}
-                        >
-                          {item.quantity === 1 ? <Trash2 size={12} className="text-warm-700" /> : <Minus size={12} />}
-                        </motion.button>
-                        <span className="w-5 text-center text-xs font-bold" style={{ color: 'var(--text-primary)' }}>
-                          {item.quantity}
-                        </span>
-                        <motion.button
-                          onClick={() => updateCartItem(item.id, item.quantity + 1)}
-                          className="w-7 h-7 rounded-md flex items-center justify-center transition-all hover:text-accent"
-                          style={{ border: '1px solid var(--border-warm)' }}
-                          whileHover={{ scale: 1.1 }}
-                          whileTap={{ scale: 0.9 }}
-                        >
-                          <Plus size={12} />
-                        </motion.button>
-                      </div>
-                    </motion.div>
-                  ))}
+                        {/* Product Meta */}
+                        <div className="flex-1 min-w-0">
+                          <p className="font-semibold text-sm truncate" style={{ color: 'var(--text-primary)' }}>
+                            {productName}
+                          </p>
+                          <p className="text-sm font-bold text-gradient mt-0.5">
+                            ₹{productPrice.toLocaleString()}
+                          </p>
+                        </div>
+
+                        {/* Quantity controls */}
+                        <div className="flex items-center gap-1.5 bg-surface-raised rounded-lg p-1">
+                          <motion.button
+                            onClick={() => item.quantity > 1
+                              ? updateCartItem(item.id, item.quantity - 1)
+                              : removeFromCart(item.id)
+                            }
+                            className="w-7 h-7 rounded-md flex items-center justify-center transition-all hover:text-accent"
+                            style={{ border: '1px solid var(--border-warm)' }}
+                            whileHover={{ scale: 1.1 }}
+                            whileTap={{ scale: 0.9 }}
+                          >
+                            {item.quantity === 1 ? <Trash2 size={12} className="text-warm-700" /> : <Minus size={12} />}
+                          </motion.button>
+                          <span className="w-5 text-center text-xs font-bold" style={{ color: 'var(--text-primary)' }}>
+                            {item.quantity}
+                          </span>
+                          <motion.button
+                            onClick={() => updateCartItem(item.id, item.quantity + 1)}
+                            className="w-7 h-7 rounded-md flex items-center justify-center transition-all hover:text-accent"
+                            style={{ border: '1px solid var(--border-warm)' }}
+                            whileHover={{ scale: 1.1 }}
+                            whileTap={{ scale: 0.9 }}
+                          >
+                            <Plus size={12} />
+                          </motion.button>
+                        </div>
+                      </motion.div>
+                    )
+                  })}
                 </AnimatePresence>
               )}
             </div>
 
-            {/* Footer summary */}
-            {cart.items.length > 0 && (
+            {/* Footer Summary */}
+            {cart?.items && cart.items.length > 0 && (
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -141,7 +158,7 @@ export default function CartDrawer({ open, onClose }) {
                   <div className="flex justify-between text-sm" style={{ color: 'var(--text-secondary)' }}>
                     <span>Subtotal</span>
                     <span className="font-semibold" style={{ color: 'var(--text-primary)' }}>
-                      ₹{cart.subtotal.toLocaleString()}
+                      ₹{(cart.subtotal || 0).toLocaleString()}
                     </span>
                   </div>
                   <div className="flex justify-between text-sm" style={{ color: 'var(--text-secondary)' }}>
@@ -150,7 +167,7 @@ export default function CartDrawer({ open, onClose }) {
                   </div>
                   <div className="flex justify-between font-display font-bold text-base pt-3 border-t border-subtle" style={{ color: 'var(--text-primary)' }}>
                     <span>Total</span>
-                    <span className="text-gradient">₹{cart.subtotal.toLocaleString()}</span>
+                    <span className="text-gradient">₹{(cart.subtotal || 0).toLocaleString()}</span>
                   </div>
                 </div>
                 <div className="space-y-2.5">
