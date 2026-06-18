@@ -32,12 +32,25 @@ export default function CartPage() {
     )
   }
 
-  // 🟢 SAFE ACCUMULATION PARSING: Fallback default values prevent initialization crashes
   const cartItems = cart?.items || []
   const totalQuantity = cart?.total_quantity || 0
   
-  // Dynamically calculate subtotal if backend values are temporarily undefined
-  const subtotalValue = cart?.subtotal || cartItems.reduce((acc, item) => acc + (Number(item.product_price || 0) * item.quantity), 0)
+  // 🟢 SAFE PARSING METHOD: Supports both database structure configurations seamlessly
+  const resolveItemDetails = (item) => {
+    const nestedProduct = item?.product || {}
+    return {
+      id: item?.id || nestedProduct?.id,
+      name: item?.product_name || nestedProduct?.name || 'Unknown Product',
+      price: Number(item?.product_price || nestedProduct?.price || 0),
+      quantity: Number(item?.quantity || 1)
+    }
+  }
+
+  // Dynamically calculate reliable subtotal values
+  const subtotalValue = cart?.subtotal || cartItems.reduce((acc, rawItem) => {
+    const item = resolveItemDetails(rawItem)
+    return acc + (item.price * item.quantity)
+  }, 0)
 
   const SHIPPING_THRESHOLD = 2500
   const isFreeShippingEligible = subtotalValue >= SHIPPING_THRESHOLD
@@ -119,12 +132,15 @@ export default function CartPage() {
                 These items are kept in an isolated memory footprint linked to your wishlist session layers.
               </p>
               <div className="space-y-2 max-h-48 overflow-y-auto pr-1">
-                {savedSandbox.map((sbItem, index) => (
-                  <div key={index} className="flex justify-between items-center text-xs p-2 rounded-xl bg-[var(--bg-secondary)]">
-                    <span className="font-medium truncate max-w-[70%] text-[var(--text-primary)]">{sbItem.product_name}</span>
-                    <span className="font-bold text-purple-400">₹{Number(sbItem.product_price || 0).toLocaleString()}</span>
-                  </div>
-                ))}
+                {savedSandbox.map((sbRawItem, index) => {
+                  const sbItem = resolveItemDetails(sbRawItem)
+                  return (
+                    <div key={index} className="flex justify-between items-center text-xs p-2 rounded-xl bg-[var(--bg-secondary)]">
+                      <span className="font-medium truncate max-w-[70%] text-[var(--text-primary)]">{sbItem.name}</span>
+                      <span className="font-bold text-purple-400">₹{sbItem.price.toLocaleString()}</span>
+                    </div>
+                  )
+                })}
               </div>
             </FadeIn>
           )}
@@ -145,69 +161,73 @@ export default function CartPage() {
             </div>
 
             <AnimatePresence initial={false}>
-              {cartItems.map((item) => (
-                <motion.div
-                  key={item.id}
-                  layout
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  exit={{ opacity: 0, height: 0, marginBottom: 0, overflow: 'hidden' }}
-                  transition={{ duration: 0.3 }}
-                  className="flex gap-4 p-4 rounded-2xl group relative overflow-visible"
-                  style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}
-                >
-                  <div
-                    className="w-20 h-20 rounded-xl flex-shrink-0 overflow-hidden flex items-center justify-center font-bold text-xl text-white"
-                    style={{ background: 'linear-gradient(135deg, rgba(168,85,247,0.3), rgba(124,58,237,0.15))' }}
+              {cartItems.map((rawItem) => {
+                const item = resolveItemDetails(rawItem)
+                
+                return (
+                  <motion.div
+                    key={item.id}
+                    layout
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, height: 0, marginBottom: 0, overflow: 'hidden' }}
+                    transition={{ duration: 0.3 }}
+                    className="flex gap-4 p-4 rounded-2xl group relative overflow-visible"
+                    style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}
                   >
-                    {(item.product_name || '?')[0]}
-                  </div>
-
-                  <div className="flex-1 min-w-0">
-                    <div className="flex items-start justify-between gap-2">
-                      <div>
-                        <h3 className="font-semibold text-sm leading-tight" style={{ color: 'var(--text-primary)' }}>
-                          {item.product_name}
-                        </h3>
-                        <p className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>
-                          ₹{Number(item.product_price || 0).toLocaleString()} each
-                        </p>
-                      </div>
-                      <button
-                        onClick={() => removeFromCart(item.id)}
-                        className="opacity-0 group-hover:opacity-100 p-1.5 rounded-lg text-red-400 hover:text-red-500 hover:bg-red-400/10 transition-all cursor-pointer"
-                      >
-                        <Trash2 size={14} />
-                      </button>
+                    <div
+                      className="w-20 h-20 rounded-xl flex-shrink-0 overflow-hidden flex items-center justify-center font-bold text-xl text-white"
+                      style={{ background: 'linear-gradient(135deg, rgba(168,85,247,0.3), rgba(124,58,237,0.15))' }}
+                    >
+                      {(item.name || '?')[0]}
                     </div>
 
-                    <div className="flex items-center justify-between mt-3">
-                      <div className="flex items-center gap-1 rounded-xl overflow-hidden" style={{ border: '1px solid var(--border)' }}>
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-start justify-between gap-2">
+                        <div>
+                          <h3 className="font-semibold text-sm leading-tight" style={{ color: 'var(--text-primary)' }}>
+                            {item.name}
+                          </h3>
+                          <p className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>
+                            ₹{item.price.toLocaleString()} each
+                          </p>
+                        </div>
                         <button
-                          onClick={() => item.quantity > 1 ? updateCartItem(item.id, item.quantity - 1) : removeFromCart(item.id)}
-                          className="w-8 h-8 flex items-center justify-center hover:bg-surface-raised transition-colors cursor-pointer"
-                          style={{ color: 'var(--text-primary)' }}
+                          onClick={() => removeFromCart(item.id)}
+                          className="opacity-0 group-hover:opacity-100 p-1.5 rounded-lg text-red-400 hover:text-red-500 hover:bg-red-400/10 transition-all cursor-pointer"
                         >
-                          {item.quantity === 1 ? <Trash2 size={11} className="text-red-400" /> : <Minus size={11} />}
+                          <Trash2 size={14} />
                         </button>
-                        <span className="w-8 text-center text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>
-                          {item.quantity}
+                      </div>
+
+                      <div className="flex items-center justify-between mt-3">
+                        <div className="flex items-center gap-1 rounded-xl overflow-hidden" style={{ border: '1px solid var(--border)' }}>
+                          <button
+                            onClick={() => item.quantity > 1 ? updateCartItem(item.id, item.quantity - 1) : removeFromCart(item.id)}
+                            className="w-8 h-8 flex items-center justify-center hover:bg-surface-raised transition-colors cursor-pointer"
+                            style={{ color: 'var(--text-primary)' }}
+                          >
+                            {item.quantity === 1 ? <Trash2 size={11} className="text-red-400" /> : <Minus size={11} />}
+                          </button>
+                          <span className="w-8 text-center text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>
+                            {item.quantity}
+                          </span>
+                          <button
+                            onClick={() => updateCartItem(item.id, item.quantity + 1)}
+                            className="w-8 h-8 flex items-center justify-center hover:bg-surface-raised transition-colors cursor-pointer"
+                            style={{ color: 'var(--text-primary)' }}
+                          >
+                            <Plus size={11} />
+                          </button>
+                        </div>
+                        <span className="font-bold text-gradient">
+                          ₹{(item.price * item.quantity).toLocaleString()}
                         </span>
-                        <button
-                          onClick={() => updateCartItem(item.id, item.quantity + 1)}
-                          className="w-8 h-8 flex items-center justify-center hover:bg-surface-raised transition-colors cursor-pointer"
-                          style={{ color: 'var(--text-primary)' }}
-                        >
-                          <Plus size={11} />
-                        </button>
                       </div>
-                      <span className="font-bold text-gradient">
-                        ₹{Number((item.product_price || 0) * item.quantity).toLocaleString()}
-                      </span>
                     </div>
-                  </div>
-                </motion.div>
-              ))}
+                  </motion.div>
+                )
+              })}
             </AnimatePresence>
 
             <div className="mt-6">
@@ -259,16 +279,19 @@ export default function CartPage() {
                 </div>
 
                 <div className="p-5 space-y-3" style={{ background: 'var(--surface)' }}>
-                  {cartItems.map(item => (
-                    <div key={item.id} className="flex justify-between text-sm">
-                      <span className="truncate max-w-[160px]" style={{ color: 'var(--text-secondary)' }}>
-                        {item.product_name} <span style={{ color: 'var(--text-muted)' }}>×{item.quantity}</span>
-                      </span>
-                      <span className="font-medium flex-shrink-0 ml-2" style={{ color: 'var(--text-primary)' }}>
-                        ₹{Number((item.product_price || 0) * item.quantity).toLocaleString()}
-                      </span>
-                    </div>
-                  ))}
+                  {cartItems.map(rawItem => {
+                    const item = resolveItemDetails(rawItem)
+                    return (
+                      <div key={item.id} className="flex justify-between text-sm">
+                        <span className="truncate max-w-[160px]" style={{ color: 'var(--text-secondary)' }}>
+                          {item.name} <span style={{ color: 'var(--text-muted)' }}>×{item.quantity}</span>
+                        </span>
+                        <span className="font-medium flex-shrink-0 ml-2" style={{ color: 'var(--text-primary)' }}>
+                          ₹{(item.price * item.quantity).toLocaleString()}
+                        </span>
+                      </div>
+                    )
+                  })}
                 </div>
 
                 <div className="p-5 space-y-3 border-t" style={{ borderColor: 'var(--border)', background: 'var(--bg-secondary)' }}>
