@@ -1,0 +1,373 @@
+@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Montserrat:wght@500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Canvas & Layers: Shifted away from bright white to a warm, sophisticated almond base */
+    --bg: #EFEAE0;          
+    --bg-secondary: #E5DEC0; 
+    --surface: #F9F6F0;     /* Soft cream color for distinct separation between cards and background */
+    --surface-raised: #EAE3D5; 
+    
+    /* Structured Borders: Solidified edge lines with deep linen/clay tones */
+    --border: rgba(74, 60, 44, 0.22); 
+    --border-warm: rgba(138, 106, 70, 0.3); 
+    
+    /* Premium High-Contrast Typography UI */
+    --text-primary: #1F1914;    /* Deep roasted coffee tone for ultimate heading clarity */
+    --text-secondary: #424A3B;  /* Deep olive spruce for clean body copy */
+    --text-muted: #7A5B35;      /* Earthy amber-bronze for meta text labels */
+    
+    /* Elegant Accent Palette */
+    --accent: #A37644; 
+    --accent-light: #CFAB7E; 
+    --accent-dark: #63401A; 
+    --accent-glow: rgba(163, 118, 68, 0.22); 
+    --accent-glow-strong: rgba(163, 118, 68, 0.35); 
+  }
+
+  .dark {
+    --bg: #1A1815;
+    --bg-secondary: #1F1B17;
+    --surface: #24201A;
+    --surface-raised: #2E2A24;
+    --border: rgba(193, 154, 107, 0.1);
+    --border-warm: rgba(193, 154, 107, 0.15);
+    --text-primary: #F9F6F1;
+    --text-secondary: #C5B8A0;
+    --text-muted: #8B8B7E;
+    --accent: #D4AF7A;
+    --accent-light: #E8C794;
+    --accent-dark: #A68860;
+    --accent-glow: rgba(212, 175, 122, 0.2);
+    --accent-glow-strong: rgba(212, 175, 122, 0.3);
+  }
+
+  html { 
+    scroll-behavior: smooth;
+    scroll-padding-top: 80px;
+  }
+
+  body {
+    background-color: var(--bg);
+    color: var(--text-primary);
+    font-family: 'DM Sans', 'Poppins', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    transition: background-color 0.4s ease, color 0.4s ease;
+  }
+
+  * { box-sizing: border-box; }
+  
+  ::-webkit-scrollbar { width: 7px; height: 7px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { 
+    background: var(--text-muted); 
+    border-radius: 4px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+  }
+  ::-webkit-scrollbar-thumb:hover { background: var(--accent); background-clip: padding-box; }
+}
+
+@layer components {
+  /* ─── Glass Effects ─── */
+  .glass {
+    background: rgba(249, 246, 240, 0.8);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid var(--border-warm);
+  }
+
+  .dark .glass {
+    background: rgba(36, 32, 26, 0.85);
+  }
+
+  .glass-strong {
+    background: rgba(249, 246, 240, 0.96);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+    border: 1px solid var(--border-warm);
+  }
+
+  .dark .glass-strong {
+    background: rgba(26, 24, 21, 0.95);
+    border: 1px solid var(--border-warm);
+  }
+
+  /* ─── Card Flip ─── */
+  .card-flip {
+    perspective: 1200px;
+  }
+
+  .card-flip-inner {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    transition: transform 0.7s cubic-bezier(0.34, 1.56, 0.64, 1);
+    transform-style: preserve-3d;
+  }
+
+  .card-flip:hover .card-flip-inner {
+    transform: rotateY(180deg);
+  }
+
+  .card-front,
+  .card-back {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+    border-radius: inherit;
+    overflow: hidden;
+  }
+
+  .card-back {
+    transform: rotateY(180deg);
+  }
+
+  /* ─── Buttons ─── */
+  .btn-primary {
+    @apply relative inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-semibold text-sm overflow-hidden transition-all duration-300;
+    background: linear-gradient(135deg, var(--accent), var(--accent-light));
+    color: #fff;
+    box-shadow: 0 4px 16px var(--accent-glow);
+  }
+
+  .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 28px var(--accent-glow-strong);
+    filter: brightness(1.08);
+  }
+
+  .btn-primary:active { 
+    transform: translateY(0);
+    box-shadow: 0 2px 8px var(--accent-glow);
+  }
+
+  .btn-primary:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+  }
+
+  .btn-secondary {
+    @apply inline-flex items-center justify-center gap-2 px-6 py-3 rounded-xl font-medium text-sm transition-all duration-300;
+    background: var(--surface-raised);
+    color: var(--text-primary);
+    border: 1.5px solid var(--border-warm);
+  }
+
+  .btn-secondary:hover {
+    background: var(--surface);
+    transform: translateY(-1px);
+    border-color: var(--accent);
+    box-shadow: 0 4px 12px var(--accent-glow);
+  }
+
+  .btn-secondary:active {
+    transform: translateY(0);
+  }
+
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200;
+    color: var(--text-secondary);
+  }
+
+  .btn-ghost:hover {
+    background: var(--surface-raised);
+    color: var(--accent);
+  }
+
+  /* ─── Input Fields ─── */
+  .input-field {
+    @apply w-full px-4 py-3 rounded-xl text-sm outline-none transition-all duration-300;
+    background: var(--surface-raised);
+    border: 1.5px solid var(--border);
+    color: var(--text-primary);
+  }
+
+  .input-field::placeholder { 
+    color: var(--text-muted);
+  }
+
+  .input-field:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 4px var(--accent-glow);
+    background: var(--surface);
+  }
+
+  /* ─── High Contrast Solid Color Badges ─── */
+  .badge {
+    @apply inline-flex items-center px-3 py-1.5 rounded-full text-xs font-bold tracking-wide shadow-sm;
+  }
+
+  .badge-gold {
+    @apply badge;
+    background: #FEF3C7; 
+    color: #92400E;      
+    border: 1px solid #FDE68A;
+  }
+
+  .badge-sage {
+    @apply badge;
+    background: #DCE7DC; 
+    color: #243325;
+    border: 1px solid #C4D6C4;
+  }
+
+  .badge-warm {
+    @apply badge;
+    background: #F1E2D3; 
+    color: #613B14;
+    border: 1px solid #DFCEBD;
+  }
+
+  .badge-purple {
+    @apply badge;
+    background: #F3E8FF; 
+    color: #6B21A8;
+    border: 1px solid #E9D5FF;
+  }
+
+  .badge-green {
+    @apply badge;
+    background: #DCFCE7; 
+    color: #166534;
+    border: 1px solid #BBF7D0;
+  }
+
+  .badge-orange {
+    @apply badge;
+    background: #FFEDD5; 
+    color: #9A3412;
+    border: 1px solid #FED7AA;
+  }
+
+  /* ─── Shimmer Loading ─── */
+  .shimmer {
+    background: linear-gradient(90deg, var(--surface-raised) 25%, var(--surface) 50%, var(--surface-raised) 75%);
+    background-size: 200% 100%;
+    animation: shimmer 2s infinite;
+  }
+
+  /* ─── Gradients ─── */
+  .text-gradient {
+    background: linear-gradient(135deg, var(--accent) 0%, var(--accent-light) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .border-subtle { 
+    border-color: var(--border-warm);
+  }
+
+  /* ─── Headings ─── */
+  .section-heading {
+    @apply font-display font-bold tracking-tight;
+    color: var(--text-primary);
+    letter-spacing: -0.02em;
+  }
+
+  .section-subheading {
+    @apply font-display font-semibold;
+    color: var(--text-secondary);
+  }
+
+  /* ─── Stars ─── */
+  .star-filled { color: #D4A574; }
+  .star-empty { color: var(--text-muted); }
+
+  /* ─── Premium Card Styles ─── */
+  .card-premium {
+    @apply rounded-2xl transition-all duration-300;
+    background: var(--surface);
+    border: 1px solid var(--border-warm);
+    box-shadow: 0 6px 16px rgba(54, 43, 30, 0.08);
+  }
+
+  .card-premium:hover {
+    box-shadow: 0 16px 36px rgba(115, 87, 52, 0.14);
+    transform: translateY(-2px);
+  }
+}
+
+@layer utilities {
+  .animate-delay-100 { animation-delay: 100ms; }
+  .animate-delay-200 { animation-delay: 200ms; }
+  .animate-delay-300 { animation-delay: 300ms; }
+  .animate-delay-400 { animation-delay: 400ms; }
+  .animate-delay-500 { animation-delay: 500ms; }
+  .animate-delay-600 { animation-delay: 600ms; }
+
+  .text-primary { color: var(--text-primary); }
+  .text-secondary { color: var(--text-secondary); }
+  .text-muted { color: var(--text-muted); }
+  .text-accent { color: var(--accent); }
+
+  .bg-surface { background-color: var(--surface); }
+  .bg-surface-raised { background-color: var(--surface-raised); }
+  .border-subtle { border-color: var(--border-warm); }
+  
+  /* Smooth scroll fade-in on load */
+  @supports (animation-timeline: view()) {
+    .scroll-fade-in {
+      animation: fadeUp both;
+      animation-timeline: view();
+      animation-range: entry 0% cover 30%;
+    }
+
+    .scroll-fade-in-stagger > * {
+      animation: fadeUp both;
+      animation-timeline: view();
+      animation-range: entry 0% cover 40%;
+    }
+  }
+
+  /* Gives the flip container a 3D environment perspective */
+  .perspective-1000 {
+    perspective: 1000px;
+  }
+  
+  /* Forces child elements to preserve their 3D layouts */
+  .transform-style-3d {
+    transform-style: preserve-3d;
+  }
+  
+  /* Hides the structural side facing away from the screen viewer */
+  .backface-hidden {
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+  }
+  
+  /* Positions the back face structure correctly rotated beforehand */
+  .rotate-y-180 {
+    transform: rotateY(180deg);
+  }
+}
+
+/* --- Premium Micro-interactions --- */
+@keyframes particle-burst {
+  0% { 
+    transform: translate(-50%, -50%) scale(0.3); 
+    opacity: 1; 
+  }
+  80% {
+    opacity: 1;
+  }
+  100% { 
+    transform: translate(calc(-50% + var(--tw-x)), calc(-50% + var(--tw-y))) scale(1.2); 
+    opacity: 0; 
+  }
+}
+
+.animate-particle-1 { animation: particle-burst 0.5s cubic-bezier(0.1, 0.8, 0.3, 1) forwards; --tw-x: -50px; --tw-y: -50px; }
+.animate-particle-2 { animation: particle-burst 0.5s cubic-bezier(0.1, 0.8, 0.3, 1) forwards; --tw-x: 50px; --tw-y: -60px; }
+.animate-particle-3 { animation: particle-burst 0.5s cubic-bezier(0.1, 0.8, 0.3, 1) forwards; --tw-x: 0px; --tw-y: -70px; }
+.animate-particle-4 { animation: particle-burst 0.5s cubic-bezier(0.1, 0.8, 0.3, 1) forwards; --tw-x: -60px; --tw-y: 40px; }
+.animate-particle-5 { animation: particle-burst 0.5s cubic-bezier(0.1, 0.8, 0.3, 1) forwards; --tw-x: 60px; --tw-y: 50px; }
