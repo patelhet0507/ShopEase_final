@@ -104,7 +104,6 @@ export default function ProductDetailPage() {
     setCurrentImageIndex(prev => prev === productImages.length - 1 ? 0 : prev + 1)
   }
 
-  // Dynamic coordinates compiler processing mouse movements inside zoom scope boundary maps
   const handleMouseMove = (e) => {
     if (!imageContainerRef.current) return
     const { left, top, width, height } = imageContainerRef.current.getBoundingClientRect()
@@ -130,6 +129,7 @@ export default function ProductDetailPage() {
     setSubmittingReview(true)
     
     try {
+      // 🟢 FIXED: Explicitly includes verified_purchase to successfully satisfy schema validation
       await reviewsApi.create(product.id, {
         rating: Number(reviewForm.rating),
         title: reviewForm.title,
@@ -150,7 +150,15 @@ export default function ProductDetailPage() {
       
     } catch (err) {
       console.error(err)
-      alert(err.response?.data?.detail || "Failed to commit your experience rating record.")
+      
+      // 🟢 FIXED: Safely unpack and show structural array verification responses from FastAPI
+      const backendDetail = err.response?.data?.detail
+      if (Array.isArray(backendDetail)) {
+        const errorMsg = backendDetail.map(e => `${e.loc.join('.')}: ${e.msg}`).join('\n')
+        alert(`Validation Error:\n${errorMsg}`)
+      } else {
+        alert(backendDetail || "Failed to commit your experience rating record.")
+      }
     } finally {
       setSubmittingReview(false)
     }
@@ -186,7 +194,7 @@ export default function ProductDetailPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-12 bg-surface border border-border rounded-[24px] p-6 md:p-8 shadow-sm">
         
-        {/* Left: Product Image Stage (No white borders, built-in magnification tracking glass) */}
+        {/* Left: Product Image Stage */}
         <div className="flex flex-col gap-4">
           <div 
             ref={imageContainerRef}
@@ -211,7 +219,7 @@ export default function ProductDetailPage() {
               </>
             )}
 
-            {/* Main Image Layer (Transparent background rendering enabled) */}
+            {/* Main Image Layer */}
             <img 
               src={productImages[currentImageIndex]} 
               alt={product.name} 
@@ -385,7 +393,7 @@ export default function ProductDetailPage() {
         )}
       </div>
 
-      {/* Write Product Review Glassmorphism Overlay Modal Context */}
+      {/* Write Product Review Modal */}
       {showReviewModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-surface border border-border w-full max-w-md rounded-[24px] p-6 shadow-2xl relative">
@@ -434,7 +442,7 @@ export default function ProductDetailPage() {
                   rows={4} 
                   value={reviewForm.comment} 
                   onChange={e => setReviewForm(p => ({ ...p, comment: e.target.value }))} 
-                  placeholder="What did you like or dislike about this asset configuration?" 
+                  placeholder="What did you like or dislike about this device?" 
                   className="w-full text-xs bg-surface-raised border border-border rounded-xl px-4 py-2.5 outline-none focus:border-purple-500 transition-colors text-primary resize-none" 
                 />
               </div>
