@@ -8,29 +8,25 @@ const api = axios.create({
   headers: { 'Content-Type': 'application/json' },
 })
 
-// Automatically attach Bearer token or user_id to requests safely
+// Automatically attach Bearer token or user_id safely to global requests
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('token')
-  let userId = localStorage.getItem('userId')
+  const userId = localStorage.getItem('userId')
   
   if (token) {
     config.headers.Authorization = `Bearer ${token}`
   }
 
-  // 🟢 FIXED: Only append user_id if it exists, is a valid number/string, 
-  // and isn't accidentally writing broken object string artifacts down onto global routes
-  if (userId && userId !== 'undefined' && userId !== '[object Object]') {
-    // Only automatically append for routes that explicitly manage user contexts
-    const needsUserContext = 
-      config.url?.includes('/cart') || 
-      config.url?.includes('/wishlist') || 
-      config.url?.includes('/orders') ||
-      config.url?.includes('/reviews/')
+  // Only run automatic appending if it's a valid integer ID and not already appended manually
+  if (userId && userId !== 'undefined' && userId !== '[object Object]' && !config.url?.includes('user_id=')) {
+    // Apply safely to context routes that are NOT explicitly handled manually
+    const autoContextRoutes = ['/cart', '/wishlist', '/orders']
+    const matchesRoute = autoContextRoutes.some(route => config.url?.includes(route))
 
-    if (needsUserContext) {
+    if (matchesRoute) {
       if (!config.url.includes('?')) {
         config.url += `?user_id=${userId}`
-      } else if (!config.url.includes(`user_id=`)) {
+      } else {
         config.url += `&user_id=${userId}`
       }
     }
@@ -127,9 +123,10 @@ export const reviewsApi = {
   list: (productId) => api.get(`/api/products/${productId}/reviews/`),
   getStats: (productId) => api.get(`/api/products/${productId}/reviews/stats`),
   
-  // 🟢 CLEAN: Keeps the standard parameter mapping. 
-  // The safer interceptor will only append user_id query properties if valid integers exist.
-  create: (productId, data) => api.post(`/api/products/${productId}/reviews/`, data),
+  // 🟢 EXPLICIT FIX: Accepts both parameters to explicitly build the query URL string 
+  // without relying on or clashing with the global interceptor logic.
+  create: (productId, userId, data) => 
+    api.post(`/api/products/${productId}/reviews/?user_id=${userId}`, data),
   
   update: (reviewId, data) => api.put(`/api/reviews/${reviewId}/`, data),
   delete: (reviewId) => api.delete(`/api/reviews/${reviewId}/`),

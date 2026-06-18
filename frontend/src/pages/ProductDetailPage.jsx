@@ -19,18 +19,18 @@ export default function ProductDetailPage() {
   const [adding, setAdding] = useState(false)
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
 
-  // Reviews Tracking State Layers
+  // Reviews Data Tracking Sheets
   const [reviews, setReviews] = useState([])
   const [stats, setStats] = useState({ average_rating: 0, total_reviews: 0, rating_distribution: {1:0, 2:0, 3:0, 4:0, 5:0} })
   const [showReviewModal, setShowReviewModal] = useState(false)
   const [submittingReview, setSubmittingReview] = useState(false)
   const [reviewForm, setReviewForm] = useState({ rating: 5, title: '', comment: '' })
 
-  // Hover Magnifying Glass Lens Tracker Properties
+  // Hover Magnifying Lens Tracker
   const [zoomStyle, setZoomStyle] = useState({ display: 'none', backgroundPosition: '0% 0%' })
   const imageContainerRef = useRef(null)
 
-  // Extract ONLY the database ID digits found at the very end ($) of the slug string
+  // Extract ID found at the end ($) of the path string
   const match = productSlug ? productSlug.match(/\d+$/) : null
   const idFromSlug = match ? parseInt(match[0], 10) : null
 
@@ -54,7 +54,6 @@ export default function ProductDetailPage() {
         setProduct(activeProduct)
         setCurrentImageIndex(0)
 
-        // Parallel processing review downloads down from your live REST endpoint layer
         try {
           const [reviewsRes, statsRes] = await Promise.all([
             reviewsApi.list(activeProduct.id),
@@ -89,7 +88,6 @@ export default function ProductDetailPage() {
     setAdding(false)
   }
 
-  // Fallback avatar handling for items lacking explicit image assets
   const productImages = product?.images?.length > 0 
     ? product.images 
     : product?.image_url 
@@ -122,27 +120,35 @@ export default function ProductDetailPage() {
     setZoomStyle({ display: 'none', backgroundPosition: '0% 0%' })
   }
 
-  // Review submission routine mapping cleanly to your updated api.js structure
+  // Fully isolated review submission tracking method
   const handleReviewSubmit = async (e) => {
     e.preventDefault()
     if (!user) {
-      alert("Please authenticate session layers to submit reviews.")
+      alert("Please authenticate your session to submit reviews.")
+      return
+    }
+
+    // 🟢 SAFE CONTEXT RESOLUTION: Try parsing from Context, falling back directly to localStorage integers
+    const storageUserId = localStorage.getItem('userId')
+    const rawUserId = user.id || user.user_id || storageUserId
+    const resolvedUserId = parseInt(rawUserId, 10)
+
+    if (!resolvedUserId || isNaN(resolvedUserId)) {
+      alert("Account Validation Error: Could not parse a valid numerical user ID. Please sign out and log back in.")
       return
     }
 
     setSubmittingReview(true)
     
     try {
-      // 🟢 FIXED: Only passing 2 parameters. Your api.js interceptor will 
-      // automatically append the correct user_id query param to the URL string.
-      await reviewsApi.create(product.id, {
+      // 🟢 FIXED CALL: Send product ID, clean numerical user ID, and body data object explicitly
+      await reviewsApi.create(product.id, resolvedUserId, {
         rating: Number(reviewForm.rating),
         title: reviewForm.title,
         comment: reviewForm.comment,
         verified_purchase: true
       })
       
-      // Pull updated data sheets to re-sync stats values without refreshing the page
       const [reviewsRes, statsRes] = await Promise.all([
         reviewsApi.list(product.id),
         reviewsApi.getStats(product.id)
@@ -155,8 +161,6 @@ export default function ProductDetailPage() {
       
     } catch (err) {
       console.error(err)
-      
-      // Unpack validation responses sent by FastAPI
       const backendDetail = err.response?.data?.detail
       if (Array.isArray(backendDetail)) {
         const errorMsg = backendDetail.map(e => `${e.loc.join('.')}: ${e.msg}`).join('\n')
@@ -199,7 +203,7 @@ export default function ProductDetailPage() {
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-12 bg-surface border border-border rounded-[24px] p-6 md:p-8 shadow-sm">
         
-        {/* Left: Product Image Box */}
+        {/* Left Card View image display */}
         <div className="flex flex-col gap-4">
           <div 
             ref={imageContainerRef}
@@ -224,14 +228,12 @@ export default function ProductDetailPage() {
               </>
             )}
 
-            {/* Main Image View */}
             <img 
               src={productImages[currentImageIndex]} 
               alt={product.name} 
               className="max-h-[360px] max-w-full object-contain select-none mix-blend-lighten pointer-events-none" 
             />
 
-            {/* Hover Lens Zoom Panel */}
             <div 
               className="absolute inset-0 pointer-events-none rounded-2xl transition-opacity duration-150 border-2 border-purple-500/20 bg-no-repeat"
               style={{
@@ -258,7 +260,7 @@ export default function ProductDetailPage() {
           </div>
         </div>
 
-        {/* Right: Metadata Specifications */}
+        {/* Right Info Frame panel details */}
         <div className="flex flex-col justify-between">
           <div>
             <span className="text-xs uppercase font-bold tracking-wider text-purple-500 bg-purple-500/10 px-3 py-1 rounded-full">
@@ -285,7 +287,7 @@ export default function ProductDetailPage() {
                 ))}
               </div>
               <span className="text-xs text-muted font-medium">
-                ({stats.average_rating || '4.8'} / 5.0 Rating • {stats.total_reviews || 0} global reflections)
+                ({stats.average_rating || '4.8'} / 5.0 Rating • {stats.total_reviews || 0} reflections)
               </span>
             </div>
 
@@ -294,11 +296,10 @@ export default function ProductDetailPage() {
             </div>
 
             <p className="mt-6 text-sm text-secondary leading-relaxed border-t border-subtle pt-6">
-              {product.description || 'No specialized description payload has been provided for this product.'}
+              {product.description || 'No specialized description payload has been provided for this product row configuration.'}
             </p>
           </div>
 
-          {/* Action Interface Controls Row */}
           <div className="mt-8 border-t border-subtle pt-6">
             <div className="flex gap-4">
               <button
@@ -328,7 +329,6 @@ export default function ProductDetailPage() {
               )}
             </div>
 
-            {/* Quality Seals */}
             <div className="grid grid-cols-3 gap-4 mt-6 text-[11px] text-muted font-medium">
               <div className="flex items-center gap-2"><Truck size={14} className="text-purple-500" /> Free Delivery</div>
               <div className="flex items-center gap-2"><RotateCcw size={14} className="text-purple-500" /> 7-Day Replacement</div>
@@ -338,7 +338,7 @@ export default function ProductDetailPage() {
         </div>
       </div>
 
-      {/* Review Section */}
+      {/* Review Management Metric Layout */}
       <div className="mt-12 bg-surface border border-border rounded-[24px] p-6 md:p-8 shadow-sm">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center border-b border-subtle pb-6 mb-6 gap-4">
           <div>
@@ -368,10 +368,9 @@ export default function ProductDetailPage() {
           )}
         </div>
 
-        {/* Individual Review Feeds */}
         {reviews.length === 0 ? (
           <p className="text-xs text-muted text-center py-8 bg-surface-raised rounded-2xl border border-dashed border-border">
-            No customer reflections filed for this product yet. Be the first to express feedback!
+            No customer reflections filed for this product workspace variation yet. Be the first to express feedback!
           </p>
         ) : (
           <div className="space-y-4 max-h-[450px] overflow-y-auto pr-2">
@@ -398,7 +397,7 @@ export default function ProductDetailPage() {
         )}
       </div>
 
-      {/* Write Product Review Modal */}
+      {/* Review Modal Form block overlay stage */}
       {showReviewModal && (
         <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-50 flex items-center justify-center p-4">
           <div className="bg-surface border border-border w-full max-w-md rounded-[24px] p-6 shadow-2xl relative">
