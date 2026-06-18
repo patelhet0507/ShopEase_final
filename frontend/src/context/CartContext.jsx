@@ -43,47 +43,64 @@ export function CartProvider({ children }) {
   }, [user, fetchCart, fetchWishlist])
 
   const addToCart = useCallback(async (productId, quantity = 1) => {
-    if (!user?.id) {
-      alert("Please log in to manage your cart items.")
-      return
+  if (!user?.id) {
+    alert("Please log in to manage your cart items.")
+    return
+  }
+
+  setCartLoading(true)
+
+  try {
+    const payload = {
+      product_id: Number(productId),
+      quantity: Number(quantity)
     }
-    setCartLoading(true)
-    try {
-      const targetProductId = parseInt(productId, 10)
-      const payload = { product_id: targetProductId, quantity: parseInt(quantity, 10) }
-      
-      const { data } = await cartApi.add(user.id, payload)
-      setCart(data || { items: [], total_quantity: 0, subtotal: 0 })
-      
-      setTimeout(() => {
-        setCartOpen(true)
-      }, 750)
-    } catch (err) {
-      console.error("Add operation failure:", err.response?.data || err.message)
-    } finally {
-      setCartLoading(false)
+
+    await cartApi.add(user.id, payload)
+
+    await fetchCart()
+
+    setCartOpen(true)
+  } catch (err) {
+    console.error(
+      "Add operation failure:",
+      err.response?.data || err.message
+    )
+  } finally {
+    setCartLoading(false)
     }
-  }, [user])
+  }, [user, fetchCart])
 
   const updateCartItem = useCallback(async (cartItemId, quantity) => {
-    if (!user?.id) return
-    try {
-      const { data } = await cartApi.update(user.id, cartItemId, { quantity: parseInt(quantity, 10) })
-      setCart(data || { items: [], total_quantity: 0, subtotal: 0 })
-    } catch (err) {
-      console.error("Update quantity operation failure:", err.response?.data || err.message)
+  if (!user?.id) return
+
+  try {
+    await cartApi.update(user.id, cartItemId, {
+      quantity: Number(quantity)
+    })
+
+    await fetchCart()
+  } catch (err) {
+    console.error(
+      "Update quantity operation failure:",
+      err.response?.data || err.message)
     }
-  }, [user])
+  }, [user, fetchCart])
 
   const removeFromCart = useCallback(async (cartItemId) => {
-    if (!user?.id) return
-    try {
-      const { data } = await cartApi.remove(user.id, cartItemId)
-      setCart(data || { items: [], total_quantity: 0, subtotal: 0 })
-    } catch (err) {
-      console.error("Remove operation failure:", err.response?.data || err.message)
-    }
-  }, [user])
+  if (!user?.id) return
+
+  try {
+    await cartApi.remove(user.id, cartItemId)
+
+    await fetchCart()
+  } catch (err) {
+    console.error(
+      "Remove operation failure:",
+      err.response?.data || err.message
+    )
+  }
+}, [user, fetchCart])
 
   const clearCart = useCallback(async () => {
     if (!user?.id) return
