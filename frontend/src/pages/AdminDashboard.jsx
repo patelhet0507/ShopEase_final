@@ -195,9 +195,10 @@ function AnalyticsGraphStage({ dataset }) {
   )
 }
 
-// ─── Drag-and-Drop Image Gallery Sort Canvas ──────────────────────
+// ─── Image URL Input Canvas ─────────────────────────────────────
 function ImageGallerySortCanvas({ images, onSequenceChange }) {
   const [draggedIndex, setDraggedIndex] = useState(null)
+  const [newImageUrl, setNewImageUrl] = useState('')
 
   const handleDragStart = (e, index) => {
     setDraggedIndex(index)
@@ -219,17 +220,15 @@ function ImageGallerySortCanvas({ images, onSequenceChange }) {
     onSequenceChange(reorderedImages)
   }
 
-  const handleFileUploadSimulated = (e) => {
-    const files = Array.from(e.target.files)
-    if (!files.length) return
+  const handleAddImageUrl = () => {
+    if (!newImageUrl.trim()) return
     
-    // Create preview data strings for visualization canvas
-    const processed = files.map((file, i) => ({
-      id: `new-${Date.now()}-${i}`,
-      url: URL.createObjectURL(file),
-      name: file.name
-    }))
-    onSequenceChange([...images, ...processed])
+    const newImage = {
+      id: `new-${Date.now()}`,
+      url: newImageUrl.trim()
+    }
+    onSequenceChange([...images, newImage])
+    setNewImageUrl('')
   }
 
   const handleRemoveImage = (id) => {
@@ -239,8 +238,27 @@ function ImageGallerySortCanvas({ images, onSequenceChange }) {
   return (
     <div className="space-y-2">
       <label className="text-xs font-semibold block" style={{ color: 'var(--text-muted)' }}>
-        Product Image Gallery Canvas (Drag items to change display priority order)
+        Product Image URLs (Drag items to change display priority order)
       </label>
+      
+      {/* Add Image URL Input */}
+      <div className="flex gap-2">
+        <input
+          type="url"
+          value={newImageUrl}
+          onChange={(e) => setNewImageUrl(e.target.value)}
+          placeholder="Enter image URL (e.g., https://example.com/image.jpg)"
+          className="input-field text-xs flex-1"
+          onKeyPress={(e) => e.key === 'Enter' && handleAddImageUrl()}
+        />
+        <button
+          type="button"
+          onClick={handleAddImageUrl}
+          className="btn-primary text-xs px-3 py-2 cursor-pointer"
+        >
+          <Plus size={14} />
+        </button>
+      </div>
       
       <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-4 rounded-2xl border border-dashed" style={{ borderColor: 'var(--border)', background: 'var(--bg-secondary)' }}>
         <AnimatePresence mode="popLayout">
@@ -261,7 +279,7 @@ function ImageGallerySortCanvas({ images, onSequenceChange }) {
               }`}
               style={{ background: 'var(--surface)', borderColor: 'var(--border)' }}
             >
-              <img src={img.url} alt="product-node" className="w-full h-full object-cover pointer-events-none" />
+              <img src={img.url} alt="product-node" className="w-full h-full object-cover pointer-events-none" onError={(e) => { e.target.src = 'https://via.placeholder.com/150?text=Invalid+URL' }} />
               
               {/* Order index Badge indicator */}
               <div className="absolute top-1.5 left-1.5 px-1.5 py-0.5 rounded bg-black/60 text-[9px] font-black text-white">
@@ -283,13 +301,11 @@ function ImageGallerySortCanvas({ images, onSequenceChange }) {
           ))}
         </AnimatePresence>
 
-        {/* Upload Terminal Node Grid Slot */}
-        <label className="h-24 rounded-xl border-2 border-dashed flex flex-col items-center justify-center gap-1 text-center cursor-pointer hover:bg-purple-500/5 transition-colors group relative"
-          style={{ borderColor: 'var(--border)' }}>
-          <input type="file" multiple accept="image/*" className="hidden" onChange={handleFileUploadSimulated} />
-          <Upload size={16} className="text-purple-500 animate-pulse" />
-          <span className="text-[10px] font-bold" style={{ color: 'var(--text-secondary)' }}>Upload Images</span>
-        </label>
+        {images.length === 0 && (
+          <div className="col-span-full text-center py-8 text-xs" style={{ color: 'var(--text-muted)' }}>
+            No images added yet. Enter an image URL above to add one.
+          </div>
+        )}
       </div>
     </div>
   )
@@ -504,19 +520,22 @@ export default function AdminDashboard() {
 
   // ── Product CRUD ──
   const openProductModal = (data = null) => {
-    // Populate form with mock placeholder images if structural records are blank
-    const baseImages = data?.gallery || [
+    const baseImages = (data?.images?.length ? data.images : null)?.map((img, index) => (
+      typeof img === 'string'
+        ? { id: `img-${index}`, url: img }
+        : { id: img.id || `img-${index}`, url: img.url || img }
+    )) || [
       { id: '1', url: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?w=200' },
       { id: '2', url: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?w=200' }
     ]
     setForm(data
-      ? { name: data.name, price: data.price, description: data.description, category_id: data.category_id, subcategory_id: data.subcategory_id, gallery: baseImages }
-      : { name: '', price: '', description: '', category_id: categories[0]?.id || '', subcategory_id: '', gallery: [] })
+      ? { name: data.name, price: data.price, description: data.description, category_id: data.category_id, subcategory_id: data.subcategory_id, images: baseImages, stock: data.stock ?? 0 }
+      : { name: '', price: '', description: '', category_id: categories[0]?.id || '', subcategory_id: '', images: [], stock: 0 })
     setModal({ type: 'product', data })
     setError('')
   }
   const saveProduct = async () => {
-    const { name, price, description, category_id, subcategory_id, gallery } = form
+    const { name, price, description, category_id, subcategory_id, images, stock } = form
     if (!name?.trim() || !price || !description?.trim() || !category_id || !subcategory_id)
       return setError('All fields are required')
     setSaving(true)
@@ -526,16 +545,17 @@ export default function AdminDashboard() {
         slug: form.slug?.trim() || generateSlug(name, modal.data?.id || Date.now()),
         price: Number(price),
         description,
+        images: (images || []).map(img => img.url).filter(Boolean),
+        stock: Number(stock || 0),
         category_id: Number(category_id),
         subcategory_id: Number(subcategory_id),
-        gallery,
       }
       if (modal.data) {
         const { data } = await productsApi.update(modal.data.id, payload)
-        setProducts(prev => prev.map(p => p.id === data.id ? { ...data, gallery } : p))
+        setProducts(prev => prev.map(p => p.id === data.id ? data : p))
       } else {
         const { data } = await productsApi.create(payload)
-        setProducts(prev => [...prev, { ...data, gallery }])
+        setProducts(prev => [...prev, data])
       }
       setModal(null)
     } catch (e) { setError(e.response?.data?.detail || 'Failed to save') }
@@ -819,10 +839,22 @@ export default function AdminDashboard() {
                 <textarea rows={3} value={form.description || ''} onChange={e => setForm(f => ({ ...f, description: e.target.value }))} className="input-field resize-none" placeholder="Product description…" />
               </div>
 
+              <div>
+                <label className="text-xs font-semibold mb-1 block" style={{ color: 'var(--text-muted)' }}>Stock *</label>
+                <input
+                  type="number"
+                  min="0"
+                  value={form.stock ?? 0}
+                  onChange={e => setForm(f => ({ ...f, stock: e.target.value }))}
+                  className="input-field"
+                  placeholder="0"
+                />
+              </div>
+
               {/* Integrated Image Gallery Drag-and-Drop Attachment Stage */}
               <ImageGallerySortCanvas
-                images={form.gallery || []}
-                onSequenceChange={(updatedGallery) => setForm(f => ({ ...f, gallery: updatedGallery }))}
+                images={form.images || []}
+                onSequenceChange={(updatedImages) => setForm(f => ({ ...f, images: updatedImages }))}
               />
             </>
           )}
