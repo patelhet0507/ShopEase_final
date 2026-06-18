@@ -15,14 +15,13 @@ export default function ProfilePage() {
   const [success, setSuccess] = useState(false)
 
   useEffect(() => {
-    if (user) {
-      setFormData({
-        first_name: user.first_name || '',
-        last_name: user.last_name || '',
-        address: user.address || '',
-        mobile_number: user.mobile_number || ''
-      })
-    }
+    if (!user) return
+    setFormData({
+      first_name: user.first_name || '',
+      last_name: user.last_name || '',
+      address: user.address || '',
+      mobile_number: user.mobile_number || ''
+    })
   }, [user])
 
   const handleChange = (e) => {
@@ -34,7 +33,6 @@ export default function ProfilePage() {
     e.preventDefault()
     setLoading(true)
     setSuccess(false)
-
     try {
       const response = await usersApi.updateProfile(formData)
       if (response.data) {
@@ -51,13 +49,13 @@ export default function ProfilePage() {
   }
 
   return (
-    <motion.div 
+    <motion.div
       initial={{ opacity: 0 }}
       animate={{ opacity: 1 }}
       className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 py-12 px-4"
     >
       <div className="max-w-2xl mx-auto">
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="bg-white rounded-xl shadow-lg p-8"
@@ -66,12 +64,12 @@ export default function ProfilePage() {
           <p className="text-slate-600 mb-8 font-medium">Manage your personal information</p>
 
           {success && (
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
               className="mb-6 p-4 bg-green-50 border-2 border-green-500 rounded-lg"
             >
-              <p className="text-green-700 font-semibold">✓ Profile updated successfully!</p>
+              <p className="text-green-700 font-semibold">Profile updated successfully!</p>
             </motion.div>
           )}
 
@@ -106,7 +104,7 @@ export default function ProfilePage() {
               <label className="block text-sm font-semibold text-slate-900 mb-2">Email</label>
               <input
                 type="email"
-                value={user?.email}
+                value={user?.email || ''}
                 disabled
                 className="w-full px-4 py-3 border-2 border-slate-300 rounded-lg bg-slate-50 font-medium text-slate-700 cursor-not-allowed"
               />
