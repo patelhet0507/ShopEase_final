@@ -16,22 +16,13 @@ const CATEGORY_COLORS = [
   ['#8b5cf6', '#6d28d9'],
 ]
 
-// HELPER: Generates a clean web safe URL slug out of string texts
-const generateCategorySlug = (name, id) => {
-  const cleanText = String(name)
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-') // Replace non-alphanumeric values with dashes
-    .replace(/(^-|-$)/g, '')     // Clean dangling outer borders
-  return `${cleanText}-${id}`
-}
-
 export default function CategoriesPage() {
   const [categories, setCategories] = useState([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
 
   useEffect(() => {
-    categoriesApi.list().then(({ data }) => {
+    categoriesApi.listWithStructure().then(({ data }) => {
       setCategories(data)
       setLoading(false)
     }).catch(() => setLoading(false))
@@ -79,9 +70,6 @@ export default function CategoriesPage() {
             const [from, to] = CATEGORY_COLORS[i % CATEGORY_COLORS.length]
             const totalProducts = cat.subcategories?.reduce((s, sub) => s + (sub.product_count || 0), 0) || 0
             
-            // Generate combined SEO path slug string (e.g. "electronics-12")
-            const categorySlugPath = generateCategorySlug(cat.name, cat.id)
-
             return (
               <StaggerItem key={cat.id}>
                 <motion.div 
@@ -110,7 +98,7 @@ export default function CategoriesPage() {
                           <Package size={22} className="text-white" />
                         </div>
                         <Link
-                          to={`/categories/${categorySlugPath}`}
+                          to={`/categories/${cat.slug}`}
                           className="inline-flex items-center gap-1 text-xs font-semibold px-3 py-1.5 rounded-full transition-all hover:scale-105"
                           style={{ background: `${from}20`, color: from }}
                         >
@@ -131,7 +119,7 @@ export default function CategoriesPage() {
                       {cat.subcategories?.slice(0, 4).map(sub => (
                         <Link
                           key={sub.id}
-                          to={`/categories/${categorySlugPath}?sub=${sub.slug || sub.id}`}
+                          to={`/categories/${cat.slug}?sub=${sub.slug || sub.id}`}
                           className="flex items-center justify-between px-3 py-2 rounded-xl transition-colors hover:bg-[var(--surface-raised)]"
                         >
                           <span className="text-sm font-medium transition-colors group-hover/sub:text-[var(--text-primary)]" style={{ color: 'var(--text-secondary)' }}>
@@ -149,7 +137,7 @@ export default function CategoriesPage() {
                       
                       {(cat.subcategories?.length || 0) > 4 && (
                         <Link
-                          to={`/categories/${categorySlugPath}`}
+                          to={`/categories/${cat.slug}`}
                           className="block text-center text-xs py-2 rounded-xl transition-colors hover:bg-[var(--surface-raised)]"
                           style={{ color: 'var(--text-muted)' }}
                         >
