@@ -1,5 +1,5 @@
 import os
-from fastapi import Depends, HTTPException, Query
+from fastapi import Depends, HTTPException, Query, Header
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import func
@@ -53,6 +53,12 @@ def _slugify(value: str) -> str:
     return cleaned.strip("-")
 
 
+# ===== Header-based Auth Dependency =====
+
+async def get_current_user_id(x_user_id: int = Header(...)):
+    return x_user_id
+
+
 # ===== Auth Endpoints =====
 
 @app.post("/api/auth/register", response_model=schemas.UserOut, status_code=201)
@@ -86,7 +92,7 @@ def login(payload: schemas.LoginRequest, db: Session = Depends(get_db)):
 # ===== User Profile Endpoints (NEW) =====
 
 @app.get("/api/users/me", response_model=schemas.UserOut)
-def get_current_user(user_id: int = Query(...), db: Session = Depends(get_db)):
+def get_current_user(user_id: int = Depends(get_current_user_id), db: Session = Depends(get_db)):
     user = db.query(models.User).filter(models.User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
@@ -94,7 +100,7 @@ def get_current_user(user_id: int = Query(...), db: Session = Depends(get_db)):
 
 
 @app.put("/api/users/me", response_model=schemas.UserOut)
-def update_current_user(user_id: int = Query(...), payload: schemas.UserUpdate = None, db: Session = Depends(get_db)):
+def update_current_user(user_id: int = Depends(get_current_user_id), payload: schemas.UserUpdate = None, db: Session = Depends(get_db)):
     user = db.query(models.User).filter(models.User.id == user_id).first()
     if not user:
         raise HTTPException(status_code=404, detail="User not found")
@@ -637,7 +643,7 @@ def get_review_stats(product_id: int, db: Session = Depends(get_db)):
 
 
 @app.post("/api/products/{product_id}/reviews/", response_model=schemas.ReviewOut)
-def create_review(product_id: int, user_id: int = Query(...), payload: schemas.ReviewCreate = None, db: Session = Depends(get_db)):
+def create_review(product_id: int, user_id: int = Depends(get_current_user_id), payload: schemas.ReviewCreate = None, db: Session = Depends(get_db)):
     product = db.query(models.Product).filter(models.Product.id == product_id).first()
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
@@ -665,7 +671,7 @@ def create_review(product_id: int, user_id: int = Query(...), payload: schemas.R
 
 
 @app.put("/api/reviews/{review_id}/", response_model=schemas.ReviewOut)
-def update_review(review_id: int, user_id: int = Query(...), payload: schemas.ReviewUpdate = None, db: Session = Depends(get_db)):
+def update_review(review_id: int, user_id: int = Depends(get_current_user_id), payload: schemas.ReviewUpdate = None, db: Session = Depends(get_db)):
     review = db.query(models.Review).filter(models.Review.id == review_id).first()
     if not review:
         raise HTTPException(status_code=404, detail="Review not found")
@@ -683,7 +689,7 @@ def update_review(review_id: int, user_id: int = Query(...), payload: schemas.Re
 
 
 @app.delete("/api/reviews/{review_id}/", status_code=204)
-def delete_review(review_id: int, user_id: int = Query(...), db: Session = Depends(get_db)):
+def delete_review(review_id: int, user_id: int = Depends(get_current_user_id), db: Session = Depends(get_db)):
     review = db.query(models.Review).filter(models.Review.id == review_id).first()
     if not review:
         raise HTTPException(status_code=404, detail="Review not found")
@@ -699,7 +705,7 @@ def delete_review(review_id: int, user_id: int = Query(...), db: Session = Depen
 # ===== Orders (NEW - Checkout Flow) =====
 
 @app.post("/api/orders/", response_model=schemas.OrderOut)
-def create_order(user_id: int = Query(...), payload: schemas.OrderCreate = None, db: Session = Depends(get_db)):
+def create_order(user_id: int = Depends(get_current_user_id), payload: schemas.OrderCreate = None, db: Session = Depends(get_db)):
     """Create order from cart items (Cash on Delivery only)"""
     
     user = db.query(models.User).filter(models.User.id == user_id).first()
@@ -769,14 +775,14 @@ def create_order(user_id: int = Query(...), payload: schemas.OrderCreate = None,
 
 
 @app.get("/api/orders/", response_model=List[schemas.OrderListOut])
-def list_user_orders(user_id: int = Query(...), db: Session = Depends(get_db)):
+def list_user_orders(user_id: int = Depends(get_current_user_id), db: Session = Depends(get_db)):
     """List all orders for a user"""
     orders = db.query(models.Order).filter(models.Order.user_id == user_id).order_by(models.Order.created_at.desc()).all()
     return orders
 
 
 @app.get("/api/orders/{order_id}/", response_model=schemas.OrderOut)
-def get_order(order_id: int, user_id: int = Query(...), db: Session = Depends(get_db)):
+def get_order(order_id: int, user_id: int = Depends(get_current_user_id), db: Session = Depends(get_db)):
     """Get order details"""
     order = db.query(models.Order).filter(
         models.Order.id == order_id,
@@ -787,6 +793,15 @@ def get_order(order_id: int, user_id: int = Query(...), db: Session = Depends(ge
         raise HTTPException(status_code=404, detail="Order not found")
     
     return order
+
+
+# ===== Admin Endpoints =====
+
+@app.get("/api/admin/orders/", response_model=List[schemas.OrderOut])
+def admin_list_all_orders(db: Session = Depends(get_db)):
+    """List all orders (admin)"""
+    orders = db.query(models.Order).order_by(models.Order.created_at.desc()).all()
+    return orders
 
 
 @app.put("/api/orders/{order_id}/status", response_model=schemas.OrderOut)

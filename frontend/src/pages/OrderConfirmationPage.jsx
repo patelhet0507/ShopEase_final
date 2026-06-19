@@ -34,10 +34,10 @@ export default function OrderConfirmationPage() {
 
     async function fetchOrder() {
       try {
-        const { data: orders } = await ordersApi.list(user.id)
+        const { data: orders } = await ordersApi.list()
         const match = orders.find(o => o.order_number === orderNumber)
         if (match) {
-          const { data: fullOrder } = await ordersApi.get(match.id, user.id)
+          const { data: fullOrder } = await ordersApi.get(match.id)
           setOrder(fullOrder)
           await clearCart()
         }

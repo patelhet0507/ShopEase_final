@@ -8,7 +8,7 @@ const api = axios.create({
   headers: { 'Content-Type': 'application/json' },
 })
 
-// Automatically attach Bearer token or user_id safely to requests
+// Automatically attach Bearer token or X-User-ID header
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('token')
   const storedUser = localStorage.getItem('shopease_user')
@@ -17,15 +17,11 @@ api.interceptors.request.use((config) => {
     config.headers.Authorization = `Bearer ${token}`
   }
   
-  // Safe URL Search Params Injection
   if (storedUser) {
     try {
       const user = JSON.parse(storedUser)
       if (user?.id) {
-        config.params = {
-          ...config.params,
-          user_id: Number(user.id)
-        }
+        config.headers['X-User-ID'] = Number(user.id)
       }
     } catch {}
   }
@@ -48,10 +44,10 @@ export const usersApi = {
   list: () => api.get('/api/users/'),
   updateRole: (userId, role) =>
     api.put(`/api/users/${userId}/role/`, { role }),
-  getProfile: (userId) =>
-    api.get('/api/users/me', { params: { user_id: userId } }),
-  updateProfile: (userId, profileData) =>
-    api.put('/api/users/me', profileData, { params: { user_id: userId } }),
+  getProfile: () =>
+    api.get('/api/users/me'),
+  updateProfile: (profileData) =>
+    api.put('/api/users/me', profileData),
 }
 
 // Categories (Slug Support)
@@ -127,16 +123,14 @@ export const reviewsApi = {
 
 // Orders
 export const ordersApi = {
-  list: (userId) => api.get('/api/orders/', { params: { user_id: userId } }),
-  get: (orderId, userId) => api.get(`/api/orders/${orderId}/`, { params: { user_id: userId } }),
-  create: (userId, data) =>
-    api.post('/api/orders/', data, {
-      params: { user_id: userId }
-    }),
+  list: () => api.get('/api/orders/'),
+  get: (orderId) => api.get(`/api/orders/${orderId}/`),
+  create: (data) => api.post('/api/orders/', data),
   updateStatus: (orderId, status) =>
     api.put(`/api/orders/${orderId}/status`, null, {
       params: { status }
     }),
+  adminList: () => api.get('/api/admin/orders/'),
 }
 
 export default api

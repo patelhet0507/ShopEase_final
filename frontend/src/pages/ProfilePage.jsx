@@ -6,10 +6,10 @@ import { motion } from 'framer-motion'
 export default function ProfilePage() {
   const { user, setUser } = useAuth()
   const [formData, setFormData] = useState({
-    first_name: '',
-    last_name: '',
-    address: '',
-    mobile_number: ''
+    first_name: user?.first_name || '',
+    last_name: user?.last_name || '',
+    address: user?.address || '',
+    mobile_number: user?.mobile_number || ''
   })
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
@@ -34,12 +34,7 @@ export default function ProfilePage() {
     setLoading(true)
     setSuccess(false)
     try {
-      const stored = localStorage.getItem('shopease_user')
-      const parsed = stored ? JSON.parse(stored) : null
-      const id = user?.id || parsed?.id
-      if (!id) { alert('User not found. Please log in again.'); setLoading(false); return }
-
-      const response = await usersApi.updateProfile(id, formData)
+      const response = await usersApi.updateProfile(formData)
       if (response.data) {
         setUser(response.data)
         localStorage.setItem('shopease_user', JSON.stringify(response.data))
@@ -53,6 +48,14 @@ export default function ProfilePage() {
     } finally {
       setLoading(false)
     }
+  }
+
+  if (!user) {
+    return (
+      <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--bg)' }}>
+        <div className="w-10 h-10 border-4 rounded-full animate-spin" style={{ borderColor: 'var(--border)', borderTopColor: 'var(--neon)' }} />
+      </div>
+    )
   }
 
   return (

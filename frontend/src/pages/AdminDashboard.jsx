@@ -5,7 +5,7 @@ import {
   X, Check, AlertCircle, TrendingUp, ShoppingBag, Tag, ChevronDown, 
   Upload, Move, Calendar, DollarSign, Archive
 } from 'lucide-react'
-import { categoriesApi, subcategoriesApi, productsApi, usersApi } from '../api'
+import { categoriesApi, subcategoriesApi, productsApi, usersApi, ordersApi } from '../api'
 import { FadeIn, StaggerChildren, StaggerItem, Skeleton, Modal } from '../components/ui'
 import { generateSlug } from '../components/product/ProductCard'
 
@@ -415,7 +415,7 @@ function AdminTable({ columns, rows, onEdit, onDelete }) {
 }
 
 // ─── Main Dashboard ────────────────────────────────────
-const TABS = ['Overview', 'Categories', 'Subcategories', 'Products', 'Users']
+const TABS = ['Overview', 'Categories', 'Subcategories', 'Products', 'Users', 'Orders']
 
 export default function AdminDashboard() {
   const [tab, setTab] = useState('Overview')
@@ -423,6 +423,7 @@ export default function AdminDashboard() {
   const [subcategories, setSubcategories] = useState([])
   const [products, setProducts] = useState([])
   const [users, setUsers] = useState([])
+  const [orders, setOrders] = useState([])
   const [loading, setLoading] = useState(true)
 
   // Modal and custom Form Attachment States
@@ -438,11 +439,13 @@ export default function AdminDashboard() {
       subcategoriesApi.list(),
       productsApi.list(),
       usersApi.list(),
-    ]).then(([c, s, p, u]) => {
+      ordersApi.adminList(),
+    ]).then(([c, s, p, u, o]) => {
       setCategories(c.data)
       setSubcategories(s.data)
       setProducts(p.data)
       setUsers(u.data)
+      setOrders(o.data)
       setLoading(false)
     }).catch(() => setLoading(false))
   }, [])
@@ -769,6 +772,87 @@ export default function AdminDashboard() {
                 onEdit={() => {}}
                 onDelete={() => {}}
               />
+            </FadeIn>
+          )}
+
+          {/* ── Orders ── */}
+          {tab === 'Orders' && (
+            <FadeIn>
+              <h2 className="font-bold text-lg mb-5" style={{ color: 'var(--text-primary)' }}>Orders ({orders.length})</h2>
+              <div className="overflow-x-auto rounded-2xl" style={{ border: '1px solid var(--border)' }}>
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr style={{ background: 'var(--surface-raised)', borderBottom: '1px solid var(--border)' }}>
+                      <th className="text-left px-5 py-3 font-semibold text-xs uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>Order #</th>
+                      <th className="text-left px-5 py-3 font-semibold text-xs uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>Customer</th>
+                      <th className="text-left px-5 py-3 font-semibold text-xs uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>Total</th>
+                      <th className="text-left px-5 py-3 font-semibold text-xs uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>Status</th>
+                      <th className="text-left px-5 py-3 font-semibold text-xs uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>Date</th>
+                      <th className="text-right px-5 py-3 font-semibold text-xs uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {orders.map((order, i) => (
+                      <tr key={order.id} className="border-b last:border-0" style={{ borderColor: 'var(--border)', background: i % 2 === 0 ? 'var(--surface)' : 'transparent' }}>
+                        <td className="px-5 py-3.5" style={{ color: 'var(--text-primary)' }}>
+                          <span className="font-mono text-xs">{order.order_number}</span>
+                        </td>
+                        <td className="px-5 py-3.5" style={{ color: 'var(--text-primary)' }}>{order.shipping_name}</td>
+                        <td className="px-5 py-3.5">
+                          <span className="font-semibold text-gradient">₹{order.total_amount?.toLocaleString()}</span>
+                        </td>
+                        <td className="px-5 py-3.5">
+                          <span className="text-xs px-2.5 py-1 rounded-full font-semibold capitalize" style={{
+                            background: order.status === 'pending' ? 'rgba(234,179,8,0.15)' :
+                              order.status === 'confirmed' ? 'rgba(59,130,246,0.15)' :
+                              order.status === 'shipped' ? 'rgba(168,85,247,0.15)' :
+                              order.status === 'delivered' ? 'rgba(34,197,94,0.15)' :
+                              order.status === 'cancelled' ? 'rgba(239,68,68,0.15)' : 'rgba(100,116,139,0.15)',
+                            color: order.status === 'pending' ? '#eab308' :
+                              order.status === 'confirmed' ? '#3b82f6' :
+                              order.status === 'shipped' ? '#a855f7' :
+                              order.status === 'delivered' ? '#22c55e' :
+                              order.status === 'cancelled' ? '#ef4444' : '#64748b',
+                          }}>
+                            {order.status}
+                          </span>
+                        </td>
+                        <td className="px-5 py-3.5 text-xs" style={{ color: 'var(--text-secondary)' }}>
+                          {new Date(order.created_at).toLocaleDateString()}
+                        </td>
+                        <td className="px-5 py-3.5 text-right">
+                          <select
+                            value={order.status}
+                            onChange={async (e) => {
+                              try {
+                                await ordersApi.updateStatus(order.id, e.target.value)
+                                setOrders(prev => prev.map(o => o.id === order.id ? { ...o, status: e.target.value } : o))
+                              } catch (err) {
+                                console.error('Status update failed:', err)
+                              }
+                            }}
+                            className="text-xs px-2 py-1.5 rounded-lg outline-none cursor-pointer"
+                            style={{ background: 'var(--surface-raised)', color: 'var(--text-primary)', border: '1px solid var(--border)' }}
+                          >
+                            <option value="pending">Pending</option>
+                            <option value="confirmed">Confirmed</option>
+                            <option value="shipped">Shipped</option>
+                            <option value="delivered">Delivered</option>
+                            <option value="cancelled">Cancelled</option>
+                          </select>
+                        </td>
+                      </tr>
+                    ))}
+                    {orders.length === 0 && (
+                      <tr>
+                        <td colSpan={6} className="text-center py-10 text-sm" style={{ color: 'var(--text-muted)' }}>
+                          No orders found
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </table>
+              </div>
             </FadeIn>
           )}
         </>

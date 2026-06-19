@@ -54,7 +54,7 @@ export default function CheckoutPage() {
 
     console.log("ORDER PAYLOAD:", orderPayload)
 
-    const response = await ordersApi.create(user.id, orderPayload)
+    const response = await ordersApi.create(orderPayload)
 
     console.log("ORDER RESPONSE:", response.data)
 
