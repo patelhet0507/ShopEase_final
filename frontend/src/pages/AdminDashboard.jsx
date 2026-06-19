@@ -788,64 +788,83 @@ export default function AdminDashboard() {
                       <th className="text-left px-5 py-3 font-semibold text-xs uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>Total</th>
                       <th className="text-left px-5 py-3 font-semibold text-xs uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>Status</th>
                       <th className="text-left px-5 py-3 font-semibold text-xs uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>Date</th>
-                      <th className="text-right px-5 py-3 font-semibold text-xs uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>Actions</th>
+                      <th className="text-left px-5 py-3 font-semibold text-xs uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>Note</th>
+                      <th className="text-right px-5 py-3 font-semibold text-xs uppercase tracking-wider" style={{ color: 'var(--text-muted)' }}>Update</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {orders.map((order, i) => (
-                      <tr key={order.id} className="border-b last:border-0" style={{ borderColor: 'var(--border)', background: i % 2 === 0 ? 'var(--surface)' : 'transparent' }}>
-                        <td className="px-5 py-3.5" style={{ color: 'var(--text-primary)' }}>
-                          <span className="font-mono text-xs">{order.order_number}</span>
-                        </td>
-                        <td className="px-5 py-3.5" style={{ color: 'var(--text-primary)' }}>{order.shipping_name}</td>
-                        <td className="px-5 py-3.5">
-                          <span className="font-semibold text-gradient">₹{order.total_amount?.toLocaleString()}</span>
-                        </td>
-                        <td className="px-5 py-3.5">
-                          <span className="text-xs px-2.5 py-1 rounded-full font-semibold capitalize" style={{
-                            background: order.status === 'pending' ? 'rgba(234,179,8,0.15)' :
-                              order.status === 'confirmed' ? 'rgba(59,130,246,0.15)' :
-                              order.status === 'shipped' ? 'rgba(168,85,247,0.15)' :
-                              order.status === 'delivered' ? 'rgba(34,197,94,0.15)' :
-                              order.status === 'cancelled' ? 'rgba(239,68,68,0.15)' : 'rgba(100,116,139,0.15)',
-                            color: order.status === 'pending' ? '#eab308' :
-                              order.status === 'confirmed' ? '#3b82f6' :
-                              order.status === 'shipped' ? '#a855f7' :
-                              order.status === 'delivered' ? '#22c55e' :
-                              order.status === 'cancelled' ? '#ef4444' : '#64748b',
-                          }}>
-                            {order.status}
-                          </span>
-                        </td>
-                        <td className="px-5 py-3.5 text-xs" style={{ color: 'var(--text-secondary)' }}>
-                          {new Date(order.created_at).toLocaleDateString()}
-                        </td>
-                        <td className="px-5 py-3.5 text-right">
-                          <select
-                            value={order.status}
-                            onChange={async (e) => {
-                              try {
-                                await ordersApi.updateStatus(order.id, e.target.value)
-                                setOrders(prev => prev.map(o => o.id === order.id ? { ...o, status: e.target.value } : o))
-                              } catch (err) {
-                                console.error('Status update failed:', err)
-                              }
-                            }}
-                            className="text-xs px-2 py-1.5 rounded-lg outline-none cursor-pointer"
-                            style={{ background: 'var(--surface-raised)', color: 'var(--text-primary)', border: '1px solid var(--border)' }}
-                          >
-                            <option value="pending">Pending</option>
-                            <option value="confirmed">Confirmed</option>
-                            <option value="shipped">Shipped</option>
-                            <option value="delivered">Delivered</option>
-                            <option value="cancelled">Cancelled</option>
-                          </select>
-                        </td>
-                      </tr>
-                    ))}
+                    {orders.map((order, i) => {
+                      const statusColors = {
+                        pending: { bg: 'rgba(234,179,8,0.15)', text: '#eab308' },
+                        confirmed: { bg: 'rgba(59,130,246,0.15)', text: '#3b82f6' },
+                        shipped: { bg: 'rgba(168,85,247,0.15)', text: '#a855f7' },
+                        delivered: { bg: 'rgba(34,197,94,0.15)', text: '#22c55e' },
+                        cancelled: { bg: 'rgba(239,68,68,0.15)', text: '#ef4444' },
+                      }
+                      const sc = statusColors[order.status] || { bg: 'rgba(100,116,139,0.15)', text: '#64748b' }
+                      return (
+                        <tr key={order.id} className="border-b last:border-0" style={{ borderColor: 'var(--border)', background: i % 2 === 0 ? 'var(--surface)' : 'transparent' }}>
+                          <td className="px-5 py-3.5" style={{ color: 'var(--text-primary)' }}>
+                            <span className="font-mono text-xs">{order.order_number}</span>
+                          </td>
+                          <td className="px-5 py-3.5" style={{ color: 'var(--text-primary)' }}>{order.shipping_name}</td>
+                          <td className="px-5 py-3.5">
+                            <span className="font-semibold text-gradient">₹{order.total_amount?.toLocaleString()}</span>
+                          </td>
+                          <td className="px-5 py-3.5">
+                            <span className="text-xs px-3 py-1.5 rounded-full font-semibold capitalize inline-flex items-center gap-1.5" style={{ background: sc.bg, color: sc.text }}>
+                              <span className="w-1.5 h-1.5 rounded-full" style={{ background: sc.text }} />
+                              {order.status}
+                            </span>
+                          </td>
+                          <td className="px-5 py-3.5 text-xs" style={{ color: 'var(--text-secondary)' }}>
+                            {new Date(order.created_at).toLocaleDateString()}
+                          </td>
+                          <td className="px-5 py-3.5">
+                            <input
+                              type="text"
+                              placeholder="Message to user..."
+                              className="text-xs px-2 py-1.5 rounded-lg w-32 outline-none"
+                              style={{ background: 'var(--surface-raised)', color: 'var(--text-primary)', border: '1px solid var(--border)' }}
+                              id={`note-${order.id}`}
+                              defaultValue=""
+                            />
+                          </td>
+                          <td className="px-5 py-3.5 text-right">
+                            <div className="relative inline-block">
+                              <select
+                                value={order.status}
+                                onChange={async (e) => {
+                                  const newStatus = e.target.value
+                                  const note = document.getElementById(`note-${order.id}`)?.value || ''
+                                  try {
+                                    await ordersApi.updateStatus(order.id, newStatus, note)
+                                    setOrders(prev => prev.map(o => o.id === order.id ? { ...o, status: newStatus } : o))
+                                    document.getElementById(`note-${order.id}`).value = ''
+                                  } catch (err) {
+                                    console.error('Status update failed:', err)
+                                  }
+                                }}
+                                className="text-xs pl-3 pr-8 py-2 rounded-xl outline-none appearance-none cursor-pointer font-semibold transition-all"
+                                style={{
+                                  background: sc.bg,
+                                  color: sc.text,
+                                  border: `1px solid ${sc.text}33`,
+                                }}
+                              >
+                                {['pending', 'confirmed', 'shipped', 'delivered', 'cancelled'].map(s => (
+                                  <option key={s} value={s} style={{ color: statusColors[s]?.text || '#64748b' }}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>
+                                ))}
+                              </select>
+                              <ChevronDown size={12} className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: sc.text }} />
+                            </div>
+                          </td>
+                        </tr>
+                      )
+                    })}
                     {orders.length === 0 && (
                       <tr>
-                        <td colSpan={6} className="text-center py-10 text-sm" style={{ color: 'var(--text-muted)' }}>
+                        <td colSpan={7} className="text-center py-10 text-sm" style={{ color: 'var(--text-muted)' }}>
                           No orders found
                         </td>
                       </tr>

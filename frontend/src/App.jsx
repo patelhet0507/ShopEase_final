@@ -1,4 +1,4 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
+import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom'
 import { AuthProvider, useAuth } from './context/AuthContext'
 import { CartProvider } from './context/CartContext'
 import { ThemeProvider } from './context/ThemeContext'
@@ -15,22 +15,28 @@ import WishlistPage from './pages/WishlistPage'
 import AdminDashboard from './pages/AdminDashboard'
 import CheckoutPage from './pages/CheckoutPage'
 import ProfilePage from './pages/ProfilePage'
+import OrderConfirmationPage from './pages/OrderConfirmationPage'
+import OrderTrackingPage from './pages/OrderTrackingPage'
+import OrdersPage from './pages/OrdersPage'
 
 function PrivateRoute({ children }) {
   const { user } = useAuth()
-  return user ? children : <Navigate to="/login" replace />
+  const location = useLocation()
+  if (!user) return <Navigate to="/login" state={{ from: location }} replace />
+  return children
 }
 
 function AdminRoute({ children }) {
   const { user } = useAuth()
-  if (!user) return <Navigate to="/login" replace />
-  if (user.role !== 'admin') return <Navigate to="/" replace />
+  const location = useLocation()
+  if (!user) return <Navigate to="/login" state={{ from: location }} replace />
+  if (user.role !== 'admin') return <Navigate to="/products" replace />
   return children
 }
 
 function GuestRoute({ children }) {
   const { user } = useAuth()
-  return user ? <Navigate to="/" replace /> : children
+  return user ? <Navigate to="/products" replace /> : children
 }
 
 export default function App() {
@@ -61,6 +67,9 @@ function AppInner() {
           <Route path="wishlist" element={<PrivateRoute><WishlistPage /></PrivateRoute>} />
           <Route path="checkout" element={<PrivateRoute><CheckoutPage /></PrivateRoute>} />
           <Route path="profile" element={<PrivateRoute><ProfilePage /></PrivateRoute>} />
+          <Route path="order-confirmation/:orderNumber" element={<PrivateRoute><OrderConfirmationPage /></PrivateRoute>} />
+          <Route path="order-tracking/:orderNumber" element={<PrivateRoute><OrderTrackingPage /></PrivateRoute>} />
+          <Route path="orders" element={<PrivateRoute><OrdersPage /></PrivateRoute>} />
           <Route path="admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
         </Route>
       </Routes>

@@ -8,28 +8,29 @@ const api = axios.create({
   headers: { 'Content-Type': 'application/json' },
 })
 
-// Automatically attach Bearer token or X-User-ID header
+// Automatically attach Bearer token
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('token')
-  const storedUser = localStorage.getItem('shopease_user')
-  
   if (token) {
     config.headers.Authorization = `Bearer ${token}`
   }
-  
-  if (storedUser) {
-    try {
-      const user = JSON.parse(storedUser)
-      if (user?.id) {
-        config.headers['X-User-ID'] = Number(user.id)
-      }
-    } catch {}
-  }
-  
   return config
 }, (error) => {
   return Promise.reject(error)
 })
+
+// Auto-logout on 401
+api.interceptors.response.use(
+  (response) => response,
+  (error) => {
+    if (error.response?.status === 401) {
+      localStorage.removeItem('token')
+      localStorage.removeItem('shopease_user')
+      window.location.href = '/login'
+    }
+    return Promise.reject(error)
+  }
+)
 
 // Auth
 export const authApi = {
@@ -126,10 +127,11 @@ export const ordersApi = {
   list: () => api.get('/api/orders/'),
   get: (orderId) => api.get(`/api/orders/${orderId}/`),
   create: (data) => api.post('/api/orders/', data),
-  updateStatus: (orderId, status) =>
+  updateStatus: (orderId, status, note) =>
     api.put(`/api/orders/${orderId}/status`, null, {
-      params: { status }
+      params: { status, ...(note ? { note } : {}) }
     }),
+  getEvents: (orderId) => api.get(`/api/orders/${orderId}/events`),
   adminList: () => api.get('/api/admin/orders/'),
 }
 

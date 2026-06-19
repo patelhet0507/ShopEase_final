@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { Zap, ArrowRight, AlertCircle, Check } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
@@ -15,6 +15,8 @@ const PERKS = [
 export default function RegisterPage() {
   const { register, loading } = useAuth()
   const navigate = useNavigate()
+  const location = useLocation()
+  const from = location.state?.from?.pathname || '/products'
   const [form, setForm] = useState({ email: '', password: '', confirm: '' })
   const [errors, setErrors] = useState({})
   const [apiError, setApiError] = useState('')
@@ -34,7 +36,7 @@ export default function RegisterPage() {
     e.preventDefault()
     if (!validate()) return
     const result = await register(form.email, form.password)
-    if (result.success) navigate('/')
+    if (result.success) navigate(from, { replace: true })
     else setApiError(result.error)
   }
 

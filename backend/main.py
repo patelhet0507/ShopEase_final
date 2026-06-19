@@ -1,5 +1,5 @@
 import os
-from fastapi import Depends, HTTPException, Query, Header
+from fastapi import Depends, HTTPException, Query, Header, status
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import func
@@ -53,15 +53,24 @@ def _slugify(value: str) -> str:
     return cleaned.strip("-")
 
 
-# ===== Header-based Auth Dependency =====
+# ===== JWT Auth Dependency =====
 
-async def get_current_user_id(x_user_id: int = Header(...)):
-    return x_user_id
+async def get_current_user(authorization: str = Header(...), db: Session = Depends(get_db)):
+    if not authorization.startswith("Bearer "):
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid authorization header")
+    token = authorization.replace("Bearer ", "")
+    user_id = auth.verify_access_token(token)
+    if user_id is None:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid or expired token")
+    user = db.query(models.User).filter(models.User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found")
+    return user
 
 
 # ===== Auth Endpoints =====
 
-@app.post("/api/auth/register", response_model=schemas.UserOut, status_code=201)
+@app.post("/api/auth/register", response_model=schemas.TokenOut, status_code=201)
 def register(payload: schemas.UserCreate, db: Session = Depends(get_db)):
     existing = db.query(models.User).filter(models.User.email == payload.email).first()
     if existing:
@@ -78,46 +87,42 @@ def register(payload: schemas.UserCreate, db: Session = Depends(get_db)):
     db.add(user)
     db.commit()
     db.refresh(user)
-    return user
+    access_token = auth.create_access_token(user.id)
+    return {"access_token": access_token, "token_type": "bearer", "user": user}
 
 
-@app.post("/api/auth/login", response_model=schemas.UserOut)
+@app.post("/api/auth/login", response_model=schemas.TokenOut)
 def login(payload: schemas.LoginRequest, db: Session = Depends(get_db)):
     user = db.query(models.User).filter(models.User.email == payload.email).first()
     if not user or not auth.verify_password(payload.password, user.hashed_password):
         raise HTTPException(status_code=401, detail="Invalid email or password")
-    return user
+    access_token = auth.create_access_token(user.id)
+    return {"access_token": access_token, "token_type": "bearer", "user": user}
 
 
 # ===== User Profile Endpoints (NEW) =====
 
 @app.get("/api/users/me", response_model=schemas.UserOut)
-def get_current_user(user_id: int = Depends(get_current_user_id), db: Session = Depends(get_db)):
-    user = db.query(models.User).filter(models.User.id == user_id).first()
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-    return user
+def get_current_user_endpoint(current_user: models.User = Depends(get_current_user)):
+    return current_user
 
 
 @app.put("/api/users/me", response_model=schemas.UserOut)
-def update_current_user(user_id: int = Depends(get_current_user_id), payload: schemas.UserUpdate = None, db: Session = Depends(get_db)):
-    user = db.query(models.User).filter(models.User.id == user_id).first()
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
+def update_current_user(payload: schemas.UserUpdate = None, current_user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
 
     if payload.first_name is not None:
-        user.first_name = payload.first_name
+        current_user.first_name = payload.first_name
     if payload.last_name is not None:
-        user.last_name = payload.last_name
+        current_user.last_name = payload.last_name
     if payload.address is not None:
-        user.address = payload.address
+        current_user.address = payload.address
     if payload.mobile_number is not None:
-        user.mobile_number = payload.mobile_number
+        current_user.mobile_number = payload.mobile_number
 
-    user.updated_at = datetime.utcnow()
+    current_user.updated_at = datetime.utcnow()
     db.commit()
-    db.refresh(user)
-    return user
+    db.refresh(current_user)
+    return current_user
 
 
 @app.get("/api/users/", response_model=List[schemas.UserOut])
@@ -643,21 +648,21 @@ def get_review_stats(product_id: int, db: Session = Depends(get_db)):
 
 
 @app.post("/api/products/{product_id}/reviews/", response_model=schemas.ReviewOut)
-def create_review(product_id: int, user_id: int = Depends(get_current_user_id), payload: schemas.ReviewCreate = None, db: Session = Depends(get_db)):
+def create_review(product_id: int, payload: schemas.ReviewCreate = None, current_user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
     product = db.query(models.Product).filter(models.Product.id == product_id).first()
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
 
     existing_review = db.query(models.Review).filter(
         models.Review.product_id == product_id,
-        models.Review.user_id == user_id
+        models.Review.user_id == current_user.id
     ).first()
 
     if existing_review:
         raise HTTPException(status_code=400, detail="Review already exists for this product")
 
     review = models.Review(
-        user_id=user_id,
+        user_id=current_user.id,
         product_id=product_id,
         rating=payload.rating,
         title=payload.title,
@@ -671,12 +676,12 @@ def create_review(product_id: int, user_id: int = Depends(get_current_user_id), 
 
 
 @app.put("/api/reviews/{review_id}/", response_model=schemas.ReviewOut)
-def update_review(review_id: int, user_id: int = Depends(get_current_user_id), payload: schemas.ReviewUpdate = None, db: Session = Depends(get_db)):
+def update_review(review_id: int, payload: schemas.ReviewUpdate = None, current_user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
     review = db.query(models.Review).filter(models.Review.id == review_id).first()
     if not review:
         raise HTTPException(status_code=404, detail="Review not found")
 
-    if review.user_id != user_id:
+    if review.user_id != current_user.id:
         raise HTTPException(status_code=403, detail="Unauthorized")
 
     review.rating = payload.rating
@@ -689,12 +694,12 @@ def update_review(review_id: int, user_id: int = Depends(get_current_user_id), p
 
 
 @app.delete("/api/reviews/{review_id}/", status_code=204)
-def delete_review(review_id: int, user_id: int = Depends(get_current_user_id), db: Session = Depends(get_db)):
+def delete_review(review_id: int, current_user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
     review = db.query(models.Review).filter(models.Review.id == review_id).first()
     if not review:
         raise HTTPException(status_code=404, detail="Review not found")
 
-    if review.user_id != user_id:
+    if review.user_id != current_user.id:
         raise HTTPException(status_code=403, detail="Unauthorized")
 
     db.delete(review)
@@ -705,12 +710,8 @@ def delete_review(review_id: int, user_id: int = Depends(get_current_user_id), d
 # ===== Orders (NEW - Checkout Flow) =====
 
 @app.post("/api/orders/", response_model=schemas.OrderOut)
-def create_order(user_id: int = Depends(get_current_user_id), payload: schemas.OrderCreate = None, db: Session = Depends(get_db)):
+def create_order(payload: schemas.OrderCreate = None, current_user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
     """Create order from cart items (Cash on Delivery only)"""
-    
-    user = db.query(models.User).filter(models.User.id == user_id).first()
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
 
     if not payload.order_items:
         raise HTTPException(status_code=400, detail="Order must contain at least one item")
@@ -739,7 +740,7 @@ def create_order(user_id: int = Depends(get_current_user_id), payload: schemas.O
     order_number = f"ORD-{datetime.utcnow().strftime('%Y%m%d')}-{uuid.uuid4().hex[:8].upper()}"
     
     order = models.Order(
-        user_id=user_id,
+        user_id=current_user.id,
         order_number=order_number,
         shipping_address=payload.shipping_address,
         shipping_mobile=payload.shipping_mobile,
@@ -750,9 +751,8 @@ def create_order(user_id: int = Depends(get_current_user_id), payload: schemas.O
     )
 
     db.add(order)
-    db.flush()  # Flush to get order ID
+    db.flush()
 
-    # Add order items
     for item_data in order_items_data:
         order_item = models.OrderItem(
             order_id=order.id,
@@ -763,11 +763,9 @@ def create_order(user_id: int = Depends(get_current_user_id), payload: schemas.O
         )
         db.add(order_item)
 
-        # Update product stock
         item_data["product"].stock -= item_data["quantity"]
 
-    # Clear user's cart
-    db.query(models.CartItem).filter(models.CartItem.user_id == user_id).delete()
+    db.query(models.CartItem).filter(models.CartItem.user_id == current_user.id).delete()
 
     db.commit()
     db.refresh(order)
@@ -775,24 +773,35 @@ def create_order(user_id: int = Depends(get_current_user_id), payload: schemas.O
 
 
 @app.get("/api/orders/", response_model=List[schemas.OrderListOut])
-def list_user_orders(user_id: int = Depends(get_current_user_id), db: Session = Depends(get_db)):
+def list_user_orders(current_user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
     """List all orders for a user"""
-    orders = db.query(models.Order).filter(models.Order.user_id == user_id).order_by(models.Order.created_at.desc()).all()
+    orders = db.query(models.Order).filter(models.Order.user_id == current_user.id).order_by(models.Order.created_at.desc()).all()
     return orders
 
 
 @app.get("/api/orders/{order_id}/", response_model=schemas.OrderOut)
-def get_order(order_id: int, user_id: int = Depends(get_current_user_id), db: Session = Depends(get_db)):
+def get_order(order_id: int, current_user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
     """Get order details"""
     order = db.query(models.Order).filter(
         models.Order.id == order_id,
-        models.Order.user_id == user_id
+        models.Order.user_id == current_user.id
     ).first()
     
     if not order:
         raise HTTPException(status_code=404, detail="Order not found")
     
     return order
+
+
+@app.get("/api/orders/{order_id}/events", response_model=List[schemas.OrderEventOut])
+def get_order_events(order_id: int, current_user: models.User = Depends(get_current_user), db: Session = Depends(get_db)):
+    order = db.query(models.Order).filter(models.Order.id == order_id).first()
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
+    if order.user_id != current_user.id:
+        raise HTTPException(status_code=403, detail="Unauthorized")
+    events = db.query(models.OrderEvent).filter(models.OrderEvent.order_id == order_id).order_by(models.OrderEvent.created_at.asc()).all()
+    return events
 
 
 # ===== Admin Endpoints =====
@@ -805,7 +814,7 @@ def admin_list_all_orders(db: Session = Depends(get_db)):
 
 
 @app.put("/api/orders/{order_id}/status", response_model=schemas.OrderOut)
-def update_order_status(order_id: int, status: str = Query(...), db: Session = Depends(get_db)):
+def update_order_status(order_id: int, status: str = Query(...), note: str = Query(None), db: Session = Depends(get_db)):
     """Update order status (admin only)"""
     valid_statuses = ["pending", "confirmed", "shipped", "delivered", "cancelled"]
     
@@ -818,6 +827,10 @@ def update_order_status(order_id: int, status: str = Query(...), db: Session = D
 
     order.status = status
     order.updated_at = datetime.utcnow()
+
+    event = models.OrderEvent(order_id=order.id, status=status, note=note)
+    db.add(event)
+
     db.commit()
     db.refresh(order)
     return order

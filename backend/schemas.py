@@ -37,6 +37,12 @@ class LoginRequest(BaseModel):
     password: str
 
 
+class TokenOut(BaseModel):
+    access_token: str
+    token_type: str = "bearer"
+    user: UserOut
+
+
 class RoleUpdate(BaseModel):
     role: str
 
@@ -271,8 +277,20 @@ class OrderOut(BaseModel):
     status: str
     payment_method: str
     order_items: List[OrderItemOut] = []
+    events: List[OrderEventOut] = []
     created_at: datetime
     updated_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+class OrderEventOut(BaseModel):
+    id: int
+    order_id: int
+    status: str
+    note: Optional[str] = None
+    created_at: datetime
 
     class Config:
         from_attributes = True

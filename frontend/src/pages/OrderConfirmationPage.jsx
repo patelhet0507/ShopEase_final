@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react'
 import { useParams, Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { CheckCircle, Download, ShoppingBag, Home, ArrowRight, Package } from 'lucide-react'
+import { CheckCircle, Download, ShoppingBag, Home, ArrowRight, Package, Truck } from 'lucide-react'
 import { useCart } from '../context/CartContext'
 import { useAuth } from '../context/AuthContext'
 import { ordersApi } from '../api'
@@ -234,7 +234,14 @@ export default function OrderConfirmationPage() {
           </motion.button>
 
           {/* Action Buttons */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <Link
+              to={`/order-tracking/${order.order_number}`}
+              className="btn-primary flex items-center justify-center gap-2 py-3"
+            >
+              <Truck size={18} />
+              Track Order
+            </Link>
             <Link
               to="/products"
               className="btn-secondary flex items-center justify-center gap-2 py-3"
@@ -244,7 +251,7 @@ export default function OrderConfirmationPage() {
             </Link>
             <Link
               to="/"
-              className="btn-primary flex items-center justify-center gap-2 py-3"
+              className="btn-secondary flex items-center justify-center gap-2 py-3"
             >
               <Home size={18} />
               Back to Home

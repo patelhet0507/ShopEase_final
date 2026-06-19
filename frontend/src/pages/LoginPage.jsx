@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { Link, useNavigate } from 'react-router-dom'
+import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { Zap, ArrowRight, AlertCircle } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
@@ -8,6 +8,8 @@ import { FloatingInput } from '../components/ui'
 export default function LoginPage() {
   const { login, loading } = useAuth()
   const navigate = useNavigate()
+  const location = useLocation()
+  const from = location.state?.from?.pathname || '/products'
   const [form, setForm] = useState({ email: '', password: '' })
   const [errors, setErrors] = useState({})
   const [apiError, setApiError] = useState('')
@@ -26,7 +28,7 @@ export default function LoginPage() {
     if (!validate()) return
     const result = await login(form.email, form.password)
     if (result.success) {
-      navigate('/')
+      navigate(from, { replace: true })
     } else {
       setApiError(result.error)
     }

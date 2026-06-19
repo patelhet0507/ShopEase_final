@@ -1,6 +1,6 @@
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { useState, useEffect } from 'react'
-import { ShoppingBag, Heart, Sun, Moon, Menu, X, LayoutDashboard, LogOut, Zap, User } from 'lucide-react'
+import { ShoppingBag, Heart, Sun, Moon, Menu, X, LayoutDashboard, LogOut, Zap, User, Package } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { useCart } from '../../context/CartContext'
 import { useTheme } from '../../context/ThemeContext'
@@ -177,6 +177,10 @@ export default function Navbar() {
                         <Link to="/profile" className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-secondary hover:text-primary hover:bg-surface-raised transition-all">
                           <User size={15} />
                           Profile
+                        </Link>
+                        <Link to="/orders" className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-secondary hover:text-primary hover:bg-surface-raised transition-all">
+                          <Package size={15} />
+                          My Orders
                         </Link>
                         <Link to="/wishlist" className="flex items-center gap-2.5 px-3 py-2 rounded-lg text-sm text-secondary hover:text-primary hover:bg-surface-raised transition-all">
                           <Heart size={15} />
