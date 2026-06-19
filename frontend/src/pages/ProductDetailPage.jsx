@@ -4,6 +4,7 @@ import { ShoppingCart, Heart, ArrowLeft, Star, ShieldCheck, Truck, RotateCcw, Ch
 import { useCart } from '../context/CartContext'
 import { useAuth } from '../context/AuthContext'
 import { productsApi, reviewsApi } from '../api'
+import ProductVariants from '../components/product/ProductVariants'
 
 export default function ProductDetailPage() {
   const { productSlug } = useParams()
@@ -20,6 +21,7 @@ export default function ProductDetailPage() {
   const [showReviewForm, setShowReviewForm] = useState(false)
   const [newReview, setNewReview] = useState({ rating: 5, title: '', comment: '' })
   const [submittingReview, setSubmittingReview] = useState(false)
+  const [selectedVariants, setSelectedVariants] = useState({})
 
   // BULLETPROOF REGEX: Extract ONLY the database ID digits (\d+) found at the very end ($) of the slug string
   const match = productSlug ? productSlug.match(/\d+$/) : null
@@ -251,6 +253,12 @@ export default function ProductDetailPage() {
             <p className="mt-6 text-sm text-secondary leading-relaxed border-t border-subtle pt-6">
               {product.description || 'No specialized description payload has been provided for this product row configuration inside the database system.'}
             </p>
+
+            {/* Variants */}
+            <ProductVariants
+              product={product}
+              onVariantSelect={setSelectedVariants}
+            />
           </div>
 
           {/* Action Interface Controls Row */}

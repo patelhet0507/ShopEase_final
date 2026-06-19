@@ -67,7 +67,7 @@ export default function OrderConfirmationPage() {
 
     if (order.order_items && order.order_items.length > 0) {
       order.order_items.forEach((item, index) => {
-        content += `${index + 1}. ${item.product_name || 'Product'}\n`
+        content += `${index + 1}. ${item.product_name || 'Product'}${item.variant_type && item.variant_value ? ` (${item.variant_type}: ${item.variant_value})` : ''}\n`
         content += `   Quantity: ${item.quantity}\n`
         content += `   Price: ₹${item.price_at_order ? item.price_at_order.toLocaleString() : 'N/A'}\n\n`
       })
@@ -185,7 +185,9 @@ export default function OrderConfirmationPage() {
                     {order.order_items.map((item, index) => (
                       <div key={index} className="flex justify-between text-sm">
                         <span style={{ color: 'var(--text-secondary)' }}>
-                          {item.product_name || 'Product'} x {item.quantity}
+                          {item.product_name || 'Product'}
+                          {item.variant_type && item.variant_value ? ` (${item.variant_type}: ${item.variant_value})` : ''}
+                          {' x '}{item.quantity}
                         </span>
                         <span className="font-semibold" style={{ color: 'var(--text-primary)' }}>
                           ₹{item.price_at_order ? (item.price_at_order * item.quantity).toLocaleString() : 'N/A'}

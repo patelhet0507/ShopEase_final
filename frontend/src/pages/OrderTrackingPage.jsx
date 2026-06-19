@@ -152,7 +152,7 @@ export default function OrderTrackingPage() {
           <h2 className="font-bold mb-4" style={{ color: 'var(--text-primary)' }}>Items</h2>
           {order.order_items?.map((item, i) => (
             <div key={i} className="flex justify-between py-2 text-sm" style={{ borderBottom: i < order.order_items.length - 1 ? '1px solid var(--border)' : 'none' }}>
-              <span style={{ color: 'var(--text-primary)' }}>{item.product_name} x {item.quantity}</span>
+              <span style={{ color: 'var(--text-primary)' }}>{item.product_name}{item.variant_type && item.variant_value ? ` (${item.variant_type}: ${item.variant_value})` : ''} x {item.quantity}</span>
               <span className="font-semibold" style={{ color: 'var(--text-primary)' }}>₹{(item.product_price * item.quantity).toLocaleString()}</span>
             </div>
           ))}

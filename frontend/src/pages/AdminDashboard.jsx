@@ -3,196 +3,17 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   LayoutDashboard, Package, Layers, Grid3x3, Users, Plus, Pencil, Trash2,
   X, Check, AlertCircle, TrendingUp, ShoppingBag, Tag, ChevronDown, 
-  Upload, Move, Calendar, DollarSign, Archive
+  Upload, Move, Calendar, DollarSign, Archive, ShoppingCart, UserPlus
 } from 'lucide-react'
 import { categoriesApi, subcategoriesApi, productsApi, usersApi, ordersApi } from '../api'
 import { FadeIn, StaggerChildren, StaggerItem, Skeleton, Modal } from '../components/ui'
 import { generateSlug } from '../components/product/ProductCard'
 
-// ─── Mock Sales Data Engine for Analytics ──────────────────────────
-const ANALYTICS_DATA = {
-  Weekly: [
-    { label: 'Mon', revenue: 12000, inventory: 450 },
-    { label: 'Tue', revenue: 19000, inventory: 420 },
-    { label: 'Wed', revenue: 15000, inventory: 410 },
-    { label: 'Thu', revenue: 28000, inventory: 380 },
-    { label: 'Fri', revenue: 22000, inventory: 350 },
-    { label: 'Sat', revenue: 34000, inventory: 310 },
-    { label: 'Sun', revenue: 41000, inventory: 290 },
-  ],
-  Monthly: [
-    { label: 'Week 1', revenue: 85000, inventory: 500 },
-    { label: 'Week 2', revenue: 120000, inventory: 420 },
-    { label: 'Week 3', revenue: 98000, inventory: 380 },
-    { label: 'Week 4', revenue: 165000, inventory: 290 },
-  ]
-}
-
-// ─── Dynamic Real-Time Sales SVG Multi-Line Graph Stage ───────────
-function AnalyticsGraphStage({ dataset }) {
-  const [timeframe, setTimeframe] = useState('Weekly')
-  const [hoveredIndex, setHoveredIndex] = useState(null)
-  
-  const data = ANALYTICS_DATA[timeframe]
-  
-  // Graph Configurations
-  const width = 600
-  const height = 240
-  const padding = 40
-  
-  const maxRevenue = Math.max(...data.map(d => d.revenue)) * 1.15
-  const maxInventory = Math.max(...data.map(d => d.inventory)) * 1.15
-
-  // Map Data Vectors into Viewport Coordinate Arcs
-  const getPoints = (type) => {
-    return data.map((d, index) => {
-      const x = padding + (index / (data.length - 1)) * (width - padding * 2)
-      const maxVal = type === 'revenue' ? maxRevenue : maxInventory
-      const currentVal = type === 'revenue' ? d.revenue : d.inventory
-      const y = height - padding - (currentVal / maxVal) * (height - padding * 2)
-      return { x, y, value: currentVal, label: d.label }
-    })
-  }
-
-  const revenuePoints = getPoints('revenue')
-  const inventoryPoints = getPoints('inventory')
-
-  const createPathD = (points) => {
-    return points.reduce((acc, p, i) => i === 0 ? `M ${p.x} ${p.y}` : `${acc} L ${p.x} ${p.y}`, '')
-  }
-
-  return (
-    <div className="p-6 rounded-2xl mb-10 relative overflow-hidden flex flex-col"
-      style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
-      
-      {/* Stage Control Bar */}
-      <div className="flex items-center justify-between mb-6 flex-wrap gap-4">
-        <div>
-          <h3 className="font-bold text-base flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
-            <TrendingUp size={16} className="text-purple-500" />
-            Active Store Metrics Studio
-          </h3>
-          <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Real-time cross-over charting of revenue flows vs. stock overhead</p>
-        </div>
-        <div className="flex gap-1 p-1 rounded-xl bg-neutral-500/10" style={{ background: 'var(--surface-raised)' }}>
-          {['Weekly', 'Monthly'].map(t => (
-            <button
-              key={t}
-              onClick={() => { setTimeframe(t); setHoveredIndex(null); }}
-              className={`px-3 py-1.5 text-xs font-semibold rounded-lg transition-all ${
-                timeframe === t ? 'shadow-sm text-white' : ''
-              }`}
-              style={timeframe === t ? { background: 'linear-gradient(135deg, #a855f7, #7c3aed)' } : { color: 'var(--text-secondary)' }}
-            >
-              {t}
-            </button>
-          ))}
-        </div>
-      </div>
-
-      {/* Interactive Legend Indicators */}
-      <div className="flex items-center gap-6 mb-4 text-xs font-medium">
-        <div className="flex items-center gap-2">
-          <span className="w-3 h-0.5 rounded" style={{ backgroundColor: '#a855f7' }} />
-          <span style={{ color: 'var(--text-secondary)' }}>Revenue Flow (₹)</span>
-        </div>
-        <div className="flex items-center gap-2">
-          <span className="w-3 h-0.5 rounded" style={{ backgroundColor: '#22c55e' }} />
-          <span style={{ color: 'var(--text-secondary)' }}>Inventory Overheads (Units)</span>
-        </div>
-      </div>
-
-      {/* SVG Canvas Renderer */}
-      <div className="relative w-full overflow-x-auto">
-        <svg viewBox={`0 0 ${width} ${height}`} className="w-full h-auto min-w-[500px]">
-          {/* Horizontal Grid lines */}
-          {[0, 0.25, 0.5, 0.75, 1].map((ratio, i) => {
-            const y = padding + ratio * (height - padding * 2)
-            return (
-              <line key={i} x1={padding} y1={y} x2={width - padding} y2={y} 
-                stroke="var(--border)" strokeDasharray="4,4" />
-            )
-          })}
-
-          {/* Core Multi-Line Vectors */}
-          <motion.path
-            initial={{ pathLength: 0 }}
-            animate={{ pathLength: 1 }}
-            transition={{ duration: 0.8, ease: 'easeInOut' }}
-            d={createPathD(revenuePoints)}
-            fill="none"
-            stroke="#a855f7"
-            strokeWidth="2.5"
-            strokeLinecap="round"
-          />
-          <motion.path
-            initial={{ pathLength: 0 }}
-            animate={{ pathLength: 1 }}
-            transition={{ duration: 0.8, ease: 'easeInOut' }}
-            d={createPathD(inventoryPoints)}
-            fill="none"
-            stroke="#22c55e"
-            strokeWidth="2.5"
-            strokeLinecap="round"
-          />
-
-          {/* Interactive Dynamic Node Trigger Mapping */}
-          {revenuePoints.map((pt, idx) => (
-            <g key={idx} 
-               onMouseEnter={() => setHoveredIndex(idx)}
-               onMouseLeave={() => setHoveredIndex(null)}
-               className="cursor-pointer"
-            >
-              {/* Invisible touch bounds */}
-              <rect x={pt.x - 15} y={0} width={30} height={height} fill="transparent" />
-              
-              {/* Highlight Trackline */}
-              {hoveredIndex === idx && (
-                <line x1={pt.x} y1={padding} x2={pt.x} y2={height - padding} stroke="var(--border)" strokeWidth="1" />
-              )}
-              
-              {/* Revenue Points */}
-              <circle cx={pt.x} cy={pt.y} r={hoveredIndex === idx ? 5 : 3.5} fill="#a855f7" stroke="var(--surface)" strokeWidth="1.5" />
-              {/* Inventory Points */}
-              <circle cx={inventoryPoints[idx].x} cy={inventoryPoints[idx].y} r={hoveredIndex === idx ? 5 : 3.5} fill="#22c55e" stroke="var(--surface)" strokeWidth="1.5" />
-              
-              {/* X Axis Labels */}
-              <text x={pt.x} y={height - 12} textAnchor="middle" fill="var(--text-muted)" className="text-[10px] font-medium font-sans">
-                {pt.label}
-              </text>
-            </g>
-          ))}
-        </svg>
-
-        {/* Dynamic Tooltip Element Popover */}
-        <AnimatePresence>
-          {hoveredIndex !== null && (
-            <motion.div
-              initial={{ opacity: 0, y: 10, scale: 0.95 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 10 }}
-              className="absolute pointer-events-none p-3 rounded-xl shadow-xl border flex flex-col gap-1 z-30"
-              style={{
-                left: `${(revenuePoints[hoveredIndex].x / width) * 100}%`,
-                top: '20%',
-                transform: 'translateX(-50%)',
-                background: 'var(--surface)',
-                borderColor: 'var(--border)'
-              }}
-            >
-              <span className="text-[10px] uppercase font-bold text-neutral-400">{data[hoveredIndex].label} Timeline</span>
-              <div className="flex items-center gap-2 text-xs font-semibold text-purple-500">
-                <DollarSign size={12} /> Rev: <span>₹{data[hoveredIndex].revenue.toLocaleString()}</span>
-              </div>
-              <div className="flex items-center gap-2 text-xs font-semibold text-green-500">
-                <Archive size={12} /> Stock: <span>{data[hoveredIndex].inventory} Units</span>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </div>
-    </div>
-  )
+function getWeekStart() {
+  const now = new Date()
+  const day = now.getDay()
+  const diff = now.getDate() - day + (day === 0 ? -6 : 1)
+  return new Date(now.setDate(diff))
 }
 
 // ─── Image URL Input Canvas ─────────────────────────────────────
@@ -679,9 +500,45 @@ export default function AdminDashboard() {
                 <StatCard icon={Users} label="Users" value={users.length} color="#f59e0b" delay={0.24} />
               </div>
 
-              {/* Advanced Real-time Sales Analytic Stage insertion */}
+              {/* Real stats this week */}
               <FadeIn>
-                <AnalyticsGraphStage />
+                {(() => {
+                  const weekStart = getWeekStart()
+                  const ordersThisWeek = orders.filter(o => new Date(o.created_at) >= weekStart)
+                  const revenueThisWeek = ordersThisWeek.reduce((sum, o) => sum + (o.total_amount || 0), 0)
+                  const usersThisWeek = users.filter(u => new Date(u.created_at) >= weekStart)
+                  return (
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+                      <div className="p-4 rounded-2xl flex items-center gap-4" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
+                        <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'rgba(168,85,247,0.15)' }}>
+                          <ShoppingCart size={18} className="text-purple-500" />
+                        </div>
+                        <div>
+                          <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Orders This Week</p>
+                          <p className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>{ordersThisWeek.length}</p>
+                        </div>
+                      </div>
+                      <div className="p-4 rounded-2xl flex items-center gap-4" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
+                        <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'rgba(34,197,94,0.15)' }}>
+                          <DollarSign size={18} className="text-green-500" />
+                        </div>
+                        <div>
+                          <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Revenue This Week</p>
+                          <p className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>₹{revenueThisWeek.toLocaleString()}</p>
+                        </div>
+                      </div>
+                      <div className="p-4 rounded-2xl flex items-center gap-4" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
+                        <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'rgba(59,130,246,0.15)' }}>
+                          <UserPlus size={18} className="text-blue-500" />
+                        </div>
+                        <div>
+                          <p className="text-xs" style={{ color: 'var(--text-muted)' }}>New Users This Week</p>
+                          <p className="text-xl font-bold" style={{ color: 'var(--text-primary)' }}>{usersThisWeek.length}</p>
+                        </div>
+                      </div>
+                    </div>
+                  )
+                })()}
               </FadeIn>
 
               {/* Recent products */}
@@ -1008,25 +865,23 @@ export default function AdminDashboard() {
                     </div>
                   ))}
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex flex-col sm:flex-row gap-2">
                   <input
                     type="text"
                     placeholder="Type (e.g. Size)"
-                    className="input-field text-xs flex-[35]"
+                    className="input-field text-xs flex-1"
                     id="variant-type-input"
-                    style={{ minWidth: 0 }}
                   />
                   <input
                     type="text"
-                    placeholder="Value (e.g. Large)"
-                    className="input-field text-xs flex-[35]"
+                    placeholder="Values, comma-separated (e.g. S, M, L)"
+                    className="input-field text-xs flex-[2]"
                     id="variant-value-input"
-                    style={{ minWidth: 0 }}
                   />
                   <input
                     type="number"
                     placeholder="+₹"
-                    className="input-field text-xs w-16"
+                    className="input-field text-xs w-20"
                     id="variant-price-input"
                     defaultValue="0"
                     min="0"
@@ -1034,7 +889,7 @@ export default function AdminDashboard() {
                   <input
                     type="number"
                     placeholder="Stock"
-                    className="input-field text-xs w-16"
+                    className="input-field text-xs w-20"
                     id="variant-stock-input"
                     defaultValue="0"
                     min="0"
@@ -1046,11 +901,13 @@ export default function AdminDashboard() {
                       const priceInput = document.getElementById('variant-price-input')
                       const stockInput = document.getElementById('variant-stock-input')
                       const type = typeInput?.value?.trim()
-                      const value = valueInput?.value?.trim()
-                      if (!type || !value) return
+                      const valuesRaw = valueInput?.value?.trim()
+                      if (!type || !valuesRaw) return
+                      const values = valuesRaw.split(',').map(v => v.trim()).filter(Boolean)
+                      if (values.length === 0) return
                       const priceAdj = parseInt(priceInput?.value || '0', 10) || 0
                       const stock = parseInt(stockInput?.value || '0', 10) || 0
-                      setFormVariants(prev => [...prev, { id: Date.now(), type, value, price_adjustment: priceAdj, stock }])
+                      setFormVariants(prev => [...prev, ...values.map(v => ({ id: Date.now() + Math.random(), type, value: v, price_adjustment: priceAdj, stock }))])
                       typeInput.value = ''
                       valueInput.value = ''
                       priceInput.value = '0'
@@ -1093,4 +950,3 @@ export default function AdminDashboard() {
     </div>
   )
 }
-  

@@ -797,7 +797,9 @@ def create_order(payload: schemas.OrderCreate = None, current_user: models.User 
         order_items_data.append({
             "product": product,
             "quantity": item.quantity,
-            "price": product.price
+            "price": product.price,
+            "variant_type": item.variant_type,
+            "variant_value": item.variant_value
         })
 
     # Create order
@@ -823,7 +825,9 @@ def create_order(payload: schemas.OrderCreate = None, current_user: models.User 
             product_id=item_data["product"].id,
             product_name=item_data["product"].name,
             product_price=item_data["price"],
-            quantity=item_data["quantity"]
+            quantity=item_data["quantity"],
+            variant_type=item_data.get("variant_type"),
+            variant_value=item_data.get("variant_value")
         )
         db.add(order_item)
 

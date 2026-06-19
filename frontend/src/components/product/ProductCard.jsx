@@ -173,7 +173,7 @@ export default function ProductCard({ product, index = 0, onQuickView }) {
     >
       <motion.div 
         ref={cardRef}
-        className="perspective-1000 h-80 w-full cursor-pointer relative group/card"
+        className="perspective-1000 min-h-[260px] sm:h-80 w-full cursor-pointer relative group/card"
         onMouseMove={handleMouseMove}
         onMouseEnter={() => setHovering(true)}
         onMouseLeave={handleMouseLeave}
@@ -219,7 +219,7 @@ export default function ProductCard({ product, index = 0, onQuickView }) {
               }}
             />
 
-            <div className="relative h-40 overflow-hidden bg-surface-raised flex-shrink-0">
+            <div className="relative h-28 sm:h-40 overflow-hidden bg-surface-raised flex-shrink-0">
               {!imageLoaded && <div className="absolute inset-0 shimmer" />}
               
               {/* 🟢 DYNAMIC IMAGE DISPLAY */}
@@ -285,7 +285,7 @@ export default function ProductCard({ product, index = 0, onQuickView }) {
               </button>
             </div>
 
-            <div className="p-4 flex-1 flex flex-col justify-between overflow-hidden">
+            <div className="p-3 sm:p-4 flex-1 flex flex-col justify-between overflow-hidden">
               <div className="overflow-hidden">
                 <p className="text-[11px] font-bold tracking-wider mb-1 uppercase text-muted">
                   {product.subcategory_name || product.category_name || 'Product'}
