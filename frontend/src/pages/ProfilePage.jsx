@@ -2,9 +2,35 @@ import { useState, useEffect } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { usersApi } from '../api/index'
 import { motion } from 'framer-motion'
+import { User, Mail, MapPin, Smartphone, PenLine, ShieldCheck, Star } from 'lucide-react'
+
+const LEVELS = [
+  { level: 1, minExp: 0, title: 'New Reviewer' },
+  { level: 2, minExp: 50, title: 'Regular Reviewer' },
+  { level: 3, minExp: 150, title: 'Verified Reviewer', badge: true },
+  { level: 4, minExp: 300, title: 'Expert Reviewer', badge: true },
+  { level: 5, minExp: 500, title: 'Top Reviewer', badge: true },
+  { level: 6, minExp: 1000, title: 'Legendary Reviewer', badge: true },
+]
+
+function getLevel(exp) {
+  let current = LEVELS[0]
+  for (const l of LEVELS) {
+    if (exp >= l.minExp) current = l
+  }
+  return current
+}
+
+function getNextLevel(exp) {
+  for (let i = 0; i < LEVELS.length - 1; i++) {
+    if (exp < LEVELS[i + 1].minExp) return LEVELS[i + 1]
+  }
+  return null
+}
 
 export default function ProfilePage() {
-  const { user, setUser } = useAuth()
+  const { user, setUser, refreshUser } = useAuth()
+  const [editing, setEditing] = useState(false)
   const [formData, setFormData] = useState({
     first_name: user?.first_name || '',
     last_name: user?.last_name || '',
@@ -24,6 +50,10 @@ export default function ProfilePage() {
     })
   }, [user])
 
+  useEffect(() => {
+    refreshUser()
+  }, [])
+
   const handleChange = (e) => {
     const { name, value } = e.target
     setFormData(prev => ({ ...prev, [name]: value }))
@@ -36,9 +66,9 @@ export default function ProfilePage() {
     try {
       const response = await usersApi.updateProfile(formData)
       if (response.data) {
-        setUser(response.data)
-        localStorage.setItem('shopease_user', JSON.stringify(response.data))
+        await refreshUser()
         setSuccess(true)
+        setEditing(false)
         setTimeout(() => setSuccess(false), 3000)
       }
     } catch (error) {
@@ -58,6 +88,11 @@ export default function ProfilePage() {
     )
   }
 
+  const exp = user.exp || 0
+  const level = getLevel(exp)
+  const nextLevel = getNextLevel(exp)
+  const progress = nextLevel ? ((exp - level.minExp) / (nextLevel.minExp - level.minExp)) * 100 : 100
+
   return (
     <motion.div
       initial={{ opacity: 0 }}
@@ -69,121 +104,143 @@ export default function ProfilePage() {
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
-          className="rounded-xl shadow-lg p-8"
+          className="rounded-xl shadow-lg overflow-hidden"
           style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}
         >
-          <h1 className="text-4xl font-bold mb-2" style={{ color: 'var(--text-primary)' }}>My Profile</h1>
-          <p className="mb-8 font-medium" style={{ color: 'var(--text-secondary)' }}>Manage your personal information</p>
+          {/* Avatar + Name Header */}
+          <div className="p-8 pb-0">
+            <div className="flex items-center gap-5 mb-6">
+              <div className="w-16 h-16 rounded-2xl flex items-center justify-center text-2xl font-bold text-white shrink-0"
+                style={{ background: 'linear-gradient(135deg, #a855f7, #7c3aed)' }}>
+                {(user.first_name || user.email || 'U')[0].toUpperCase()}
+              </div>
+              <div className="flex-1 min-w-0">
+                <h1 className="text-2xl font-bold truncate" style={{ color: 'var(--text-primary)' }}>
+                  {user.first_name ? `${user.first_name} ${user.last_name || ''}` : user.email?.split('@')[0] || 'User'}
+                </h1>
+                <p className="text-sm truncate" style={{ color: 'var(--text-secondary)' }}>{user.email}</p>
+                {level.badge && (
+                  <div className="flex items-center gap-1.5 mt-1.5">
+                    <ShieldCheck size={14} style={{ color: '#22c55e' }} />
+                    <span className="text-xs font-semibold" style={{ color: '#22c55e' }}>Verified Reviewer</span>
+                  </div>
+                )}
+              </div>
+              <button
+                onClick={() => setEditing(!editing)}
+                className="btn-primary text-sm px-4 py-2 cursor-pointer shrink-0"
+              >
+                <PenLine size={14} /> {editing ? 'Cancel' : 'Edit'}
+              </button>
+            </div>
+          </div>
+
+          {/* EXP Card */}
+          <div className="mx-8 mb-6 p-5 rounded-2xl" style={{ background: 'var(--surface-raised)', border: '1px solid var(--border)' }}>
+            <div className="flex items-center justify-between mb-3">
+              <div className="flex items-center gap-2">
+                <Star size={16} style={{ color: '#f59e0b' }} />
+                <span className="font-bold text-sm" style={{ color: 'var(--text-primary)' }}>Level {level.level}</span>
+                <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: 'rgba(168,85,247,0.15)', color: '#a855f7' }}>{level.title}</span>
+              </div>
+              <span className="text-xs font-medium" style={{ color: 'var(--text-muted)' }}>{exp} EXP</span>
+            </div>
+            <div className="h-2 rounded-full overflow-hidden" style={{ background: 'var(--bg)' }}>
+              <motion.div
+                initial={{ width: 0 }}
+                animate={{ width: `${Math.min(progress, 100)}%` }}
+                transition={{ duration: 0.8, ease: 'easeOut' }}
+                className="h-full rounded-full"
+                style={{ background: 'linear-gradient(90deg, #a855f7, #7c3aed)' }}
+              />
+            </div>
+            {nextLevel && (
+              <p className="text-xs mt-2" style={{ color: 'var(--text-muted)' }}>
+                {nextLevel.minExp - exp} EXP to {nextLevel.title}
+              </p>
+            )}
+            {!nextLevel && (
+              <p className="text-xs mt-2 font-semibold" style={{ color: '#f59e0b' }}>Maximum Level Reached!</p>
+            )}
+          </div>
 
           {success && (
             <motion.div
               initial={{ opacity: 0, y: -10 }}
               animate={{ opacity: 1, y: 0 }}
-              className="mb-6 p-4 rounded-lg"
+              className="mx-8 mb-6 p-4 rounded-lg"
               style={{ background: 'rgba(34,197,94,0.1)', border: '2px solid rgba(34,197,94,0.3)' }}
             >
               <p className="font-semibold" style={{ color: '#22c55e' }}>Profile updated successfully!</p>
             </motion.div>
           )}
 
-          <form onSubmit={handleSubmit} className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-              <div>
-                <label className="block text-sm font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>First Name</label>
-                <input
-                  type="text"
-                  name="first_name"
-                  value={formData.first_name}
-                  onChange={handleChange}
-                  className="w-full px-4 py-3 rounded-lg transition font-medium"
-                  style={{
-                    background: 'var(--surface-raised)',
-                    border: '2px solid var(--border)',
-                    color: 'var(--text-primary)',
-                  }}
-                  placeholder="John"
-                />
+          {/* Info Display or Edit Form */}
+          <div className="px-8 pb-8">
+            {editing ? (
+              <form onSubmit={handleSubmit} className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <label className="block text-sm font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>First Name</label>
+                    <input type="text" name="first_name" value={formData.first_name} onChange={handleChange}
+                      className="input-field" placeholder="John" />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>Last Name</label>
+                    <input type="text" name="last_name" value={formData.last_name} onChange={handleChange}
+                      className="input-field" placeholder="Doe" />
+                  </div>
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>Mobile Number</label>
+                  <input type="tel" name="mobile_number" value={formData.mobile_number} onChange={handleChange}
+                    className="input-field" placeholder="+91-9999999999" />
+                </div>
+                <div>
+                  <label className="block text-sm font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>Address</label>
+                  <textarea name="address" value={formData.address} onChange={handleChange} rows="4"
+                    className="input-field resize-none" placeholder="123 Main St, City, State 12345" />
+                </div>
+                <button type="submit" disabled={loading}
+                  className="btn-primary w-full justify-center py-4 text-lg font-bold">
+                  {loading ? 'Saving...' : 'Save Changes'}
+                </button>
+              </form>
+            ) : (
+              <div className="space-y-4">
+                <div className="flex items-center gap-3 p-4 rounded-xl" style={{ background: 'var(--surface-raised)' }}>
+                  <User size={18} style={{ color: 'var(--text-muted)' }} />
+                  <div>
+                    <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Name</p>
+                    <p className="font-medium" style={{ color: 'var(--text-primary)' }}>
+                      {user.first_name || user.last_name ? `${user.first_name || ''} ${user.last_name || ''}`.trim() : '—'}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 p-4 rounded-xl" style={{ background: 'var(--surface-raised)' }}>
+                  <Mail size={18} style={{ color: 'var(--text-muted)' }} />
+                  <div>
+                    <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Email</p>
+                    <p className="font-medium" style={{ color: 'var(--text-primary)' }}>{user.email}</p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3 p-4 rounded-xl" style={{ background: 'var(--surface-raised)' }}>
+                  <Smartphone size={18} style={{ color: 'var(--text-muted)' }} />
+                  <div>
+                    <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Mobile</p>
+                    <p className="font-medium" style={{ color: 'var(--text-primary)' }}>{user.mobile_number || '—'}</p>
+                  </div>
+                </div>
+                <div className="flex items-start gap-3 p-4 rounded-xl" style={{ background: 'var(--surface-raised)' }}>
+                  <MapPin size={18} style={{ color: 'var(--text-muted)', marginTop: 2 }} />
+                  <div>
+                    <p className="text-xs" style={{ color: 'var(--text-muted)' }}>Address</p>
+                    <p className="font-medium" style={{ color: 'var(--text-primary)' }}>{user.address || '—'}</p>
+                  </div>
+                </div>
               </div>
-
-              <div>
-                <label className="block text-sm font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>Last Name</label>
-                <input
-                  type="text"
-                  name="last_name"
-                  value={formData.last_name}
-                  onChange={handleChange}
-                  className="w-full px-4 py-3 rounded-lg transition font-medium"
-                  style={{
-                    background: 'var(--surface-raised)',
-                    border: '2px solid var(--border)',
-                    color: 'var(--text-primary)',
-                  }}
-                  placeholder="Doe"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="block text-sm font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>Email</label>
-              <input
-                type="email"
-                value={user?.email || ''}
-                disabled
-                className="w-full px-4 py-3 rounded-lg font-medium cursor-not-allowed"
-                style={{
-                  background: 'var(--surface-raised)',
-                  border: '2px solid var(--border)',
-                  color: 'var(--text-muted)',
-                  opacity: 0.7,
-                }}
-              />
-              <p className="text-xs mt-1" style={{ color: 'var(--text-muted)' }}>Email cannot be changed</p>
-            </div>
-
-            <div>
-              <label className="block text-sm font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>Mobile Number</label>
-              <input
-                type="tel"
-                name="mobile_number"
-                value={formData.mobile_number}
-                onChange={handleChange}
-                className="w-full px-4 py-3 rounded-lg transition font-medium"
-                style={{
-                  background: 'var(--surface-raised)',
-                  border: '2px solid var(--border)',
-                  color: 'var(--text-primary)',
-                }}
-                placeholder="+91-9999999999"
-              />
-            </div>
-
-            <div>
-              <label className="block text-sm font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>Address</label>
-              <textarea
-                name="address"
-                value={formData.address}
-                onChange={handleChange}
-                rows="4"
-                className="w-full px-4 py-3 rounded-lg transition font-medium"
-                style={{
-                  background: 'var(--surface-raised)',
-                  border: '2px solid var(--border)',
-                  color: 'var(--text-primary)',
-                }}
-                placeholder="123 Main St, City, State 12345"
-              />
-            </div>
-
-            <button
-              type="submit"
-              disabled={loading}
-              className="btn-primary w-full justify-center py-4 text-lg font-bold"
-            >
-              {loading ? 'Saving...' : 'Save Changes'}
-            </button>
-          </form>
-
-
+            )}
+          </div>
         </motion.div>
       </div>
     </motion.div>

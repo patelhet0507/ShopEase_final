@@ -403,7 +403,14 @@ export default function ProductDetailPage() {
                       </div>
                       <div>
                         <p className="font-semibold" style={{ color: 'var(--text-primary)' }}>{review.user_email?.split('@')[0] || 'User'}</p>
-                        <p className="text-xs" style={{ color: 'var(--text-muted)' }}>{new Date(review.created_at).toLocaleDateString()}</p>
+                        <div className="flex items-center gap-1.5">
+                          <p className="text-xs" style={{ color: 'var(--text-muted)' }}>{new Date(review.created_at).toLocaleDateString()}</p>
+                          {(review.user_exp || 0) >= 150 && (
+                            <span className="text-xs flex items-center gap-0.5 font-medium" style={{ color: '#22c55e' }}>
+                              <ShieldCheck size={10} /> Verified Reviewer
+                            </span>
+                          )}
+                        </div>
                       </div>
                     </div>
                     <div className="flex items-center gap-0.5">

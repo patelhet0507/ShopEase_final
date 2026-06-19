@@ -3,7 +3,7 @@ import { Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { Package, ChevronRight, Search, Layers } from 'lucide-react'
 import { categoriesApi } from '../api'
-import { FadeIn, StaggerChildren, StaggerItem, Skeleton, EmptyState } from '../components/ui'
+import { FadeIn, Skeleton, EmptyState } from '../components/ui'
 
 const CATEGORY_COLORS = [
   ['#a855f7', '#7c3aed'],
@@ -65,19 +65,29 @@ export default function CategoriesPage() {
       ) : filtered.length === 0 ? (
         <EmptyState icon={Layers} title="No categories found" description="Try a different search term." />
       ) : (
-        <StaggerChildren className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <motion.div
+          initial="hidden"
+          animate="visible"
+          variants={{
+            hidden: {},
+            visible: { transition: { staggerChildren: 0.04, delayChildren: 0.05 } }
+          }}
+          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8"
+        >
           {filtered.map((cat, i) => {
             const [from, to] = CATEGORY_COLORS[i % CATEGORY_COLORS.length]
             const totalProducts = cat.subcategories?.reduce((s, sub) => s + (sub.product_count || 0), 0) || 0
             
             return (
-              <StaggerItem key={cat.id}>
-                <motion.div 
-                  className="relative rounded-3xl overflow-visible group"
-                  whileHover={{ y: -5 }}
-                  transition={{ type: "spring", stiffness: 300, damping: 20 }}
-                >
-                  {/* Visual Ambient Card Glow Backdrop */}
+              <motion.div
+                key={cat.id}
+                variants={{
+                  hidden: { opacity: 0, y: 15 },
+                  visible: { opacity: 1, y: 0, transition: { duration: 0.3 } }
+                }}
+              >
+                <div className="relative rounded-3xl overflow-hidden group transition-transform duration-300 hover:-translate-y-0.5" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
+                  {/* Ambient Card Glow */}
                   <div 
                     className="absolute inset-0 opacity-0 group-hover:opacity-100 blur-2xl rounded-3xl transition-all duration-500 pointer-events-none scale-105 z-0"
                     style={{
@@ -85,77 +95,73 @@ export default function CategoriesPage() {
                       filter: 'blur(24px)'
                     }}
                   />
-
-                  {/* Card Content Container */}
-                  <div className="relative rounded-3xl overflow-hidden bg-[var(--surface)] z-10 border transition-colors duration-300 group-hover:border-transparent" style={{ border: '1px solid var(--border)' }}>
-                    
-                    {/* Category Header Area */}
-                    <div className="relative p-6 pb-8"
-                      style={{ background: `linear-gradient(135deg, ${from}12, ${to}06)` }}>
-                      <div className="flex items-start justify-between mb-4">
-                        <div className="w-12 h-12 rounded-2xl flex items-center justify-center"
-                          style={{ background: `linear-gradient(135deg, ${from}, ${to})`, boxShadow: `0 8px 24px ${from}40` }}>
-                          <Package size={22} className="text-white" />
-                        </div>
-                        <Link
-                          to={`/categories/${cat.slug}`}
-                          className="inline-flex items-center gap-1 text-xs font-semibold px-3 py-1.5 rounded-full transition-all hover:scale-105"
-                          style={{ background: `${from}20`, color: from }}
-                        >
-                          View all <ChevronRight size={12} />
-                        </Link>
+                  
+                  {/* Category Header */}
+                  <div className="relative p-6 pb-8 z-10"
+                    style={{ background: `linear-gradient(135deg, ${from}12, ${to}06)` }}>
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="w-12 h-12 rounded-2xl flex items-center justify-center"
+                        style={{ background: `linear-gradient(135deg, ${from}, ${to})`, boxShadow: `0 8px 24px ${from}40` }}>
+                        <Package size={22} className="text-white" />
                       </div>
-
-                      <h2 className="font-display font-bold text-xl mb-1" style={{ color: 'var(--text-primary)' }}>
-                        {cat.name}
-                      </h2>
-                      <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
-                        {cat.subcategories?.length || 0} subcategories • {totalProducts} products
-                      </p>
+                      <Link
+                        to={`/categories/${cat.slug}`}
+                        className="inline-flex items-center gap-1 text-xs font-semibold px-3 py-1.5 rounded-full transition-all hover:scale-105"
+                        style={{ background: `${from}20`, color: from }}
+                      >
+                        View all <ChevronRight size={12} />
+                      </Link>
                     </div>
 
-                    {/* Subcategories Navigation List */}
-                    <div className="p-4 space-y-1.5" style={{ background: 'var(--surface)' }}>
-                      {cat.subcategories?.slice(0, 4).map(sub => (
-                        <Link
-                          key={sub.id}
-                          to={`/categories/${cat.slug}?sub=${sub.slug}`}
-                          className="flex items-center justify-between px-3 py-2 rounded-xl transition-colors hover:bg-[var(--surface-raised)]"
-                        >
-                          <span className="text-sm font-medium transition-colors group-hover/sub:text-[var(--text-primary)]" style={{ color: 'var(--text-secondary)' }}>
-                            {sub.name}
-                          </span>
-                          <div className="flex items-center gap-2">
-                            <span className="text-xs px-2 py-0.5 rounded-full"
-                              style={{ background: `${from}15`, color: from }}>
-                              {sub.product_count}
-                            </span>
-                            <ChevronRight size={12} style={{ color: 'var(--text-muted)' }} />
-                          </div>
-                        </Link>
-                      ))}
-                      
-                      {(cat.subcategories?.length || 0) > 4 && (
-                        <Link
-                          to={`/categories/${cat.slug}`}
-                          className="block text-center text-xs py-2 rounded-xl transition-colors hover:bg-[var(--surface-raised)]"
-                          style={{ color: 'var(--text-muted)' }}
-                        >
-                          +{cat.subcategories.length - 4} more subcategories
-                        </Link>
-                      )}
-                      {(!cat.subcategories || cat.subcategories.length === 0) && (
-                        <p className="text-xs text-center py-2" style={{ color: 'var(--text-muted)' }}>
-                          No subcategories yet
-                        </p>
-                      )}
-                    </div>
+                    <h2 className="font-display font-bold text-xl mb-1" style={{ color: 'var(--text-primary)' }}>
+                      {cat.name}
+                    </h2>
+                    <p className="text-xs" style={{ color: 'var(--text-muted)' }}>
+                      {cat.subcategories?.length || 0} subcategories • {totalProducts} products
+                    </p>
                   </div>
-                </motion.div>
-              </StaggerItem>
+
+                  {/* Subcategories */}
+                  <div className="p-4 space-y-1.5 relative z-10" style={{ background: 'var(--surface)' }}>
+                    {cat.subcategories?.slice(0, 4).map(sub => (
+                      <Link
+                        key={sub.id}
+                        to={`/categories/${cat.slug}/${sub.slug}`}
+                        className="flex items-center justify-between px-3 py-2 rounded-xl transition-colors hover:bg-[var(--surface-raised)]"
+                      >
+                        <span className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>
+                          {sub.name}
+                        </span>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xs px-2 py-0.5 rounded-full"
+                            style={{ background: `${from}15`, color: from }}>
+                            {sub.product_count}
+                          </span>
+                          <ChevronRight size={12} style={{ color: 'var(--text-muted)' }} />
+                        </div>
+                      </Link>
+                    ))}
+                    
+                    {(cat.subcategories?.length || 0) > 4 && (
+                      <Link
+                        to={`/categories/${cat.slug}`}
+                        className="block text-center text-xs py-2 rounded-xl transition-colors hover:bg-[var(--surface-raised)]"
+                        style={{ color: 'var(--text-muted)' }}
+                      >
+                        +{cat.subcategories.length - 4} more subcategories
+                      </Link>
+                    )}
+                    {(!cat.subcategories || cat.subcategories.length === 0) && (
+                      <p className="text-xs text-center py-2" style={{ color: 'var(--text-muted)' }}>
+                        No subcategories yet
+                      </p>
+                    )}
+                  </div>
+                </div>
+              </motion.div>
             )
           })}
-        </StaggerChildren>
+        </motion.div>
       )}
     </div>
   )

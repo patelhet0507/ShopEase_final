@@ -5,6 +5,8 @@ import { CheckCircle, Download, ShoppingBag, Home, ArrowRight, Package, Truck } 
 import { useCart } from '../context/CartContext'
 import { useAuth } from '../context/AuthContext'
 import { ordersApi } from '../api'
+import { jsPDF } from 'jspdf'
+import 'jspdf-autotable'
 
 export default function OrderConfirmationPage() {
   const { orderNumber } = useParams()
@@ -50,58 +52,202 @@ export default function OrderConfirmationPage() {
     fetchOrder()
   }, [orderNumber, user?.id, clearCart, order])
 
-  const generateReceiptContent = () => {
-    if (!order) return ''
-
-    let content = `SHOP EASE - ORDER RECEIPT\n`
-    content += `================================\n\n`
-    content += `Order Number: ${order.order_number}\n`
-    content += `Date: ${new Date(order.created_at).toLocaleString()}\n\n`
-    content += `SHIPPING INFORMATION\n`
-    content += `-------------------\n`
-    content += `Name: ${order.shipping_name}\n`
-    content += `Mobile: ${order.shipping_mobile}\n`
-    content += `Address: ${order.shipping_address}\n\n`
-    content += `ORDER ITEMS\n`
-    content += `-----------\n`
-
-    if (order.order_items && order.order_items.length > 0) {
-      order.order_items.forEach((item, index) => {
-        content += `${index + 1}. ${item.product_name || 'Product'}\n`
-        content += `   Quantity: ${item.quantity}\n`
-        content += `   Price: ₹${item.price_at_order ? item.price_at_order.toLocaleString() : 'N/A'}\n\n`
-      })
-    }
-
-    content += `TOTAL\n`
-    content += `-----\n`
-    content += `Total Amount: ₹${order.total_amount ? order.total_amount.toLocaleString() : 'N/A'}\n\n`
-    content += `Payment Method: Cash on Delivery (COD)\n`
-    content += `Status: ${order.status || 'Pending'}\n\n`
-    content += `================================\n`
-    content += `Thank you for shopping with ShopEase!\n`
-
-    return content
-  }
-
   const downloadReceipt = async () => {
     if (!order) return
 
     setDownloading(true)
     try {
-      const content = generateReceiptContent()
-      const blob = new Blob([content], { type: 'text/plain' })
-      const url = URL.createObjectURL(blob)
-      const a = document.createElement('a')
-      a.href = url
-      a.download = `receipt_${order.order_number}.txt`
-      document.body.appendChild(a)
-      a.click()
-      document.body.removeChild(a)
-      URL.revokeObjectURL(url)
+      const doc = new jsPDF('p', 'mm', 'a4')
+      const pageW = 210
+      const pageH = 297
+      const margin = 18
+      const contentW = pageW - margin * 2
+
+      // Watermark
+      doc.saveGraphicsState()
+      doc.setGState(new doc.GState({ opacity: 0.06 }))
+      doc.setTextColor(168, 85, 247)
+      doc.setFontSize(72)
+      for (let y = -80; y < pageH + 80; y += 80) {
+        for (let x = -80; x < pageW + 80; x += 120) {
+          doc.text('ShopEase', x, y, { angle: 35 })
+        }
+      }
+      doc.restoreGraphicsState()
+
+      // Draw border
+      doc.setDrawColor(168, 85, 247)
+      doc.setLineWidth(0.8)
+      doc.rect(margin - 2, margin - 2, contentW + 4, pageH - margin * 2 + 4)
+      doc.setDrawColor(200, 160, 240)
+      doc.setLineWidth(0.3)
+      doc.rect(margin - 1, margin - 1, contentW + 2, pageH - margin * 2 + 2)
+
+      // Logo area
+      doc.setFillColor(168, 85, 247)
+      doc.roundedRect(margin, 24, 14, 14, 3, 3, 'F')
+      doc.setTextColor(255, 255, 255)
+      doc.setFontSize(10)
+      doc.setFont('helvetica', 'bold')
+      doc.text('SE', margin + 2.5, 34.5)
+
+      doc.setTextColor(30, 30, 30)
+      doc.setFontSize(22)
+      doc.setFont('helvetica', 'bold')
+      doc.text('ShopEase', margin + 20, 35)
+
+      doc.setFontSize(15)
+      doc.setFont('helvetica', 'normal')
+      doc.setTextColor(168, 85, 247)
+      doc.text('INVOICE', margin + 20, 45)
+
+      // Invoice meta right side
+      doc.setFontSize(8)
+      doc.setFont('helvetica', 'normal')
+      doc.setTextColor(120, 120, 120)
+      doc.text('Invoice #', pageW - margin - 60, 28)
+      doc.setTextColor(30, 30, 30)
+      doc.setFont('helvetica', 'bold')
+      doc.setFontSize(9)
+      doc.text(`${order.order_number}`, pageW - margin - 60, 35)
+      doc.setTextColor(120, 120, 120)
+      doc.setFont('helvetica', 'normal')
+      doc.setFontSize(8)
+      doc.text('Date:', pageW - margin - 60, 44)
+      doc.setTextColor(30, 30, 30)
+      doc.setFont('helvetica', 'bold')
+      doc.setFontSize(9)
+      doc.text(new Date(order.created_at).toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric' }), pageW - margin - 60, 51)
+
+      // Divider
+      doc.setDrawColor(220, 220, 220)
+      doc.setLineWidth(0.3)
+      doc.line(margin, 54, pageW - margin, 54)
+
+      // Bill To
+      doc.setTextColor(120, 120, 120)
+      doc.setFontSize(8)
+      doc.setFont('helvetica', 'normal')
+      doc.text('BILL TO', margin, 66)
+      doc.setTextColor(30, 30, 30)
+      doc.setFont('helvetica', 'bold')
+      doc.setFontSize(10)
+      let billY = 73
+      doc.text(order.shipping_name || 'N/A', margin, billY)
+      billY += 6
+      doc.setFont('helvetica', 'normal')
+      doc.setFontSize(9)
+      doc.setTextColor(80, 80, 80)
+      doc.text(order.shipping_mobile || '', margin, billY)
+      billY += 5
+      // Address lines
+      const addrLines = doc.splitTextToSize(order.shipping_address || '', 80)
+      addrLines.forEach(line => { doc.text(line, margin, billY); billY += 4.5 })
+
+      // Payment info right side
+      doc.setTextColor(120, 120, 120)
+      doc.setFontSize(8)
+      doc.setFont('helvetica', 'normal')
+      doc.text('PAYMENT', pageW - margin - 55, 66)
+      doc.setFontSize(9)
+      doc.setTextColor(80, 80, 80)
+      doc.setFont('helvetica', 'normal')
+      doc.text('Method:', pageW - margin - 55, 74)
+      doc.setTextColor(30, 30, 30)
+      doc.setFont('helvetica', 'bold')
+      doc.text('Cash on Delivery', pageW - margin - 22, 74)
+      doc.setTextColor(80, 80, 80)
+      doc.setFont('helvetica', 'normal')
+      doc.text('Status:', pageW - margin - 55, 81)
+      doc.setTextColor(34, 197, 94)
+      doc.setFont('helvetica', 'bold')
+      doc.text((order.status || 'Pending').toUpperCase(), pageW - margin - 22, 81)
+
+      // Items table
+      let tableY = billY + 8
+      const items = order.order_items || []
+      const tableData = items.map((item, i) => [
+        `${i + 1}`,
+        item.product_name || 'Product',
+        `${item.quantity}`,
+        `₹${Number(item.product_price || 0).toLocaleString()}`,
+        `₹${(Number(item.product_price || 0) * item.quantity).toLocaleString()}`
+      ])
+
+      doc.autoTable({
+        startY: tableY,
+        head: [['#', 'Item', 'Qty', 'Unit Price', 'Total']],
+        body: tableData,
+        theme: 'plain',
+        headStyles: {
+          fillColor: [168, 85, 247],
+          textColor: [255, 255, 255],
+          fontStyle: 'bold',
+          fontSize: 9,
+          cellPadding: 4,
+        },
+        bodyStyles: {
+          fontSize: 9,
+          textColor: [60, 60, 60],
+          cellPadding: 3.5,
+        },
+        alternateRowStyles: {
+          fillColor: [248, 245, 255],
+        },
+        columnStyles: {
+          0: { cellWidth: 12, halign: 'center' },
+          1: { cellWidth: 'auto' },
+          2: { cellWidth: 16, halign: 'center' },
+          3: { cellWidth: 30, halign: 'right' },
+          4: { cellWidth: 30, halign: 'right' },
+        },
+        margin: { left: margin, right: margin },
+        tableLineColor: [230, 230, 230],
+        tableLineWidth: 0.2,
+      })
+
+      // Total section
+      const finalY = doc.lastAutoTable.finalY + 8
+      doc.setDrawColor(220, 220, 220)
+      doc.setLineWidth(0.3)
+      doc.line(margin, finalY, pageW - margin, finalY)
+
+      const totalY = finalY + 8
+      doc.setTextColor(80, 80, 80)
+      doc.setFontSize(9)
+      doc.setFont('helvetica', 'normal')
+      doc.text('Total Amount:', margin, totalY)
+      doc.setTextColor(30, 30, 30)
+      doc.setFont('helvetica', 'bold')
+      doc.setFontSize(14)
+      doc.text(`₹${Number(order.total_amount || 0).toLocaleString()}`, pageW - margin - 30, totalY, { align: 'right' })
+
+      // Footer
+      const footerY = pageH - margin - 20
+      doc.setDrawColor(220, 220, 220)
+      doc.setLineWidth(0.3)
+      doc.line(margin, footerY, pageW - margin, footerY)
+
+      doc.setTextColor(168, 85, 247)
+      doc.setFontSize(8)
+      doc.setFont('helvetica', 'bold')
+      doc.text('ShopEase', margin, footerY + 8)
+
+      doc.setTextColor(150, 150, 150)
+      doc.setFont('helvetica', 'normal')
+      doc.setFontSize(7)
+      doc.text('Thank you for your purchase!', margin, footerY + 15)
+      doc.text('For any queries, contact support@shopease.com', margin, footerY + 20)
+
+      // Page number
+      doc.setFontSize(7)
+      doc.setTextColor(180, 180, 180)
+      doc.text('Page 1 of 1', pageW - margin, footerY + 15, { align: 'right' })
+
+      doc.save(`receipt_${order.order_number}.pdf`)
     } catch (error) {
-      console.error('Error downloading receipt:', error)
-      alert('Failed to download receipt. Please try again.')
+      console.error('Error generating PDF:', error)
+      alert('Failed to generate PDF receipt. Please try again.')
     } finally {
       setDownloading(false)
     }
@@ -190,7 +336,7 @@ export default function OrderConfirmationPage() {
                           {' x '}{item.quantity}
                         </span>
                         <span className="font-semibold" style={{ color: 'var(--text-primary)' }}>
-                          ₹{item.price_at_order ? (item.price_at_order * item.quantity).toLocaleString() : 'N/A'}
+                          ₹{item.product_price ? (item.product_price * item.quantity).toLocaleString() : 'N/A'}
                         </span>
                       </div>
                     ))}
@@ -227,7 +373,7 @@ export default function OrderConfirmationPage() {
             ) : (
               <>
                 <Download size={20} />
-                Download Receipt (ZIP)
+                Download Receipt (PDF)
               </>
             )}
           </motion.button>

@@ -1,19 +1,19 @@
 import { useEffect, useState } from 'react'
-import { useParams, Link, useSearchParams } from 'react-router-dom'
+import { useParams, Link, useNavigate } from 'react-router-dom'
 import { ChevronRight, Package, ArrowLeft, Layers } from 'lucide-react'
 import { categoriesApi } from '../api'
 import ProductCard from '../components/product/ProductCard'
 import { FadeIn, Skeleton, EmptyState } from '../components/ui'
-import { AnimatePresence, motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 
 export default function CategoryDetailPage() {
-  const { categorySlug } = useParams()
-  const [searchParams, setSearchParams] = useSearchParams()
+  const { categorySlug, subSlug } = useParams()
+  const navigate = useNavigate()
   const [category, setCategory] = useState(null)
   const [loading, setLoading] = useState(true)
   
-  // Track selected subcategory code slug without refreshing pages
-  const activeSubSlug = searchParams.get('sub') || 'all'
+  // Track selected subcategory from path
+  const activeSubSlug = subSlug || 'all'
   const activeSubIdMatch = activeSubSlug ? String(activeSubSlug).match(/\d+$/) : null
   const activeSubId = activeSubIdMatch ? parseInt(activeSubIdMatch[0], 10) : null
 
@@ -68,13 +68,12 @@ export default function CategoryDetailPage() {
   const activeSubcategoryName = activeSubcategory?.name
 
   // Handles SEO parameter mutations on standard location history arrays
-  const handleSubcategoryToggle = (subSlug) => {
-    if (subSlug === 'all') {
-      searchParams.delete('sub')
+  const handleSubcategoryToggle = (slug) => {
+    if (slug === 'all') {
+      navigate(`/categories/${categorySlug}`, { replace: true })
     } else {
-      searchParams.set('sub', subSlug)
+      navigate(`/categories/${categorySlug}/${slug}`, { replace: true })
     }
-    setSearchParams(searchParams)
   }
 
   return (
@@ -100,6 +99,7 @@ export default function CategoryDetailPage() {
                 initial={{ opacity: 0, x: -10 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -10 }}
+                transition={{ duration: 0.15 }}
               >
                 <ChevronRight size={12} />
                 <span className="font-semibold text-purple-500 px-2 py-0.5 rounded-md bg-purple-500/10">
@@ -180,22 +180,21 @@ export default function CategoryDetailPage() {
             } 
           />
         ) : (
-          <motion.div layout className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
+          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-5">
             <AnimatePresence mode="popLayout">
               {filteredProducts.map((product, i) => (
                 <motion.div
                   key={product.slug || product.id}
-                  layout
-                  initial={{ opacity: 0, scale: 0.92 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.92 }}
-                  transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  exit={{ opacity: 0, scale: 0.95 }}
+                  transition={{ duration: 0.2, delay: Math.min(i * 0.02, 0.3) }}
                 >
                   <ProductCard product={{ ...product, category_name: category.name }} index={i} />
                 </motion.div>
               ))}
             </AnimatePresence>
-          </motion.div>
+          </div>
         )}
       </div>
     </div>

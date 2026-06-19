@@ -371,3 +371,23 @@
 .animate-particle-3 { animation: particle-burst 0.5s cubic-bezier(0.1, 0.8, 0.3, 1) forwards; --tw-x: 0px; --tw-y: -70px; }
 .animate-particle-4 { animation: particle-burst 0.5s cubic-bezier(0.1, 0.8, 0.3, 1) forwards; --tw-x: -60px; --tw-y: 40px; }
 .animate-particle-5 { animation: particle-burst 0.5s cubic-bezier(0.1, 0.8, 0.3, 1) forwards; --tw-x: 60px; --tw-y: 50px; }
+
+/* GPU-accelerated marquee */
+@keyframes marquee-scroll {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+.marquee-track {
+  animation: marquee-scroll 30s linear infinite;
+}
+.marquee-track:hover {
+  animation-play-state: paused;
+}
+
+/* GPU layer promotion for card animations */
+.perspective-1000 > * {
+  will-change: transform;
+}
+.card-premium {
+  will-change: transform;
+}

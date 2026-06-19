@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react'
-import { AnimatePresence, motion } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import {
   SlidersHorizontal, Search, X, ChevronDown, Package,
   Grid2X2, Grid3x3, LayoutList, Laptop, Smartphone, Shirt, Watch, Home
@@ -195,7 +195,8 @@ export default function ProductsPage() {
       )}
 
       <div className="flex gap-8">
-        <aside className="hidden lg:block w-64 flex-shrink-0 sticky top-24 self-start">
+        <aside className="hidden lg:block w-64 flex-shrink-0 self-start"
+          style={{ position: 'sticky', top: '100px', maxHeight: 'calc(100vh - 140px)', overflowY: 'auto', overscrollBehavior: 'contain' }}>
           <div className="p-5 rounded-2xl animate-fade-in" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
             <div className="flex items-center gap-2 mb-5 pb-4 border-b" style={{ borderColor: 'var(--border)' }}>
               <SlidersHorizontal size={15} className="text-purple-500" />
@@ -393,16 +394,15 @@ export default function ProductsPage() {
               action={<button onClick={resetFilters} className="btn-primary">Reset Grid Matrix</button>}
             />
           ) : (
-            <motion.div layout className={gridContainerClass} transition={{ type: 'spring', stiffness: 300, damping: 30 }}>
+            <div className={gridContainerClass}>
               <AnimatePresence mode="popLayout">
                 {filtered.map((product, i) => (
                   <motion.div
                     key={product.id}
-                    layout
-                    initial={{ opacity: 0, y: 12, scale: 0.98 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    exit={{ opacity: 0, scale: 0.94 }}
-                    transition={{ duration: 0.25, delay: (i % 8) * 0.03 }}
+                    initial={{ opacity: 0, y: 12 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                    transition={{ duration: 0.2, delay: Math.min(i * 0.015, 0.3) }}
                     className={gridVariant === 'density-list' ? 'w-full' : ''}
                   >
                     {gridVariant === 'density-list' ? (
@@ -418,7 +418,7 @@ export default function ProductsPage() {
                           <p className="text-xs truncate" style={{ color: 'var(--text-muted)' }}>{product.description}</p>
                         </div>
                         <div className="text-right flex-shrink-0 ml-4">
-                          <span className="text-sm font-bold text-gradient">â‚¹{Number(product.price || 0).toLocaleString()}</span>
+                          <span className="text-sm font-bold text-gradient">₹{Number(product.price || 0).toLocaleString()}</span>
                           <span className="block text-[10px]" style={{ color: 'var(--text-muted)' }}>In Stock</span>
                         </div>
                       </div>
@@ -428,7 +428,7 @@ export default function ProductsPage() {
                   </motion.div>
                 ))}
               </AnimatePresence>
-            </motion.div>
+            </div>
           )}
         </div>
       </div>

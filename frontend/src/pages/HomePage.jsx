@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from 'react'
 import { Link } from 'react-router-dom'
-import { motion, useScroll, useTransform, useMotionValue, useSpring, AnimatePresence } from 'framer-motion'
+import { motion, AnimatePresence } from 'framer-motion'
 import { ArrowRight, Sparkles, Truck, Lock, Award, Zap, Flame, Clock } from 'lucide-react'
 import { productsApi, categoriesApi } from '../api'
 import ProductCard from '../components/product/ProductCard'
@@ -69,10 +69,10 @@ function SpotlightCard({ children, cat, idx }) {
   return (
     <motion.div
       variants={{
-        hidden: { opacity: 0, y: 20 },
-        visible: { opacity: 1, y: 0, transition: { type: 'spring', stiffness: 200 } }
+        hidden: { opacity: 0, y: 10 },
+        visible: { opacity: 1, y: 0, transition: { duration: 0.3 } }
       }}
-      whileHover={{ y: -4 }}
+      whileHover={{ y: -3 }}
       className="group cursor-pointer relative overflow-hidden rounded-3xl"
       onMouseMove={handleMouseMove}
       onMouseEnter={() => setIsHovered(true)}
@@ -95,56 +95,26 @@ function SpotlightCard({ children, cat, idx }) {
   );
 }
 
-// ─── 3. 3D Bento Grid Item Card ───
+// ─── 3. Bento Grid Item Card ───
 function BentoCard({ feature }) {
-  const cardRef = useRef(null)
   const Icon = feature.icon
 
-  const x = useMotionValue(0)
-  const y = useMotionValue(0)
-  const mouseXSpring = useSpring(x, { stiffness: 150, damping: 20 })
-  const mouseYSpring = useSpring(y, { stiffness: 150, damping: 20 })
-
-  const rotateX = useTransform(mouseYSpring, [-0.5, 0.5], [10, -10])
-  const rotateY = useTransform(mouseXSpring, [-0.5, 0.5], [-10, 10])
-
-  const handleMouseMove = (e) => {
-    if (!cardRef.current) return
-    const rect = cardRef.current.getBoundingClientRect()
-    const mouseX = e.clientX - rect.left - rect.width / 2
-    const mouseY = e.clientY - rect.top - rect.height / 2
-    x.set(mouseX / rect.width)
-    y.set(mouseY / rect.height)
-  }
-
-  const handleMouseLeave = () => {
-    x.set(0)
-    y.set(0)
-  }
-
   return (
-    <motion.div
-      ref={cardRef}
-      onMouseMove={handleMouseMove}
-      onMouseLeave={handleMouseLeave}
-      style={{ rotateX, rotateY, transformStyle: 'preserve-3d' }}
-      className={`card-premium p-8 text-left relative overflow-hidden group perspective-1000 ${feature.size}`}
-      whileHover={{ y: -5 }}
+    <div
+      className={`card-premium p-8 text-left relative overflow-hidden group transition-transform duration-300 hover:-translate-y-1 ${feature.size}`}
+      style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}
     >
       <div 
         className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none"
-        style={{ background: 'radial-gradient(220px circle at center, var(--neon-glow), transparent 70%)', transform: 'translateZ(-10px)' }}
+        style={{ background: 'radial-gradient(220px circle at center, var(--neon-glow), transparent 70%)' }}
       />
-      <motion.div
-        className="w-12 h-12 rounded-2xl flex items-center justify-center mb-6 text-white bg-gradient-to-r from-[var(--neon)] to-[#ec4899] shadow-lg"
-        style={{ transform: 'translateZ(20px)' }}
-        whileHover={{ rotate: 12, scale: 1.1 }}
-      >
+      <div className="w-12 h-12 rounded-2xl flex items-center justify-center mb-6 text-white shadow-lg transition-transform duration-300 group-hover:rotate-12 group-hover:scale-110"
+        style={{ background: 'linear-gradient(135deg, var(--neon), #ec4899)' }}>
         <Icon size={24} />
-      </motion.div>
-      <h3 className="font-display font-bold text-xl mb-3 text-primary" style={{ transform: 'translateZ(15px)' }}>{feature.title}</h3>
-      <p className="text-sm text-secondary leading-relaxed" style={{ transform: 'translateZ(10px)' }}>{feature.desc}</p>
-    </motion.div>
+      </div>
+      <h3 className="font-display font-bold text-xl mb-3 text-primary">{feature.title}</h3>
+      <p className="text-sm text-secondary leading-relaxed">{feature.desc}</p>
+    </div>
   )
 }
 
@@ -277,8 +247,6 @@ export default function HomePage() {
   const [allProductsForCount, setAllProductsForCount] = useState([])
   const [categories, setCategories] = useState([])
   const [loading, setLoading] = useState(true)
-  
-  const { scrollY, scrollYProgress } = useScroll()
 
   useEffect(() => {
     Promise.all([productsApi.list(), categoriesApi.list()]).then(([p, c]) => {
@@ -289,64 +257,31 @@ export default function HomePage() {
     }).catch(() => setLoading(false))
   }, [])
 
-  const heroY = useTransform(scrollY, [0, 500], [0, 100])
-  const heroOpacity = useTransform(scrollY, [0, 400], [1, 0.7])
-
-  const headingWords = "Shop Premium, Live Elegantly".split(" ");
-  
-  const containerVariants = {
-    hidden: { opacity: 0 },
-    visible: {
-      opacity: 1,
-      transition: { staggerChildren: 0.12, delayChildren: 0.1 }
-    }
-  };
-
-  const wordVariants = {
-    hidden: { opacity: 0, y: 25 },
-    visible: { 
-      opacity: 1, 
-      y: 0,
-      transition: { type: 'spring', damping: 14, stiffness: 100 }
-    }
-  };
-
   return (
     <div className="overflow-hidden relative">
-      {/* Viewport Reading Scroll Progress Line Tracker */}
-      <motion.div 
-        className="fixed top-0 left-0 right-0 h-[3px] z-50 origin-[0%]"
-        style={{ 
-          scaleX: scrollYProgress,
-          background: 'linear-gradient(90deg, var(--neon) 0%, #ec4899 100%)'
-        }} 
-      />
-
       {/* Live Active Stream Notifications Stack */}
       <LiveSocialToasts />
 
       {/* ─── Hero Section ─── */}
       <section className="relative pt-20 pb-24 px-4 overflow-hidden">
-        <motion.div 
-          className="absolute top-0 right-0 w-[600px] h-[600px] rounded-full opacity-5"
+        <div className="absolute top-0 right-0 w-[600px] h-[600px] rounded-full opacity-5"
           style={{ 
             background: 'radial-gradient(circle, #a855f7 0%, transparent 70%)',
             filter: 'blur(100px)',
-            y: heroY
           }}
         />
-        <motion.div 
-          className="absolute -bottom-40 left-1/4 w-[400px] h-[400px] rounded-full opacity-4"
+        <div className="absolute -bottom-40 left-1/4 w-[400px] h-[400px] rounded-full opacity-4"
           style={{ 
             background: 'radial-gradient(circle, #ec4899 0%, transparent 70%)',
             filter: 'blur(100px)',
-            y: useTransform(scrollY, [0, 800], [0, 200])
           }}
         />
 
-        <motion.div 
+        <motion.div
           className="max-w-5xl mx-auto text-center relative z-10"
-          style={{ opacity: heroOpacity }}
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.6 }}
         >
           {/* Top Pill Badge Info Layer */}
           <motion.div
@@ -418,12 +353,8 @@ export default function HomePage() {
       </section>
 
       {/* Infinite Smooth Trust Marquee Ribbon */}
-      <div className="overflow-hidden w-full bg-[var(--surface-raised)] py-5 border-y border-subtle flex whitespace-nowrap mb-8 relative z-20">
-        <motion.div 
-          className="flex gap-16 text-xs font-bold tracking-widest text-[var(--text-muted)] uppercase"
-          animate={{ x: [0, -1200] }}
-          transition={{ ease: 'linear', duration: 30, repeat: Infinity }}
-        >
+      <div className="overflow-hidden w-full bg-[var(--surface-raised)] py-5 border-y border-subtle whitespace-nowrap mb-8 relative z-20">
+        <div className="marquee-track flex gap-16 text-xs font-bold tracking-widest text-[var(--text-muted)] uppercase" style={{ width: 'max-content' }}>
           <span>✦ Sustainable Materials</span>
           <span>✦ Cruelty Free Production</span>
           <span>✦ Global Express Shipping</span>
@@ -434,7 +365,7 @@ export default function HomePage() {
           <span>✦ Global Express Shipping</span>
           <span>✦ Handcrafted Excellence</span>
           <span>✦ Premium Quality Curations</span>
-        </motion.div>
+        </div>
       </div>
 
       {/* FLASH SALE INTERACTIVE BLOCK ROW */}
@@ -461,7 +392,7 @@ export default function HomePage() {
               viewport={{ once: true }}
               variants={{
                 hidden: { opacity: 0 },
-                visible: { opacity: 1, transition: { staggerChildren: 0.08, delayChildren: 0.1 } }
+                visible: { opacity: 1, transition: { staggerChildren: 0.05, delayChildren: 0.05 } }
               }}
               className="grid grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6"
             >

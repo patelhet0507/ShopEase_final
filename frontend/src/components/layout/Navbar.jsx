@@ -1,6 +1,6 @@
 import { Link, useNavigate, useLocation } from 'react-router-dom'
 import { useState, useEffect } from 'react'
-import { ShoppingBag, Heart, Sun, Moon, Menu, X, LayoutDashboard, LogOut, Zap, User, Package } from 'lucide-react'
+import { ShoppingBag, Heart, Sun, Moon, Menu, X, LayoutDashboard, LogOut, Zap, User, Package, ShieldCheck } from 'lucide-react'
 import { useAuth } from '../../context/AuthContext'
 import { useCart } from '../../context/CartContext'
 import { useTheme } from '../../context/ThemeContext'
@@ -148,7 +148,7 @@ export default function Navbar() {
                     {user?.email ? user.email[0].toUpperCase() : 'U'}
                   </div>
                   <span className="hidden sm:block max-w-[120px] truncate">
-                    {user?.email ? user.email.split('@')[0] : 'user'}
+                    {user?.first_name || user?.email?.split('@')[0] || 'user'}
                   </span>
                 </button>
 
@@ -162,10 +162,16 @@ export default function Navbar() {
                       className="absolute right-0 top-full mt-2 w-52 rounded-2xl glass-strong shadow-2xl overflow-hidden"
                     >
                       <div className="p-3 border-b" style={{ borderColor: 'var(--border)' }}>
-                        <p className="text-xs text-muted truncate">{user?.email}</p>
-                        <span className={`badge-${user?.role === 'admin' ? 'purple' : 'green'} mt-1`}>
-                          {user?.role || 'customer'}
-                        </span>
+                        <p className="font-semibold text-sm" style={{ color: 'var(--text-primary)' }}>
+                          {user?.first_name ? `${user.first_name} ${user.last_name || ''}`.trim() : user?.email?.split('@')[0] || 'User'}
+                        </p>
+                        <p className="text-xs mt-0.5" style={{ color: 'var(--text-muted)' }}>{user?.email}</p>
+                        {user?.exp >= 150 && (
+                          <div className="flex items-center gap-1 mt-1">
+                            <ShieldCheck size={11} style={{ color: '#22c55e' }} />
+                            <span className="text-xs font-medium" style={{ color: '#22c55e' }}>Verified Reviewer</span>
+                          </div>
+                        )}
                       </div>
                       <div className="p-1.5">
                         {user?.role === 'admin' && (
