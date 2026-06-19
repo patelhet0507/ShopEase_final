@@ -19,6 +19,7 @@ import ProfilePage from './pages/ProfilePage'
 import OrderConfirmationPage from './pages/OrderConfirmationPage'
 import OrderTrackingPage from './pages/OrderTrackingPage'
 import OrdersPage from './pages/OrdersPage'
+import NotFoundPage from './pages/NotFoundPage'
 
 function PrivateRoute({ children }) {
   const { user } = useAuth()
@@ -75,6 +76,7 @@ function AppInner() {
           <Route path="order-tracking/:orderNumber" element={<PrivateRoute><OrderTrackingPage /></PrivateRoute>} />
           <Route path="orders" element={<PrivateRoute><OrdersPage /></PrivateRoute>} />
           <Route path="admin" element={<AdminRoute><AdminDashboard /></AdminRoute>} />
+          <Route path="*" element={<NotFoundPage />} />
         </Route>
       </Routes>
     </CartProvider>
