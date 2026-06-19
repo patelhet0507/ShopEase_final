@@ -161,27 +161,15 @@ export default function LoginPage() {
               error={errors.email}
               required
             />
-            
-            <div className="space-y-1.5">
-              <FloatingInput
-                id="password"
-                label="Password"
-                type="password"
-                value={form.password}
-                onChange={e => { setForm(f => ({ ...f, password: e.target.value })); setApiError('') }}
-                error={errors.password}
-                required
-              />
-              <div className="flex justify-end px-1">
-                <Link 
-                  to="/forgot-password" 
-                  className="text-xs font-medium text-purple-500 hover:text-accent-400 transition-colors"
-                  onClick={() => setApiError('')}
-                >
-                  Forgot password?
-                </Link>
-              </div>
-            </div>
+            <FloatingInput
+              id="password"
+              label="Password"
+              type="password"
+              value={form.password}
+              onChange={e => { setForm(f => ({ ...f, password: e.target.value })); setApiError('') }}
+              error={errors.password}
+              required
+            />
 
             <motion.button
               type="submit"
