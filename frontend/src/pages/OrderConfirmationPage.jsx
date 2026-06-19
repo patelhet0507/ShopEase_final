@@ -64,16 +64,14 @@ export default function OrderConfirmationPage() {
       const contentW = pageW - margin * 2
 
       // Watermark
-      doc.saveGraphicsState()
-      doc.setGState(new doc.GState({ opacity: 0.06 }))
-      doc.setTextColor(168, 85, 247)
-      doc.setFontSize(72)
-      for (let y = -80; y < pageH + 80; y += 80) {
-        for (let x = -80; x < pageW + 80; x += 120) {
-          doc.text('ShopEase', x, y, { angle: 35 })
+      doc.setTextColor(245, 235, 255)
+      doc.setFontSize(68)
+      doc.setFont('helvetica', 'bold')
+      for (let y = -60; y < pageH + 60; y += 70) {
+        for (let x = -60; x < pageW + 60; x += 110) {
+          doc.text('ShopEase', x, y, { angle: 30 })
         }
       }
-      doc.restoreGraphicsState()
 
       // Draw border
       doc.setDrawColor(168, 85, 247)
@@ -83,9 +81,9 @@ export default function OrderConfirmationPage() {
       doc.setLineWidth(0.3)
       doc.rect(margin - 1, margin - 1, contentW + 2, pageH - margin * 2 + 2)
 
-      // Logo area
+      // Logo
       doc.setFillColor(168, 85, 247)
-      doc.roundedRect(margin, 24, 14, 14, 3, 3, 'F')
+      doc.rect(margin, 24, 14, 14, 'F')
       doc.setTextColor(255, 255, 255)
       doc.setFontSize(10)
       doc.setFont('helvetica', 'bold')
@@ -140,7 +138,6 @@ export default function OrderConfirmationPage() {
       doc.setTextColor(80, 80, 80)
       doc.text(order.shipping_mobile || '', margin, billY)
       billY += 5
-      // Address lines
       const addrLines = doc.splitTextToSize(order.shipping_address || '', 80)
       addrLines.forEach(line => { doc.text(line, margin, billY); billY += 4.5 })
 
@@ -239,7 +236,6 @@ export default function OrderConfirmationPage() {
       doc.text('Thank you for your purchase!', margin, footerY + 15)
       doc.text('For any queries, contact support@shopease.com', margin, footerY + 20)
 
-      // Page number
       doc.setFontSize(7)
       doc.setTextColor(180, 180, 180)
       doc.text('Page 1 of 1', pageW - margin, footerY + 15, { align: 'right' })

@@ -120,22 +120,25 @@ function BentoCard({ feature }) {
 
 // ─── 4. Dynamic Flash Sale Countdown Timer ───
 function FlashSaleSection() {
-  const [timeLeft, setTimeLeft] = useState({ hours: 4, minutes: 34, seconds: 12 })
+  const calcTimeToMidnight = () => {
+    const now = new Date()
+    const midnight = new Date(now)
+    midnight.setHours(24, 0, 0, 0)
+    const diff = Math.max(0, Math.floor((midnight - now) / 1000))
+    return { hours: Math.floor(diff / 3600), minutes: Math.floor((diff % 3600) / 60), seconds: diff % 60 }
+  }
+
+  const [timeLeft, setTimeLeft] = useState(calcTimeToMidnight)
 
   useEffect(() => {
     const timer = setInterval(() => {
-      setTimeLeft(prev => {
-        if (prev.seconds > 0) return { ...prev, seconds: prev.seconds - 1 }
-        if (prev.minutes > 0) return { ...prev, minutes: prev.minutes - 1, seconds: 59 }
-        if (prev.hours > 0) return { hours: prev.hours - 1, minutes: 59, seconds: 59 }
-        clearInterval(timer)
-        return prev
-      })
+      setTimeLeft(calcTimeToMidnight())
     }, 1000)
     return () => clearInterval(timer)
   }, [])
 
-  const pulseProgress = ((timeLeft.hours * 3600 + timeLeft.minutes * 60 + timeLeft.seconds) / (6 * 3600)) * 100
+  const totalSeconds = timeLeft.hours * 3600 + timeLeft.minutes * 60 + timeLeft.seconds
+  const pulseProgress = (totalSeconds / (24 * 3600)) * 100
 
   return (
     <section className="py-16 px-4 bg-gradient-to-r from-purple-950/20 to-black/40 border-y border-subtle relative overflow-hidden">
@@ -390,54 +393,6 @@ export default function HomePage() {
       {/* FLASH SALE INTERACTIVE BLOCK ROW */}
       <FlashSaleSection />
 
-      {/* ─── Categories Grid ─── */}
-      {categories.length > 0 && (
-        <section className="py-20 px-4">
-          <div className="max-w-6xl mx-auto">
-            <motion.div
-              initial={{ opacity: 0 }}
-              whileInView={{ opacity: 1 }}
-              transition={{ duration: 0.6 }}
-              viewport={{ once: true }}
-              className="text-center mb-16"
-            >
-              <h2 className="section-heading text-4xl md:text-5xl mb-4">Explore Categories</h2>
-              <p className="text-secondary max-w-2xl mx-auto">Hand-picked collections for every style and need</p>
-            </motion.div>
-
-            <motion.div
-              initial="hidden"
-              whileInView="visible"
-              viewport={{ once: true }}
-              variants={{
-                hidden: { opacity: 0 },
-                visible: { opacity: 1, transition: { staggerChildren: 0.05, delayChildren: 0.05 } }
-              }}
-              className="grid grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6"
-            >
-              {categories.map((cat, idx) => {
-                const itemCount = allProductsForCount.filter(
-                  (product) => product.category_id === cat.id || product.category === cat.name
-                ).length;
-
-                return (
-                  <SpotlightCard key={cat.id} cat={cat} idx={idx}>
-                    <div className="text-4xl mb-4 relative z-10">{CATEGORY_BADGES[idx % CATEGORY_BADGES.length].icon}</div>
-                    <h3 className="font-display font-bold text-xl mb-2 text-primary relative z-10">{cat.name}</h3>
-                    <p className="text-sm text-secondary group-hover:text-purple-500 transition-colors relative z-10">
-                      Browse {itemCount} {itemCount === 1 ? 'Design' : 'Designs'}
-                    </p>
-                    <motion.div
-                      className="absolute inset-0 rounded-3xl bg-white/0 group-hover:bg-white/5 transition-all duration-300"
-                    />
-                  </SpotlightCard>
-                );
-              })}
-            </motion.div>
-          </div>
-        </section>
-      )}
-
       {/* ─── Featured Products ─── */}
       {products.length > 0 && (
         <section className="py-20 px-4 border-t border-subtle">
@@ -493,6 +448,54 @@ export default function HomePage() {
                   <ArrowRight size={16} />
                 </Link>
               </MagneticButton>
+            </motion.div>
+          </div>
+        </section>
+      )}
+
+      {/* ─── Categories Grid ─── */}
+      {categories.length > 0 && (
+        <section className="py-20 px-4">
+          <div className="max-w-6xl mx-auto">
+            <motion.div
+              initial={{ opacity: 0 }}
+              whileInView={{ opacity: 1 }}
+              transition={{ duration: 0.6 }}
+              viewport={{ once: true }}
+              className="text-center mb-16"
+            >
+              <h2 className="section-heading text-4xl md:text-5xl mb-4">Explore Categories</h2>
+              <p className="text-secondary max-w-2xl mx-auto">Hand-picked collections for every style and need</p>
+            </motion.div>
+
+            <motion.div
+              initial="hidden"
+              whileInView="visible"
+              viewport={{ once: true }}
+              variants={{
+                hidden: { opacity: 0 },
+                visible: { opacity: 1, transition: { staggerChildren: 0.05, delayChildren: 0.05 } }
+              }}
+              className="grid grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6"
+            >
+              {categories.map((cat, idx) => {
+                const itemCount = allProductsForCount.filter(
+                  (product) => product.category_id === cat.id || product.category === cat.name
+                ).length;
+
+                return (
+                  <SpotlightCard key={cat.id} cat={cat} idx={idx}>
+                    <div className="text-4xl mb-4 relative z-10">{CATEGORY_BADGES[idx % CATEGORY_BADGES.length].icon}</div>
+                    <h3 className="font-display font-bold text-xl mb-2 text-primary relative z-10">{cat.name}</h3>
+                    <p className="text-sm text-secondary group-hover:text-purple-500 transition-colors relative z-10">
+                      Browse {itemCount} {itemCount === 1 ? 'Design' : 'Designs'}
+                    </p>
+                    <motion.div
+                      className="absolute inset-0 rounded-3xl bg-white/0 group-hover:bg-white/5 transition-all duration-300"
+                    />
+                  </SpotlightCard>
+                );
+              })}
             </motion.div>
           </div>
         </section>
