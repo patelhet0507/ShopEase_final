@@ -110,7 +110,7 @@ export default function CategoryDetailPage() {
             }`}
             style={{
               background: !subToken || subToken === 'all'
-                ? 'linear-gradient(135deg, #a855f7, #7c3aed)'
+                ? 'linear-gradient(135deg, var(--accent), var(--accent-dark))'
                 : 'var(--surface-raised)',
               color: !subToken || subToken === 'all' ? 'white' : 'var(--text-secondary)',
               border: '1px solid var(--border)',
@@ -130,7 +130,7 @@ export default function CategoryDetailPage() {
               }`}
               style={{
                 background: activeSubcategory?.id === sub.id
-                  ? 'linear-gradient(135deg, #a855f7, #7c3aed)'
+                  ? 'linear-gradient(135deg, var(--accent), var(--accent-dark))'
                   : 'var(--surface-raised)',
                 color: activeSubcategory?.id === sub.id ? 'white' : 'var(--text-secondary)',
                 border: '1px solid var(--border)',

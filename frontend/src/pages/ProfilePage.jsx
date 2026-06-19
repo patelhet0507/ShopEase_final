@@ -83,7 +83,7 @@ export default function ProfilePage() {
   if (!user) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--bg)' }}>
-        <div className="w-10 h-10 border-4 rounded-full animate-spin" style={{ borderColor: 'var(--border)', borderTopColor: 'var(--neon)' }} />
+        <div className="w-10 h-10 border-4 rounded-full animate-spin" style={{ borderColor: 'var(--border)', borderTopColor: 'var(--accent)' }} />
       </div>
     )
   }
@@ -111,7 +111,7 @@ export default function ProfilePage() {
           <div className="p-8 pb-0">
             <div className="flex items-center gap-5 mb-6">
               <div className="w-16 h-16 rounded-2xl flex items-center justify-center text-2xl font-bold text-white shrink-0"
-                style={{ background: 'linear-gradient(135deg, #a855f7, #7c3aed)' }}>
+                style={{ background: 'linear-gradient(135deg, var(--accent), var(--accent-dark))' }}>
                 {(user.first_name || user.email || 'U')[0].toUpperCase()}
               </div>
               <div className="flex-1 min-w-0">
@@ -141,7 +141,7 @@ export default function ProfilePage() {
               <div className="flex items-center gap-2">
                 <Star size={16} style={{ color: '#f59e0b' }} />
                 <span className="font-bold text-sm" style={{ color: 'var(--text-primary)' }}>Level {level.level}</span>
-                <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: 'rgba(168,85,247,0.15)', color: '#a855f7' }}>{level.title}</span>
+                <span className="text-xs px-2 py-0.5 rounded-full" style={{ background: 'rgba(var(--accent-rgb),0.15)', color: 'var(--accent)' }}>{level.title}</span>
               </div>
               <span className="text-xs font-medium" style={{ color: 'var(--text-muted)' }}>{exp} EXP</span>
             </div>
@@ -151,7 +151,7 @@ export default function ProfilePage() {
                 animate={{ width: `${Math.min(progress, 100)}%` }}
                 transition={{ duration: 0.8, ease: 'easeOut' }}
                 className="h-full rounded-full"
-                style={{ background: 'linear-gradient(90deg, #a855f7, #7c3aed)' }}
+                style={{ background: 'linear-gradient(90deg, var(--accent), var(--accent-dark))' }}
               />
             </div>
             {nextLevel && (
@@ -289,7 +289,7 @@ function VerificationCard({ email }) {
               onClick={handleResend}
               disabled={sending}
               className="flex items-center gap-1.5 text-xs font-medium transition-colors cursor-pointer"
-              style={{ color: '#a855f7' }}
+              style={{ color: 'var(--accent)' }}
             >
               {sending ? (
                 <span className="w-3 h-3 border border-purple-400/30 border-t-purple-400 rounded-full animate-spin" />

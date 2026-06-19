@@ -188,7 +188,7 @@ export default function OrderConfirmationPage() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--bg)' }}>
-        <div className="w-10 h-10 border-4 rounded-full animate-spin" style={{ borderColor: 'var(--border)', borderTopColor: 'var(--neon)' }} />
+        <div className="w-10 h-10 border-4 rounded-full animate-spin" style={{ borderColor: 'var(--border)', borderTopColor: 'var(--accent)' }} />
       </div>
     )
   }
@@ -234,15 +234,15 @@ export default function OrderConfirmationPage() {
             </motion.div>
             <h1 className="text-3xl font-bold mb-2" style={{ color: 'var(--text-primary)' }}>Order Placed Successfully!</h1>
             <p style={{ color: 'var(--text-secondary)' }}>Thank you for your purchase</p>
-            <div className="mt-4 inline-block px-4 py-2 rounded-lg" style={{ background: 'rgba(168,85,247,0.1)' }}>
-              <p className="text-sm font-semibold" style={{ color: 'var(--neon)' }}>Order Number: {order.order_number}</p>
+            <div className="mt-4 inline-block px-4 py-2 rounded-lg" style={{ background: 'rgba(var(--accent-rgb),0.1)' }}>
+              <p className="text-sm font-semibold" style={{ color: 'var(--accent)' }}>Order Number: {order.order_number}</p>
             </div>
           </div>
 
           {/* Order Details */}
           <div className="rounded-lg p-6 mb-6" style={{ background: 'var(--surface-raised)' }}>
             <h2 className="text-lg font-bold mb-4 flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
-              <Package size={20} style={{ color: 'var(--neon)' }} />
+              <Package size={20} style={{ color: 'var(--accent)' }} />
               Order Details
             </h2>
 

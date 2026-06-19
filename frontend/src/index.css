@@ -25,11 +25,17 @@
     --accent: #A37644; 
     --accent-light: #CFAB7E; 
     --accent-dark: #63401A; 
+    --accent-rgb: 163, 118, 68;
+    --accent-dark-rgb: 99, 64, 26;
+    --accent-light-rgb: 207, 171, 126;
     --accent-glow: rgba(163, 118, 68, 0.22); 
     --accent-glow-strong: rgba(163, 118, 68, 0.35); 
+    --neon-glow: rgba(var(--accent-rgb), 0.15);
+    --neon: var(--accent);
   }
 
   .dark {
+    --bg: #1A1815;
     --bg: #1A1815;
     --bg-secondary: #1F1B17;
     --surface: #24201A;
@@ -42,6 +48,9 @@
     --accent: #D4AF7A;
     --accent-light: #E8C794;
     --accent-dark: #A68860;
+    --accent-rgb: 212, 175, 122;
+    --accent-dark-rgb: 166, 136, 96;
+    --accent-light-rgb: 232, 199, 148;
     --accent-glow: rgba(212, 175, 122, 0.2);
     --accent-glow-strong: rgba(212, 175, 122, 0.3);
   }
@@ -149,6 +158,15 @@
     box-shadow: 0 2px 8px var(--accent-glow);
   }
 
+  .dark .btn-primary {
+    background: linear-gradient(135deg, var(--accent-dark), var(--accent));
+    box-shadow: 0 4px 16px var(--accent-glow);
+  }
+
+  .dark .btn-primary:hover {
+    box-shadow: 0 8px 28px var(--accent-glow-strong);
+  }
+
   .btn-primary:disabled {
     opacity: 0.6;
     cursor: not-allowed;
@@ -167,6 +185,10 @@
     transform: translateY(-1px);
     border-color: var(--accent);
     box-shadow: 0 4px 12px var(--accent-glow);
+  }
+
+  .dark .btn-secondary {
+    border-color: rgba(212, 175, 122, 0.35);
   }
 
   .btn-secondary:active {
@@ -296,6 +318,32 @@
     transform: translateY(-2px);
   }
 }
+
+/* ─── Theme overrides for hardcoded purple classes ─── */
+.text-purple-500 { color: var(--accent) !important; }
+.text-purple-500\/80 { color: rgba(var(--accent-rgb), 0.8) !important; }
+.text-purple-500\/10 { color: rgba(var(--accent-rgb), 0.1) !important; }
+.bg-purple-500 { background-color: var(--accent) !important; }
+.bg-purple-500\/5 { background-color: rgba(var(--accent-rgb), 0.05) !important; }
+.bg-purple-500\/10 { background-color: rgba(var(--accent-rgb), 0.1) !important; }
+.bg-purple-500\/80 { background-color: rgba(var(--accent-rgb), 0.8) !important; }
+.border-purple-500 { border-color: var(--accent) !important; }
+.border-purple-500\/30 { border-color: rgba(var(--accent-rgb), 0.3) !important; }
+.border-t-purple-500 { border-top-color: var(--accent) !important; }
+.border-t-purple-600 { border-top-color: var(--accent-dark) !important; }
+.shadow-purple-500\/5 { box-shadow: 0 1px 2px rgba(var(--accent-rgb), 0.05) !important; }
+.shadow-purple-500\/20 { box-shadow: 0 10px 15px -3px rgba(var(--accent-rgb), 0.2) !important; }
+.hover\:text-purple-500:hover { color: var(--accent) !important; }
+.group-hover\:text-purple-500:hover { color: var(--accent) !important; }
+.hover\:bg-purple-500:hover { background-color: var(--accent) !important; }
+.hover\:text-accent-400 { color: var(--accent) !important; }
+.text-accent-400 { color: var(--accent) !important; }
+.accent-accent-500 { accent-color: var(--accent) !important; }
+.from-purple-950\/20 { --tw-gradient-from: rgba(var(--accent-rgb), 0.2) !important; }
+.border-purple-400\/30 { border-color: rgba(var(--accent-rgb), 0.3) !important; }
+.border-t-purple-400 { border-top-color: var(--accent) !important; }
+.text-purple-200\/80 { color: rgba(var(--accent-rgb), 0.8) !important; }
+.text-purple-400 { color: var(--accent) !important; }
 
 @layer utilities {
   .animate-delay-100 { animation-delay: 100ms; }

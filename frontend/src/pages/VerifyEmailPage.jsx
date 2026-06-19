@@ -31,9 +31,9 @@ export default function VerifyEmailPage() {
     >
       {/* Animated orbs */}
       {[
-        { cx: '20%', cy: '30%', r: '200px', color: 'rgba(168,85,247,0.15)' },
-        { cx: '70%', cy: '60%', r: '280px', color: 'rgba(124,58,237,0.1)' },
-        { cx: '50%', cy: '80%', r: '150px', color: 'rgba(236,72,153,0.08)' },
+        { cx: '20%', cy: '30%', r: '200px', color: 'rgba(var(--accent-rgb),0.15)' },
+        { cx: '70%', cy: '60%', r: '280px', color: 'rgba(var(--accent-dark-rgb),0.1)' },
+        { cx: '50%', cy: '80%', r: '150px', color: 'rgba(var(--accent-light-rgb),0.08)' },
       ].map((orb, i) => (
         <motion.div
           key={i}
@@ -55,7 +55,7 @@ export default function VerifyEmailPage() {
         className="relative z-10 text-center max-w-sm w-full"
       >
         <Link to="/" className="flex items-center justify-center gap-2 mb-10">
-          <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #a855f7, #7c3aed)' }}>
+          <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg, var(--accent), var(--accent-dark))' }}>
             <Zap size={20} className="text-white" />
           </div>
           <span className="font-display font-bold text-2xl text-white">
@@ -87,7 +87,7 @@ export default function VerifyEmailPage() {
             <Link
               to="/products"
               className="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-medium text-sm transition-all hover:scale-[1.02]"
-              style={{ background: 'linear-gradient(135deg, #a855f7, #7c3aed)', color: 'white' }}
+              style={{ background: 'linear-gradient(135deg, var(--accent), var(--accent-dark))', color: 'white' }}
             >
               Continue Shopping <ArrowRight size={16} />
             </Link>
@@ -107,7 +107,7 @@ export default function VerifyEmailPage() {
             <Link
               to="/login"
               className="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-medium text-sm transition-all hover:scale-[1.02]"
-              style={{ background: 'linear-gradient(135deg, #a855f7, #7c3aed)', color: 'white' }}
+              style={{ background: 'linear-gradient(135deg, var(--accent), var(--accent-dark))', color: 'white' }}
             >
               Go to Login <ArrowRight size={16} />
             </Link>
@@ -127,7 +127,7 @@ export default function VerifyEmailPage() {
             <Link
               to="/login"
               className="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-medium text-sm transition-all hover:scale-[1.02]"
-              style={{ background: 'linear-gradient(135deg, #a855f7, #7c3aed)', color: 'white' }}
+              style={{ background: 'linear-gradient(135deg, var(--accent), var(--accent-dark))', color: 'white' }}
             >
               Go to Login <ArrowRight size={16} />
             </Link>

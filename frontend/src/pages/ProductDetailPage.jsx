@@ -280,8 +280,8 @@ export default function ProductDetailPage() {
                 >
                   <Heart 
                     size={20} 
-                    fill={wishlisted ? 'var(--neon)' : 'none'} 
-                    stroke={wishlisted ? 'var(--neon)' : 'var(--text-primary)'}
+                    fill={wishlisted ? 'var(--accent)' : 'none'} 
+                    stroke={wishlisted ? 'var(--accent)' : 'var(--text-primary)'}
                     className="transition-transform group-hover:scale-110 active:scale-95"
                   />
                 </button>
@@ -410,7 +410,7 @@ export default function ProductDetailPage() {
                 <div key={review.id} className="p-4 rounded-xl" style={{ background: 'var(--surface-raised)', border: '1px solid var(--border)' }}>
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2">
-                      <div className="w-10 h-10 rounded-full flex items-center justify-center font-bold" style={{ background: 'rgba(168,85,247,0.15)', color: '#a855f7' }}>
+                      <div className="w-10 h-10 rounded-full flex items-center justify-center font-bold" style={{ background: 'rgba(var(--accent-rgb),0.15)', color: 'var(--accent)' }}>
                         {review.user_email?.[0]?.toUpperCase() || 'U'}
                       </div>
                       <div>

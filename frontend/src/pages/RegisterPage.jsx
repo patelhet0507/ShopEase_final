@@ -51,7 +51,7 @@ export default function RegisterPage() {
           className="w-full max-w-sm"
         >
           <Link to="/" className="flex items-center gap-2 mb-10">
-            <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #a855f7, #7c3aed)' }}>
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'linear-gradient(135deg, var(--accent), var(--accent-dark))' }}>
               <Zap size={16} className="text-white" />
             </div>
             <span className="font-display font-bold text-xl" style={{ color: 'var(--text-primary)' }}>
@@ -63,7 +63,7 @@ export default function RegisterPage() {
             <h2 className="font-display font-bold text-3xl mb-2" style={{ color: 'var(--text-primary)' }}>Create account</h2>
             <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
               Already have an account?{' '}
-              <Link to="/login" className="text-purple-500 font-medium hover:text-purple-400 transition-colors">
+              <Link to="/login" className="text-purple-500 font-medium hover:text-accent-400 transition-colors">
                 Sign in
               </Link>
             </p>
@@ -117,8 +117,8 @@ export default function RegisterPage() {
         style={{ background: 'linear-gradient(135deg, #0f0f18 0%, #1a0a2e 50%, #0f0f18 100%)' }}>
         <div className="absolute inset-0">
           {[
-            { cx: '30%', cy: '40%', r: '250px', color: 'rgba(168,85,247,0.12)' },
-            { cx: '65%', cy: '55%', r: '200px', color: 'rgba(236,72,153,0.08)' },
+            { cx: '30%', cy: '40%', r: '250px', color: 'rgba(var(--accent-rgb),0.12)' },
+            { cx: '65%', cy: '55%', r: '200px', color: 'rgba(var(--accent-light-rgb),0.08)' },
           ].map((orb, i) => (
             <motion.div key={i} className="absolute rounded-full"
               style={{ left: orb.cx, top: orb.cy, width: orb.r, height: orb.r, background: `radial-gradient(circle, ${orb.color}, transparent 70%)`, transform: 'translate(-50%, -50%)' }}
@@ -144,8 +144,8 @@ export default function RegisterPage() {
                 className="flex items-center gap-3"
               >
                 <div className="w-7 h-7 rounded-full flex items-center justify-center flex-shrink-0"
-                  style={{ background: 'rgba(168,85,247,0.2)', border: '1px solid rgba(168,85,247,0.3)' }}>
-                  <Check size={13} className="text-purple-400" />
+                  style={{ background: 'rgba(var(--accent-rgb),0.2)', border: '1px solid rgba(var(--accent-rgb),0.3)' }}>
+                  <Check size={13} className="text-accent-400" />
                 </div>
                 <span className="text-sm" style={{ color: 'rgba(255,255,255,0.7)' }}>{perk}</span>
               </motion.div>

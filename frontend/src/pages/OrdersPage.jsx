@@ -7,7 +7,7 @@ import { ordersApi } from '../api'
 const STATUS_COLORS = {
   pending:    { bg: 'rgba(234,179,8,0.15)', text: '#eab308' },
   confirmed:  { bg: 'rgba(59,130,246,0.15)', text: '#3b82f6' },
-  shipped:    { bg: 'rgba(168,85,247,0.15)', text: '#a855f7' },
+  shipped:    { bg: 'rgba(var(--accent-rgb),0.15)', text: 'var(--accent)' },
   delivered:  { bg: 'rgba(34,197,94,0.15)', text: '#22c55e' },
   cancelled:  { bg: 'rgba(239,68,68,0.15)', text: '#ef4444' },
 }
@@ -26,7 +26,7 @@ export default function OrdersPage() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--bg)' }}>
-        <div className="w-10 h-10 border-4 rounded-full animate-spin" style={{ borderColor: 'var(--border)', borderTopColor: 'var(--neon)' }} />
+        <div className="w-10 h-10 border-4 rounded-full animate-spin" style={{ borderColor: 'var(--border)', borderTopColor: 'var(--accent)' }} />
       </div>
     )
   }
@@ -35,7 +35,7 @@ export default function OrdersPage() {
     <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="min-h-screen py-12 px-4" style={{ background: 'var(--bg)' }}>
       <div className="max-w-3xl mx-auto">
         <div className="flex items-center gap-3 mb-8">
-          <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #a855f7, #7c3aed)' }}>
+          <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg, var(--accent), var(--accent-dark))' }}>
             <Package size={18} className="text-white" />
           </div>
           <div>

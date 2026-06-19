@@ -6,9 +6,9 @@ import { categoriesApi } from '../api'
 import { FadeIn, Skeleton, EmptyState } from '../components/ui'
 
 const CATEGORY_COLORS = [
-  ['#a855f7', '#7c3aed'],
+  ['var(--accent)', 'var(--accent-dark)'],
   ['#3b82f6', '#1d4ed8'],
-  ['#ec4899', '#db2777'],
+  ['var(--accent-light)', 'var(--accent-dark)'],
   ['#22c55e', '#15803d'],
   ['#f59e0b', '#d97706'],
   ['#ef4444', '#dc2626'],

@@ -149,13 +149,13 @@ export default function ProductsPage() {
                   key={item.id}
                   onClick={() => { triggerFeedback(); setGridVariant(item.id) }}
                   className="relative p-2.5 rounded-lg text-sm transition-colors focus:outline-none"
-                  style={{ color: isActive ? '#a855f7' : 'var(--text-muted)' }}
+                  style={{ color: isActive ? 'var(--accent)' : 'var(--text-muted)' }}
                 >
                   {isActive && (
                     <motion.div
                       layoutId="activeLayoutBackground"
                       className="absolute inset-0 rounded-lg"
-                      style={{ background: 'rgba(168,85,247,0.12)', border: '1px solid rgba(168,85,247,0.25)' }}
+                      style={{ background: 'rgba(var(--accent-rgb),0.12)', border: '1px solid rgba(var(--accent-rgb),0.25)' }}
                       transition={{ type: 'spring', stiffness: 380, damping: 30 }}
                     />
                   )}
@@ -180,7 +180,7 @@ export default function ProductsPage() {
           <button onClick={() => { triggerFeedback(); setSidebarOpen(true) }} className="btn-secondary text-xs py-2.5 lg:hidden">
             <SlidersHorizontal size={14} /> Filters
             {activeFilters.length > 0 && (
-              <span className="ml-1 w-4 h-4 rounded-full text-white text-[10px] flex items-center justify-center" style={{ background: '#a855f7' }}>
+              <span className="ml-1 w-4 h-4 rounded-full text-white text-[10px] flex items-center justify-center" style={{ background: 'var(--accent)' }}>
                 {activeFilters.length}
               </span>
             )}
@@ -226,7 +226,7 @@ export default function ProductsPage() {
                     className={`flex items-center justify-between w-full text-left px-3 py-2.5 rounded-xl text-xs font-medium transition-all group ${!selectedCategory ? 'neon-border bg-purple-500/5 text-purple-500 font-semibold' : 'hover:bg-surface-raised text-secondary'}`}
                   >
                     <div className="flex items-center gap-2">
-                      <Grid3x3 size={14} className={!selectedCategory ? 'text-purple-500' : 'text-text-muted group-hover:text-purple-400'} />
+                      <Grid3x3 size={14} className={!selectedCategory ? 'text-purple-500' : 'text-text-muted group-hover:text-accent-400'} />
                       <span>All Categories</span>
                     </div>
                     <span className={`px-2 py-0.5 text-[10px] font-semibold rounded-full ${!selectedCategory ? 'bg-purple-500 text-white' : 'bg-surface-raised text-muted'}`} style={{ color: !selectedCategory ? '#fff' : 'var(--text-secondary)' }}>
@@ -244,7 +244,7 @@ export default function ProductsPage() {
                         className={`flex items-center justify-between w-full text-left px-3 py-2.5 rounded-xl text-xs font-medium transition-all group ${isSelected ? 'neon-border bg-purple-500/5 text-purple-500 font-semibold' : 'hover:bg-surface-raised text-secondary'}`}
                       >
                         <div className="flex items-center gap-2">
-                          <CatIcon size={14} className={isSelected ? 'text-purple-500' : 'text-text-muted group-hover:text-purple-400'} />
+                          <CatIcon size={14} className={isSelected ? 'text-purple-500' : 'text-text-muted group-hover:text-accent-400'} />
                           <span>{cat.name}</span>
                         </div>
                         <span className={`px-2 py-0.5 text-[10px] font-semibold rounded-full ${isSelected ? 'bg-purple-500 text-white' : 'bg-surface-raised text-muted'}`} style={{ color: isSelected ? '#fff' : 'var(--text-secondary)' }}>
@@ -267,7 +267,7 @@ export default function ProductsPage() {
                   max={maxPrice}
                   value={priceRange[1]}
                   onChange={e => setPriceRange([priceRange[0], Number(e.target.value)])}
-                  className="w-full accent-purple-500 cursor-pointer"
+                  className="w-full accent-accent-500 cursor-pointer"
                 />
                 <div className="flex justify-between text-[10px] mt-1" style={{ color: 'var(--text-muted)' }}>
                   <span>â‚¹0</span>
@@ -365,7 +365,7 @@ export default function ProductsPage() {
                       max={maxPrice}
                       value={priceRange[1]}
                       onChange={e => setPriceRange([priceRange[0], Number(e.target.value)])}
-                      className="w-full accent-purple-500"
+                      className="w-full accent-accent-500"
                     />
                   </div>
 
@@ -410,7 +410,7 @@ export default function ProductsPage() {
                         className="flex items-center gap-4 p-4 rounded-xl transition-all hover:scale-[1.005]"
                         style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}
                       >
-                        <div className="w-16 h-16 rounded-lg bg-gradient-to-br from-purple-500/20 to-indigo-500/10 flex items-center justify-center font-bold text-lg text-purple-400 flex-shrink-0">
+                        <div className="w-16 h-16 rounded-lg bg-gradient-to-br from-accent-500/20 to-indigo-500/10 flex items-center justify-center font-bold text-lg text-accent-400 flex-shrink-0">
                           {(product.name || '?')[0]}
                         </div>
                         <div className="flex-1 min-w-0">

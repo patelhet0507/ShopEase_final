@@ -94,9 +94,9 @@ export default function CartPage() {
               onClick={handleSaveCartToSandbox}
               className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl text-xs font-semibold tracking-wide border transition-all shadow-sm cursor-pointer"
               style={{
-                background: 'rgba(168,85,247,0.06)',
-                borderColor: 'rgba(168,85,247,0.2)',
-                color: '#a855f7'
+                background: 'rgba(var(--accent-rgb),0.06)',
+                borderColor: 'rgba(var(--accent-rgb),0.2)',
+                color: 'var(--accent)'
               }}
             >
               <FolderHeart size={14} />
@@ -138,7 +138,7 @@ export default function CartPage() {
                   return (
                     <div key={index} className="flex justify-between items-center text-xs p-2 rounded-xl bg-[var(--bg-secondary)]">
                       <span className="font-medium truncate max-w-[70%] text-[var(--text-primary)]">{sbItem.name}</span>
-                      <span className="font-bold text-purple-400">₹{sbItem.price.toLocaleString()}</span>
+                      <span className="font-bold text-accent-400">₹{sbItem.price.toLocaleString()}</span>
                     </div>
                   )
                 })}
@@ -178,7 +178,7 @@ export default function CartPage() {
                   >
                     <div
                       className="w-20 h-20 rounded-xl flex-shrink-0 overflow-hidden flex items-center justify-center font-bold text-xl text-white"
-                      style={{ background: 'linear-gradient(135deg, rgba(168,85,247,0.3), rgba(124,58,237,0.15))' }}
+                      style={{ background: 'linear-gradient(135deg, rgba(var(--accent-rgb),0.3), rgba(var(--accent-dark-rgb),0.15))' }}
                     >
                       {(item.name || '?')[0]}
                     </div>
@@ -266,7 +266,7 @@ export default function CartPage() {
                       width: `${shippingProgressBarPercentage}%`,
                       background: isFreeShippingEligible
                         ? 'linear-gradient(90deg, #22c55e, #4ade80)'
-                        : 'linear-gradient(90deg, #a855f7, #ec4899)',
+                        : 'linear-gradient(90deg, var(--accent), var(--accent-dark))',
                     }}
                     initial={{ width: 0 }}
                     animate={{ width: `${shippingProgressBarPercentage}%` }}

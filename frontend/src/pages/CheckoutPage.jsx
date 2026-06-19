@@ -176,9 +176,9 @@ export default function CheckoutPage() {
                 />
               </div>
 
-              <div className="rounded-lg p-4" style={{ background: 'rgba(168,85,247,0.08)', border: '2px solid rgba(168,85,247,0.2)' }}>
+              <div className="rounded-lg p-4" style={{ background: 'rgba(var(--accent-rgb),0.08)', border: '2px solid rgba(var(--accent-rgb),0.2)' }}>
                 <p className="text-sm font-semibold" style={{ color: 'var(--text-primary)' }}>Payment Method</p>
-                <p className="text-lg font-bold mt-2" style={{ color: 'var(--neon)' }}>Cash on Delivery (COD)</p>
+                <p className="text-lg font-bold mt-2" style={{ color: 'var(--accent)' }}>Cash on Delivery (COD)</p>
                 <p className="text-sm mt-2" style={{ color: 'var(--text-secondary)' }}>Pay when your order arrives at your doorstep</p>
               </div>
 

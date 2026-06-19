@@ -57,7 +57,7 @@ function WishlistCard({ item, onRemove, onAddToCart }) {
 
       {/* Image area */}
       <div className="relative h-44 flex items-center justify-center font-bold text-4xl text-white select-none"
-        style={{ background: 'linear-gradient(135deg, rgba(168,85,247,0.2), rgba(236,72,153,0.12))' }}>
+        style={{ background: 'linear-gradient(135deg, rgba(var(--accent-rgb),0.2), rgba(var(--accent-light-rgb),0.12))' }}>
         {product.name?.[0] || '?'}
 
         {/* Hover overlay */}
@@ -172,7 +172,7 @@ export default function WishlistPage() {
         x: Math.cos(angle) * distance,
         y: Math.sin(angle) * distance,
         scale: 0.4 + Math.random() * 0.8,
-        color: ['#a855f7', '#ec4899', '#22c55e', '#3b82f6', '#f59e0b'][Math.floor(Math.random() * 5)]
+        color: ['var(--accent)', 'var(--accent-light)', '#22c55e', '#3b82f6', '#f59e0b'][Math.floor(Math.random() * 5)]
       }
     })
 
@@ -245,7 +245,7 @@ export default function WishlistPage() {
                 onClick={handleMoveAllInStock}
                 disabled={isBulkAdding}
                 className="inline-flex items-center gap-2 px-5 py-3 rounded-xl text-xs font-bold uppercase tracking-wider text-white shadow-lg shadow-purple-500/20 transition-all cursor-pointer select-none relative overflow-hidden"
-                style={{ background: 'linear-gradient(135deg, #a855f7, #ec4899)' }}
+                style={{ background: 'linear-gradient(135deg, var(--accent), var(--accent-dark))' }}
               >
                 {isBulkAdding ? (
                   <>

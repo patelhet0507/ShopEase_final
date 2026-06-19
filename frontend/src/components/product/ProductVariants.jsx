@@ -89,7 +89,7 @@ export default function ProductVariants({ product, onVariantSelect }) {
                     <span>{variant.value}</span>
 
                     {variant.price_adjustment > 0 && (
-                      <span className={`text-xs font-bold ${isSelected ? 'text-purple-400' : 'text-purple-500/80'}`}>
+                      <span className={`text-xs font-bold ${isSelected ? 'text-accent-400' : 'text-purple-500/80'}`}>
                         +₹{Number(variant.price_adjustment).toLocaleString()}
                       </span>
                     )}

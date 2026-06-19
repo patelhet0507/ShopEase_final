@@ -42,9 +42,9 @@ export default function LoginPage() {
         <div className="absolute inset-0">
           {/* Animated orbs */}
           {[
-            { cx: '20%', cy: '30%', r: '200px', color: 'rgba(168,85,247,0.15)' },
-            { cx: '70%', cy: '60%', r: '280px', color: 'rgba(124,58,237,0.1)' },
-            { cx: '50%', cy: '80%', r: '150px', color: 'rgba(236,72,153,0.08)' },
+            { cx: '20%', cy: '30%', r: '200px', color: 'rgba(var(--accent-rgb),0.15)' },
+            { cx: '70%', cy: '60%', r: '280px', color: 'rgba(var(--accent-dark-rgb),0.1)' },
+            { cx: '50%', cy: '80%', r: '150px', color: 'rgba(var(--accent-light-rgb),0.08)' },
           ].map((orb, i) => (
             <motion.div
               key={i}
@@ -63,7 +63,7 @@ export default function LoginPage() {
 
         <div className="relative z-10 flex flex-col justify-center px-16 py-12">
           <Link to="/" className="flex items-center gap-2 mb-12">
-            <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #a855f7, #7c3aed)' }}>
+            <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg, var(--accent), var(--accent-dark))' }}>
               <Zap size={18} className="text-white" />
             </div>
             <span className="font-display font-bold text-xl text-white">ShopEase</span>
@@ -91,7 +91,7 @@ export default function LoginPage() {
                 style={{ background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.08)' }}
               >
                 <div className="w-10 h-10 rounded-lg flex items-center justify-center text-sm font-bold text-white"
-                  style={{ background: `linear-gradient(135deg, rgba(168,85,247,0.4), rgba(124,58,237,0.2))` }}>
+                  style={{ background: `linear-gradient(135deg, rgba(var(--accent-rgb),0.4), rgba(var(--accent-dark-rgb),0.2))` }}>
                   {name[0]}
                 </div>
                 <div>
@@ -121,7 +121,7 @@ export default function LoginPage() {
         >
           {/* Mobile logo */}
           <Link to="/" className="flex items-center gap-2 mb-10 lg:hidden">
-            <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #a855f7, #7c3aed)' }}>
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center" style={{ background: 'linear-gradient(135deg, var(--accent), var(--accent-dark))' }}>
               <Zap size={16} className="text-white" />
             </div>
             <span className="font-display font-bold text-xl" style={{ color: 'var(--text-primary)' }}>
@@ -133,7 +133,7 @@ export default function LoginPage() {
             <h2 className="font-display font-bold text-3xl mb-2" style={{ color: 'var(--text-primary)' }}>Welcome back</h2>
             <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>
               Don't have an account?{' '}
-              <Link to="/register" className="text-purple-500 font-medium hover:text-purple-400 transition-colors">
+              <Link to="/register" className="text-purple-500 font-medium hover:text-accent-400 transition-colors">
                 Sign up free
               </Link>
             </p>

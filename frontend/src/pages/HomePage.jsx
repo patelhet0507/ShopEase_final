@@ -109,7 +109,7 @@ function BentoCard({ feature }) {
         style={{ background: 'radial-gradient(220px circle at center, var(--neon-glow), transparent 70%)' }}
       />
       <div className="w-12 h-12 rounded-2xl flex items-center justify-center mb-6 text-white shadow-lg transition-transform duration-300 group-hover:rotate-12 group-hover:scale-110"
-        style={{ background: 'linear-gradient(135deg, var(--neon), #ec4899)' }}>
+        style={{ background: 'linear-gradient(135deg, var(--accent), var(--accent-dark))' }}>
         <Icon size={24} />
       </div>
       <h3 className="font-display font-bold text-xl mb-3 text-primary">{feature.title}</h3>
@@ -172,7 +172,7 @@ function FlashSaleSection() {
           </div>
           <span className="text-xl font-bold text-muted -mt-5">:</span>
           <div className="flex flex-col items-center">
-            <div className="w-14 h-14 glass border border-subtle rounded-xl flex items-center justify-center text-xl font-bold text-[var(--neon)] shadow-inner">
+            <div className="w-14 h-14 glass border border-subtle rounded-xl flex items-center justify-center text-xl font-bold text-[var(--accent)] shadow-inner">
               {String(timeLeft.seconds).padStart(2, '0')}
             </div>
             <span className="text-[10px] uppercase font-sans tracking-wider text-muted mt-1.5">Sec</span>
@@ -183,7 +183,7 @@ function FlashSaleSection() {
       {/* Frame Motion Animated Pulsing Status Bar Tracking Time Allocation */}
       <div className="absolute bottom-0 left-0 right-0 h-1 bg-surface-raised">
         <motion.div 
-          className="h-full bg-gradient-to-r from-[var(--neon)] via-pink-500 to-red-500"
+          className="h-full bg-gradient-to-r from-[var(--accent)] via-pink-500 to-red-500"
           initial={{ width: '100%' }}
           animate={{ width: `${pulseProgress}%` }}
           transition={{ duration: 1, ease: 'easeOut' }}
@@ -231,7 +231,7 @@ function LiveSocialToasts() {
             className="glass-strong p-4 rounded-2xl shadow-xl flex items-start gap-3 border pointer-events-auto backdrop-blur-xl"
             style={{ borderColor: 'var(--border)', background: 'var(--surface)' }}
           >
-            <div className="p-2 bg-purple-500/10 rounded-xl text-[var(--neon)] flex-shrink-0 mt-0.5">
+            <div className="p-2 bg-purple-500/10 rounded-xl text-[var(--accent)] flex-shrink-0 mt-0.5">
               <Clock size={14} className="animate-spin-slow" />
             </div>
             <div className="flex-1">
@@ -288,13 +288,13 @@ export default function HomePage() {
       <section className="relative pt-20 pb-24 px-4 overflow-hidden">
         <div className="absolute top-0 right-0 w-[600px] h-[600px] rounded-full opacity-5"
           style={{ 
-            background: 'radial-gradient(circle, #a855f7 0%, transparent 70%)',
+            background: 'radial-gradient(circle, var(--accent) 0%, transparent 70%)',
             filter: 'blur(100px)',
           }}
         />
         <div className="absolute -bottom-40 left-1/4 w-[400px] h-[400px] rounded-full opacity-4"
           style={{ 
-            background: 'radial-gradient(circle, #ec4899 0%, transparent 70%)',
+            background: 'radial-gradient(circle, var(--accent-dark) 0%, transparent 70%)',
             filter: 'blur(100px)',
           }}
         />
@@ -410,7 +410,7 @@ export default function HomePage() {
               </div>
               <Link
                 to="/products"
-                className="hidden sm:flex items-center gap-2 text-purple-500 hover:text-purple-400 transition-colors font-semibold"
+                className="hidden sm:flex items-center gap-2 text-purple-500 hover:text-accent-400 transition-colors font-semibold"
               >
                 View all <ArrowRight size={16} />
               </Link>

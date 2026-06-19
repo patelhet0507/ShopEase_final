@@ -94,7 +94,7 @@ export function Badge({ children, variant = 'purple' }) {
 export function EmptyState({ icon: Icon, title, description, action }) {
   return (
     <div className="flex flex-col items-center justify-center py-24 px-4 text-center">
-      <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4" style={{ background: 'rgba(168,85,247,0.1)' }}>
+      <div className="w-16 h-16 rounded-2xl flex items-center justify-center mb-4" style={{ background: 'rgba(var(--accent-rgb),0.1)' }}>
         <Icon size={28} className="text-purple-500" />
       </div>
       <h3 className="text-lg font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>{title}</h3>
@@ -183,9 +183,9 @@ export function FloatingInput({ id, label, type = 'text', value, onChange, error
         className="w-full px-4 pt-6 pb-2.5 rounded-xl text-sm outline-none transition-all duration-200 peer"
         style={{
           background: 'var(--surface-raised)',
-          border: `1px solid ${error ? '#ef4444' : focused ? 'rgba(168,85,247,0.5)' : 'var(--border)'}`,
+          border: `1px solid ${error ? '#ef4444' : focused ? 'rgba(var(--accent-rgb),0.5)' : 'var(--border)'}`,
           color: 'var(--text-primary)',
-          boxShadow: focused ? `0 0 0 3px rgba(168,85,247,0.1)` : 'none',
+          boxShadow: focused ? `0 0 0 3px rgba(var(--accent-rgb),0.1)` : 'none',
         }}
       />
       <label
@@ -195,7 +195,7 @@ export function FloatingInput({ id, label, type = 'text', value, onChange, error
           top: floating ? '8px' : '50%',
           transform: floating ? 'none' : 'translateY(-50%)',
           fontSize: floating ? '10px' : '14px',
-          color: floating ? (focused ? '#a855f7' : 'var(--text-muted)') : 'var(--text-muted)',
+          color: floating ? (focused ? 'var(--accent)' : 'var(--text-muted)') : 'var(--text-muted)',
         }}
       >
         {label}

@@ -9,7 +9,7 @@ const STEPS = ['pending', 'confirmed', 'shipped', 'delivered']
 const STATUS_META = {
   pending:    { icon: Clock,        color: '#eab308', label: 'Pending' },
   confirmed:  { icon: CheckCircle,  color: '#3b82f6', label: 'Confirmed' },
-  shipped:    { icon: Truck,        color: '#a855f7', label: 'Shipped' },
+  shipped:    { icon: Truck,        color: 'var(--accent)', label: 'Shipped' },
   delivered:  { icon: Package,      color: '#22c55e', label: 'Delivered' },
   cancelled:  { icon: XCircle,      color: '#ef4444', label: 'Cancelled' },
 }
@@ -50,7 +50,7 @@ export default function OrderTrackingPage() {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ background: 'var(--bg)' }}>
-        <div className="w-10 h-10 border-4 rounded-full animate-spin" style={{ borderColor: 'var(--border)', borderTopColor: 'var(--neon)' }} />
+        <div className="w-10 h-10 border-4 rounded-full animate-spin" style={{ borderColor: 'var(--border)', borderTopColor: 'var(--accent)' }} />
       </div>
     )
   }

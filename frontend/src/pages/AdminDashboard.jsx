@@ -460,7 +460,7 @@ export default function AdminDashboard() {
       <FadeIn>
         <div className="flex items-center gap-3 mb-8">
           <div className="w-10 h-10 rounded-xl flex items-center justify-center"
-            style={{ background: 'linear-gradient(135deg, #a855f7, #7c3aed)' }}>
+            style={{ background: 'linear-gradient(135deg, var(--accent), var(--accent-dark))' }}>
             <LayoutDashboard size={18} className="text-white" />
           </div>
           <div>
@@ -480,7 +480,7 @@ export default function AdminDashboard() {
               tab === t ? 'text-white shadow-lg' : 'hover:bg-surface'
             }`}
             style={tab === t
-              ? { background: 'linear-gradient(135deg, #a855f7, #7c3aed)', color: 'white' }
+              ? { background: 'linear-gradient(135deg, var(--accent), var(--accent-dark))', color: 'white' }
               : { color: 'var(--text-secondary)' }
             }
           >
@@ -499,7 +499,7 @@ export default function AdminDashboard() {
           {tab === 'Overview' && (
             <div>
               <div className="grid grid-cols-2 md:grid-cols-4 gap-5 mb-6">
-                <StatCard icon={Layers} label="Categories" value={categories.length} color="#a855f7" delay={0} />
+                <StatCard icon={Layers} label="Categories" value={categories.length} color="var(--accent)" delay={0} />
                 <StatCard icon={Grid3x3} label="Subcategories" value={subcategories.length} color="#3b82f6" delay={0.08} />
                 <StatCard icon={Package} label="Products" value={products.length} color="#22c55e" delay={0.16} />
                 <StatCard icon={Users} label="Users" value={users.length} color="#f59e0b" delay={0.24} />
@@ -515,7 +515,7 @@ export default function AdminDashboard() {
                   return (
                     <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
                       <div className="p-4 rounded-2xl flex items-center gap-4" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
-                        <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'rgba(168,85,247,0.15)' }}>
+                        <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'rgba(var(--accent-rgb),0.15)' }}>
                           <ShoppingCart size={18} className="text-purple-500" />
                         </div>
                         <div>
@@ -705,15 +705,15 @@ export default function AdminDashboard() {
                               onChange={e => updateRole(row.id, e.target.value)}
                               className="text-xs px-3 py-1.5 rounded-lg outline-none cursor-pointer appearance-none pr-7"
                               style={{
-                                background: v === 'admin' ? 'rgba(168,85,247,0.15)' : 'rgba(34,197,94,0.15)',
-                                color: v === 'admin' ? '#a855f7' : '#22c55e',
-                                border: `1px solid ${v === 'admin' ? 'rgba(168,85,247,0.3)' : 'rgba(34,197,94,0.3)'}`,
+                                background: v === 'admin' ? 'rgba(var(--accent-rgb),0.15)' : 'rgba(34,197,94,0.15)',
+                                color: v === 'admin' ? 'var(--accent)' : '#22c55e',
+                                border: `1px solid ${v === 'admin' ? 'rgba(var(--accent-rgb),0.3)' : 'rgba(34,197,94,0.3)'}`,
                               }}
                             >
                               <option value="user">user</option>
                               <option value="admin">admin</option>
                             </select>
-                            <ChevronDown size={10} className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: v === 'admin' ? '#a855f7' : '#22c55e' }} />
+                            <ChevronDown size={10} className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: v === 'admin' ? 'var(--accent)' : '#22c55e' }} />
                           </div>
                         )
                       },
@@ -780,7 +780,7 @@ export default function AdminDashboard() {
                       const statusColors = {
                         pending: { bg: 'rgba(234,179,8,0.15)', text: '#eab308' },
                         confirmed: { bg: 'rgba(59,130,246,0.15)', text: '#3b82f6' },
-                        shipped: { bg: 'rgba(168,85,247,0.15)', text: '#a855f7' },
+                        shipped: { bg: 'rgba(var(--accent-rgb),0.15)', text: 'var(--accent)' },
                         delivered: { bg: 'rgba(34,197,94,0.15)', text: '#22c55e' },
                         cancelled: { bg: 'rgba(239,68,68,0.15)', text: '#ef4444' },
                       }
@@ -960,7 +960,7 @@ export default function AdminDashboard() {
                 <div className="space-y-2 mb-3">
                   {formVariants.map((v, i) => (
                     <div key={v.id || i} className="flex items-center gap-2 p-2 rounded-lg" style={{ background: 'var(--surface-raised)', border: '1px solid var(--border)' }}>
-                      <span className="text-xs font-semibold px-2 py-0.5 rounded" style={{ background: 'rgba(168,85,247,0.15)', color: '#a855f7', minWidth: 60, textAlign: 'center' }}>{v.type}</span>
+                      <span className="text-xs font-semibold px-2 py-0.5 rounded" style={{ background: 'rgba(var(--accent-rgb),0.15)', color: 'var(--accent)', minWidth: 60, textAlign: 'center' }}>{v.type}</span>
                       <span className="text-xs flex-1" style={{ color: 'var(--text-primary)' }}>{v.value}</span>
                       {v.price_adjustment > 0 && <span className="text-xs font-semibold" style={{ color: '#22c55e' }}>+₹{v.price_adjustment}</span>}
                       <span className="text-xs" style={{ color: 'var(--text-muted)' }}>Stock: {v.stock}</span>
