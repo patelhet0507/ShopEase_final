@@ -89,19 +89,16 @@ export default function OrderConfirmationPage() {
 
     setDownloading(true)
     try {
-      const JSZip = (await import('jszip')).default
-      const { saveAs } = await import('file-saver')
-
-      const zip = new JSZip()
-
-      const receiptContent = generateReceiptContent()
-      zip.file(`receipt_${order.order_number}.txt`, receiptContent)
-
-      const jsonReceipt = JSON.stringify(order, null, 2)
-      zip.file(`receipt_${order.order_number}.json`, jsonReceipt)
-
-      const content = await zip.generateAsync({ type: 'blob' })
-      saveAs(content, `ShopEase_Receipt_${order.order_number}.zip`)
+      const content = generateReceiptContent()
+      const blob = new Blob([content], { type: 'text/plain' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `receipt_${order.order_number}.txt`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
     } catch (error) {
       console.error('Error downloading receipt:', error)
       alert('Failed to download receipt. Please try again.')
