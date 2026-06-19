@@ -811,6 +811,9 @@ def clear_cart(user_id: int, db: Session = Depends(get_db)):
 @app.get("/api/users/{user_id}/wishlist/", response_model=list[schemas.WishlistItemOut])
 def get_wishlist(user_id: int, db: Session = Depends(get_db)):
     items = db.query(models.WishlistItem).filter(models.WishlistItem.user_id == user_id).all()
+    for item in items:
+        if item.product:
+            item.product.view_token = auth.create_view_token(item.product.id)
     return items
 
 
@@ -1069,6 +1072,12 @@ def update_order_status(order_id: int, status: str = Query(...), note: str = Que
 
     db.commit()
     db.refresh(order)
+
+    # Send email notification for delivery steps
+    if status in ("confirmed", "shipped", "delivered", "cancelled"):
+        user_email = order.user.email
+        email_service.send_order_status_email(user_email, order.order_number, status)
+
     return order
 
 
