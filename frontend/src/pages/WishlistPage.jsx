@@ -64,8 +64,8 @@ function WishlistCard({ item, onRemove, onAddToCart }) {
         <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2"
           style={{ background: 'rgba(0,0,0,0.4)', backdropFilter: 'blur(4px)' }}>
           <Link
-            to={`/p/${product.view_token || item.product_id}`}
-            className="w-10 h-10 rounded-xl flex items-center justify-center bg-white/20 hover:bg-white/30 transition-colors text-white"
+            to={`/p/${product.view_token || generateSlug(product.name || item.product_name, product.id || item.product_id)}`}
+            className="w-10 h-10 rounded-xl flex items-center justify-center bg-white/20 hover:bg-white/30 transition-colors text-white cursor-pointer"
           >
             <Eye size={16} />
           </Link>
@@ -96,7 +96,7 @@ function WishlistCard({ item, onRemove, onAddToCart }) {
       {/* Info Container */}
       <div className="p-4 flex flex-col flex-1 h-full justify-between">
         <div>
-          <Link to={`/p/${product.view_token || item.product_id}`}>
+          <Link to={`/p/${product.view_token || generateSlug(product.name || item.product_name, product.id || item.product_id)}`} className="cursor-pointer">
             <h3 className="font-semibold text-sm leading-tight hover:text-purple-500 transition-colors line-clamp-2 mb-2"
               style={{ color: 'var(--text-primary)' }}>
               {product.name}
