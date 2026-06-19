@@ -6,9 +6,8 @@ const AuthContext = createContext(null)
 export function AuthProvider({ children }) {
   const [user, setUser] = useState(() => {
     try {
-      const token = localStorage.getItem('token')
       const stored = localStorage.getItem('shopease_user')
-      if (!token || !stored) {
+      if (!stored) {
         localStorage.removeItem('shopease_user')
         localStorage.removeItem('token')
         return null
@@ -24,9 +23,14 @@ export function AuthProvider({ children }) {
     setError(null)
     try {
       const { data } = await authApi.login(email, password)
-      localStorage.setItem('token', data.access_token)
-      localStorage.setItem('shopease_user', JSON.stringify(data.user))
-      setUser(data.user)
+      if (data.access_token) {
+        localStorage.setItem('token', data.access_token)
+        localStorage.setItem('shopease_user', JSON.stringify(data.user))
+        setUser(data.user)
+      } else {
+        localStorage.setItem('shopease_user', JSON.stringify(data))
+        setUser(data)
+      }
       return { success: true }
     } catch (err) {
       const msg = err.response?.data?.detail || 'Login failed'
@@ -42,9 +46,14 @@ export function AuthProvider({ children }) {
     setError(null)
     try {
       const { data } = await authApi.register(email, password)
-      localStorage.setItem('token', data.access_token)
-      localStorage.setItem('shopease_user', JSON.stringify(data.user))
-      setUser(data.user)
+      if (data.access_token) {
+        localStorage.setItem('token', data.access_token)
+        localStorage.setItem('shopease_user', JSON.stringify(data.user))
+        setUser(data.user)
+      } else {
+        localStorage.setItem('shopease_user', JSON.stringify(data))
+        setUser(data)
+      }
       return { success: true }
     } catch (err) {
       const msg = err.response?.data?.detail || 'Registration failed'

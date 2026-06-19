@@ -8,29 +8,25 @@ const api = axios.create({
   headers: { 'Content-Type': 'application/json' },
 })
 
-// Automatically attach Bearer token
+// Attach Bearer token (JWT) + legacy user_id for backward compat
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('token')
+  const storedUser = localStorage.getItem('shopease_user')
   if (token) {
     config.headers.Authorization = `Bearer ${token}`
+  }
+  if (storedUser) {
+    try {
+      const user = JSON.parse(storedUser)
+      if (user?.id) {
+        config.params = { ...config.params, user_id: Number(user.id) }
+      }
+    } catch {}
   }
   return config
 }, (error) => {
   return Promise.reject(error)
 })
-
-// Auto-logout on 401
-api.interceptors.response.use(
-  (response) => response,
-  (error) => {
-    if (error.response?.status === 401) {
-      localStorage.removeItem('token')
-      localStorage.removeItem('shopease_user')
-      window.location.href = '/login'
-    }
-    return Promise.reject(error)
-  }
-)
 
 // Auth
 export const authApi = {
