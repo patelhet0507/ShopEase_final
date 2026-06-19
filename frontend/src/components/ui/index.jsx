@@ -123,17 +123,19 @@ export function Modal({ open, onClose, title, children, size = 'md' }) {
             animate={{ opacity: 1, scale: 1, y: 0 }}
             exit={{ opacity: 0, scale: 0.95, y: 20 }}
             transition={{ duration: 0.2, ease: [0.4, 0, 0.2, 1] }}
-            className={`w-full ${sizes[size]} rounded-2xl p-6 shadow-2xl`}
-            style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}
+            className={`w-full ${sizes[size]} rounded-2xl shadow-2xl`}
+            style={{ background: 'var(--surface)', border: '1px solid var(--border)', maxHeight: '90vh', display: 'flex', flexDirection: 'column' }}
             onClick={e => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between mb-4">
+            <div className="flex items-center justify-between px-6 pt-6 pb-0 shrink-0">
               <h2 className="text-lg font-bold" style={{ color: 'var(--text-primary)' }}>{title}</h2>
               <button onClick={onClose} className="btn-ghost p-1.5 rounded-lg cursor-pointer">
                 <X size={18} />
               </button>
             </div>
-            {children}
+            <div style={{ overflowY: 'auto', flex: 1, padding: '1.5rem' }}>
+              {children}
+            </div>
           </motion.div>
         </motion.div>
       )}

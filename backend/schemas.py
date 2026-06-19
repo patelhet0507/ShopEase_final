@@ -109,6 +109,32 @@ class CategoryWithSubcategories(BaseModel):
 
 # ===== Product Schemas =====
 
+class VariantOut(BaseModel):
+    id: int
+    product_id: int
+    type: str
+    value: str
+    price_adjustment: int = 0
+    stock: int = 0
+
+    class Config:
+        from_attributes = True
+
+
+class VariantCreate(BaseModel):
+    type: str
+    value: str
+    price_adjustment: int = 0
+    stock: int = 0
+
+
+class VariantUpdate(BaseModel):
+    type: Optional[str] = None
+    value: Optional[str] = None
+    price_adjustment: Optional[int] = None
+    stock: Optional[int] = None
+
+
 class ProductBasic(BaseModel):
     id: int
     name: str
@@ -119,6 +145,7 @@ class ProductBasic(BaseModel):
     stock: int
     category_id: int
     subcategory_id: int
+    variants: List[VariantOut] = []
 
     class Config:
         from_attributes = True
@@ -156,6 +183,7 @@ class ProductOut(BaseModel):
     stock: int
     category_id: int
     subcategory_id: int
+    variants: List[VariantOut] = []
     created_at: datetime
     updated_at: datetime
 

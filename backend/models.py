@@ -109,9 +109,26 @@ class Product(Base):
     wishlist_items = relationship("WishlistItem", back_populates="product", cascade="all, delete-orphan")
     reviews = relationship("Review", back_populates="product", cascade="all, delete-orphan")
     order_items = relationship("OrderItem", back_populates="product", cascade="all, delete-orphan")
+    variants = relationship("ProductVariant", back_populates="product", cascade="all, delete-orphan")
 
     def __repr__(self):
         return self.name
+
+
+class ProductVariant(Base):
+    __tablename__ = "product_variants"
+
+    id = Column(Integer, primary_key=True, index=True)
+    product_id = Column(Integer, ForeignKey("products.id", ondelete="CASCADE"), nullable=False, index=True)
+    type = Column(String(50), nullable=False)
+    value = Column(String(100), nullable=False)
+    price_adjustment = Column(Integer, default=0)
+    stock = Column(Integer, default=0)
+
+    product = relationship("Product", back_populates="variants")
+
+    def __repr__(self):
+        return f"{self.type}: {self.value}"
 
 
 class CartItem(Base):

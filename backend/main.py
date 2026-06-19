@@ -494,6 +494,70 @@ def delete_product(product_id: int, db: Session = Depends(get_db)):
     return None
 
 
+# ===== Product Variants =====
+
+@app.get("/api/products/{product_id}/variants/", response_model=List[schemas.VariantOut])
+def list_variants(product_id: int, db: Session = Depends(get_db)):
+    product = db.query(models.Product).filter(models.Product.id == product_id).first()
+    if not product:
+        raise HTTPException(status_code=404, detail="Product not found")
+    return product.variants
+
+
+@app.post("/api/products/{product_id}/variants/", response_model=schemas.VariantOut, status_code=201)
+def create_variant(product_id: int, payload: schemas.VariantCreate, db: Session = Depends(get_db)):
+    if not payload.type or not payload.value:
+        raise HTTPException(status_code=400, detail="Type and value are required")
+    product = db.query(models.Product).filter(models.Product.id == product_id).first()
+    if not product:
+        raise HTTPException(status_code=404, detail="Product not found")
+    variant = models.ProductVariant(
+        product_id=product_id,
+        type=payload.type.strip(),
+        value=payload.value.strip(),
+        price_adjustment=payload.price_adjustment or 0,
+        stock=payload.stock or 0,
+    )
+    db.add(variant)
+    db.commit()
+    db.refresh(variant)
+    return variant
+
+
+@app.put("/api/products/{product_id}/variants/{variant_id}/", response_model=schemas.VariantOut)
+def update_variant(product_id: int, variant_id: int, payload: schemas.VariantUpdate, db: Session = Depends(get_db)):
+    variant = db.query(models.ProductVariant).filter(
+        models.ProductVariant.id == variant_id,
+        models.ProductVariant.product_id == product_id
+    ).first()
+    if not variant:
+        raise HTTPException(status_code=404, detail="Variant not found")
+    if payload.type is not None:
+        variant.type = payload.type.strip()
+    if payload.value is not None:
+        variant.value = payload.value.strip()
+    if payload.price_adjustment is not None:
+        variant.price_adjustment = payload.price_adjustment
+    if payload.stock is not None:
+        variant.stock = payload.stock
+    db.commit()
+    db.refresh(variant)
+    return variant
+
+
+@app.delete("/api/products/{product_id}/variants/{variant_id}/", status_code=204)
+def delete_variant(product_id: int, variant_id: int, db: Session = Depends(get_db)):
+    variant = db.query(models.ProductVariant).filter(
+        models.ProductVariant.id == variant_id,
+        models.ProductVariant.product_id == product_id
+    ).first()
+    if not variant:
+        raise HTTPException(status_code=404, detail="Variant not found")
+    db.delete(variant)
+    db.commit()
+    return None
+
+
 # ===== Cart =====
 
 @app.get("/api/users/{user_id}/cart/")

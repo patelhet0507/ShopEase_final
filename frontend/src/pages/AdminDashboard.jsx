@@ -430,6 +430,7 @@ export default function AdminDashboard() {
   const [modal, setModal] = useState(null)
   const [confirmDelete, setConfirmDelete] = useState(null)
   const [form, setForm] = useState({})
+  const [formVariants, setFormVariants] = useState([])
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
 
@@ -528,7 +529,7 @@ export default function AdminDashboard() {
   }
 
   // ── Product CRUD ──
-  const openProductModal = (data = null) => {
+  const openProductModal = async (data = null) => {
     const baseImages = (data?.images?.length ? data.images : null)?.map((img, index) => (
       typeof img === 'string'
         ? { id: `img-${index}`, url: img }
@@ -542,6 +543,14 @@ export default function AdminDashboard() {
       : { name: '', price: '', description: '', category_id: categories[0]?.id || '', subcategory_id: '', images: [], stock: 0 })
     setModal({ type: 'product', data })
     setError('')
+    if (data?.id) {
+      try {
+        const { data: variants } = await productsApi.getVariants(data.id)
+        setFormVariants(variants || [])
+      } catch { setFormVariants([]) }
+    } else {
+      setFormVariants([])
+    }
   }
   const saveProduct = async () => {
     const { name, price, description, category_id, subcategory_id, images, stock } = form
@@ -559,12 +568,29 @@ export default function AdminDashboard() {
         category_id: Number(category_id),
         subcategory_id: Number(subcategory_id),
       }
+      let savedProduct
       if (modal.data) {
         const { data } = await productsApi.update(modal.data.id, payload)
+        savedProduct = data
         setProducts(prev => prev.map(p => p.id === data.id ? data : p))
       } else {
         const { data } = await productsApi.create(payload)
+        savedProduct = data
         setProducts(prev => [...prev, data])
+      }
+      // Sync variants: get current backend variants, create new ones, remove deleted ones
+      const { data: backendVariants } = await productsApi.getVariants(savedProduct.id)
+      const backendIds = (backendVariants || []).map(v => v.id)
+      const wantedIds = formVariants.filter(v => typeof v.id === 'number').map(v => v.id)
+      for (const v of formVariants) {
+        if (!backendIds.includes(v.id)) {
+          await productsApi.createVariant(savedProduct.id, { type: v.type, value: v.value, price_adjustment: v.price_adjustment, stock: v.stock })
+        }
+      }
+      for (const backendId of backendIds) {
+        if (!wantedIds.includes(backendId)) {
+          await productsApi.deleteVariant(savedProduct.id, backendId)
+        }
       }
       setModal(null)
     } catch (e) { setError(e.response?.data?.detail || 'Failed to save') }
@@ -965,6 +991,77 @@ export default function AdminDashboard() {
                 images={form.images || []}
                 onSequenceChange={(updatedImages) => setForm(f => ({ ...f, images: updatedImages }))}
               />
+
+              {/* Variants */}
+              <div>
+                <label className="text-xs font-semibold mb-2 block" style={{ color: 'var(--text-muted)' }}>Variants</label>
+                <div className="space-y-2 mb-3">
+                  {formVariants.map((v, i) => (
+                    <div key={v.id || i} className="flex items-center gap-2 p-2 rounded-lg" style={{ background: 'var(--surface-raised)', border: '1px solid var(--border)' }}>
+                      <span className="text-xs font-semibold px-2 py-0.5 rounded" style={{ background: 'rgba(168,85,247,0.15)', color: '#a855f7', minWidth: 60, textAlign: 'center' }}>{v.type}</span>
+                      <span className="text-xs flex-1" style={{ color: 'var(--text-primary)' }}>{v.value}</span>
+                      {v.price_adjustment > 0 && <span className="text-xs font-semibold" style={{ color: '#22c55e' }}>+₹{v.price_adjustment}</span>}
+                      <span className="text-xs" style={{ color: 'var(--text-muted)' }}>Stock: {v.stock}</span>
+                      <button onClick={() => setFormVariants(prev => prev.filter((_, j) => j !== i))} className="p-1 rounded hover:bg-red-400/10 text-red-400 cursor-pointer">
+                        <Trash2 size={12} />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+                <div className="flex items-center gap-2">
+                  <input
+                    type="text"
+                    placeholder="Type (e.g. Size)"
+                    className="input-field text-xs flex-[35]"
+                    id="variant-type-input"
+                    style={{ minWidth: 0 }}
+                  />
+                  <input
+                    type="text"
+                    placeholder="Value (e.g. Large)"
+                    className="input-field text-xs flex-[35]"
+                    id="variant-value-input"
+                    style={{ minWidth: 0 }}
+                  />
+                  <input
+                    type="number"
+                    placeholder="+₹"
+                    className="input-field text-xs w-16"
+                    id="variant-price-input"
+                    defaultValue="0"
+                    min="0"
+                  />
+                  <input
+                    type="number"
+                    placeholder="Stock"
+                    className="input-field text-xs w-16"
+                    id="variant-stock-input"
+                    defaultValue="0"
+                    min="0"
+                  />
+                  <button
+                    onClick={() => {
+                      const typeInput = document.getElementById('variant-type-input')
+                      const valueInput = document.getElementById('variant-value-input')
+                      const priceInput = document.getElementById('variant-price-input')
+                      const stockInput = document.getElementById('variant-stock-input')
+                      const type = typeInput?.value?.trim()
+                      const value = valueInput?.value?.trim()
+                      if (!type || !value) return
+                      const priceAdj = parseInt(priceInput?.value || '0', 10) || 0
+                      const stock = parseInt(stockInput?.value || '0', 10) || 0
+                      setFormVariants(prev => [...prev, { id: Date.now(), type, value, price_adjustment: priceAdj, stock }])
+                      typeInput.value = ''
+                      valueInput.value = ''
+                      priceInput.value = '0'
+                      stockInput.value = '0'
+                    }}
+                    className="btn-primary text-xs px-3 py-2 cursor-pointer whitespace-nowrap"
+                  >
+                    <Plus size={12} /> Add
+                  </button>
+                </div>
+              </div>
             </>
           )}
         </div>
@@ -996,3 +1093,4 @@ export default function AdminDashboard() {
     </div>
   )
 }
+  
