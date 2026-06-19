@@ -257,6 +257,25 @@ export default function HomePage() {
     }).catch(() => setLoading(false))
   }, [])
 
+  const headingWords = "Shop Premium, Live Elegantly".split(" ");
+
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: { staggerChildren: 0.12, delayChildren: 0.1 }
+    }
+  };
+
+  const wordVariants = {
+    hidden: { opacity: 0, y: 25 },
+    visible: { 
+      opacity: 1, 
+      y: 0,
+      transition: { duration: 0.4 }
+    }
+  };
+
   return (
     <div className="overflow-hidden relative">
       {/* Live Active Stream Notifications Stack */}
