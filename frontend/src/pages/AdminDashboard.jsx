@@ -245,6 +245,8 @@ export default function AdminDashboard() {
   const [products, setProducts] = useState([])
   const [users, setUsers] = useState([])
   const [orders, setOrders] = useState([])
+  const [orderSearch, setOrderSearch] = useState('')
+  const [statusFilter, setStatusFilter] = useState('all')
   const [loading, setLoading] = useState(true)
 
   // Modal and custom Form Attachment States
@@ -729,6 +731,31 @@ export default function AdminDashboard() {
           {tab === 'Orders' && (
             <FadeIn>
               <h2 className="font-bold text-lg mb-5" style={{ color: 'var(--text-primary)' }}>Orders ({orders.length})</h2>
+              {/* ── Search / Filter Bar ── */}
+              <div className="flex flex-wrap items-center gap-3 mb-4">
+                <div className="relative flex-1 min-w-[200px]">
+                  <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--text-muted)' }} />
+                  <input
+                    type="text"
+                    placeholder="Search by order ID or customer name..."
+                    value={orderSearch}
+                    onChange={e => setOrderSearch(e.target.value)}
+                    className="w-full pl-9 pr-3 py-2 rounded-xl text-sm outline-none"
+                    style={{ background: 'var(--surface-raised)', color: 'var(--text-primary)', border: '1px solid var(--border)' }}
+                  />
+                </div>
+                <select
+                  value={statusFilter}
+                  onChange={e => setStatusFilter(e.target.value)}
+                  className="px-4 py-2 rounded-xl text-sm outline-none font-semibold capitalize appearance-none cursor-pointer"
+                  style={{ background: 'var(--surface-raised)', color: 'var(--text-primary)', border: '1px solid var(--border)', minWidth: 130 }}
+                >
+                  <option value="all">All Status</option>
+                  {['pending', 'confirmed', 'shipped', 'delivered', 'cancelled'].map(s => (
+                    <option key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</option>
+                  ))}
+                </select>
+              </div>
               <div className="overflow-x-auto rounded-2xl" style={{ border: '1px solid var(--border)' }}>
                 <table className="w-full text-sm">
                   <thead>
@@ -743,7 +770,13 @@ export default function AdminDashboard() {
                     </tr>
                   </thead>
                   <tbody>
-                    {orders.map((order, i) => {
+                    {orders.filter(order => {
+                      const matchesSearch = !orderSearch
+                        || order.order_number?.toLowerCase().includes(orderSearch.toLowerCase())
+                        || order.shipping_name?.toLowerCase().includes(orderSearch.toLowerCase())
+                      const matchesStatus = statusFilter === 'all' || order.status === statusFilter
+                      return matchesSearch && matchesStatus
+                    }).map((order, i) => {
                       const statusColors = {
                         pending: { bg: 'rgba(234,179,8,0.15)', text: '#eab308' },
                         confirmed: { bg: 'rgba(59,130,246,0.15)', text: '#3b82f6' },
@@ -815,7 +848,18 @@ export default function AdminDashboard() {
                     {orders.length === 0 && (
                       <tr>
                         <td colSpan={7} className="text-center py-10 text-sm" style={{ color: 'var(--text-muted)' }}>
-                          No orders found
+                          No orders yet
+                        </td>
+                      </tr>
+                    )}
+                    {orders.length > 0 && orders.filter(order => {
+                      const ms = !orderSearch || order.order_number?.toLowerCase().includes(orderSearch.toLowerCase()) || order.shipping_name?.toLowerCase().includes(orderSearch.toLowerCase())
+                      const mf = statusFilter === 'all' || order.status === statusFilter
+                      return ms && mf
+                    }).length === 0 && (
+                      <tr>
+                        <td colSpan={7} className="text-center py-10 text-sm" style={{ color: 'var(--text-muted)' }}>
+                          No orders match your filters
                         </td>
                       </tr>
                     )}
