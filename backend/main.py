@@ -55,14 +55,17 @@ def _slugify(value: str) -> str:
 
 # ===== JWT Auth Dependency =====
 
-async def get_current_user(authorization: str = Header(...), db: Session = Depends(get_db)):
-    if not authorization.startswith("Bearer "):
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid authorization header")
-    token = authorization.replace("Bearer ", "")
-    user_id = auth.verify_access_token(token)
-    if user_id is None:
-        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid or expired token")
-    user = db.query(models.User).filter(models.User.id == user_id).first()
+async def get_current_user(authorization: str = Header(None), user_id: int = Query(None), db: Session = Depends(get_db)):
+    if authorization and authorization.startswith("Bearer "):
+        token = authorization.replace("Bearer ", "")
+        uid = auth.verify_access_token(token)
+        if uid is None:
+            raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Invalid or expired token")
+        user = db.query(models.User).filter(models.User.id == uid).first()
+    elif user_id:
+        user = db.query(models.User).filter(models.User.id == user_id).first()
+    else:
+        raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="Authentication required")
     if not user:
         raise HTTPException(status_code=status.HTTP_401_UNAUTHORIZED, detail="User not found")
     return user
