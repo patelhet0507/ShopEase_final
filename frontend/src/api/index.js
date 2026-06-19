@@ -1,6 +1,6 @@
 import axios from 'axios'
 
-const DEFAULT_API_URL = 'https://shopease-backend-0uzd.onrender.com'
+const DEFAULT_API_URL = 'https://shopease-final.vercel.app'
 const BASE_URL = import.meta.env.VITE_API_URL || DEFAULT_API_URL
 
 const api = axios.create({

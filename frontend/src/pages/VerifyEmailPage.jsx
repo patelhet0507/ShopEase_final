@@ -1,21 +1,29 @@
-import { useEffect, useState } from 'react'
-import { useSearchParams, Link } from 'react-router-dom'
+import { useEffect, useState, useRef } from 'react'
+import { useSearchParams, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { Zap, CheckCircle, XCircle } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 
 export default function VerifyEmailPage() {
   const [searchParams] = useSearchParams()
-  const { verifyEmail } = useAuth()
+  const { verifyEmail, user, refreshUser } = useAuth()
+  const navigate = useNavigate()
   const [status, setStatus] = useState('verifying')
+  const called = useRef(false)
 
   useEffect(() => {
+    if (called.current) return
     const token = searchParams.get('token')
     if (!token) { setStatus('invalid'); return }
-    verifyEmail(token).then(res => {
+    called.current = true
+    verifyEmail(token).then(async res => {
+      if (res.success) {
+        if (user) await refreshUser()
+        setTimeout(() => navigate('/products', { replace: true }), 1500)
+      }
       setStatus(res.success ? 'success' : 'error')
     })
-  }, [searchParams, verifyEmail])
+  }, [searchParams, verifyEmail, user, refreshUser, navigate])
 
   return (
     <div className="min-h-screen flex items-center justify-center px-4" style={{ background: 'var(--bg)' }}>
@@ -42,10 +50,7 @@ export default function VerifyEmailPage() {
           <div>
             <CheckCircle size={48} className="text-green-500 mx-auto mb-4" />
             <h2 className="font-display font-bold text-2xl mb-2" style={{ color: 'var(--text-primary)' }}>Email Verified!</h2>
-            <p className="mb-6" style={{ color: 'var(--text-secondary)' }}>Your account is now active. You can log in and start shopping.</p>
-            <Link to="/login" className="btn-primary inline-flex items-center gap-2">
-              Go to Login
-            </Link>
+            <p className="mb-6" style={{ color: 'var(--text-secondary)' }}>Redirecting you...</p>
           </div>
         )}
 

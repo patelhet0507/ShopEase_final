@@ -68,7 +68,7 @@ frontend_origins = [
     "http://localhost:5173",
     "http://127.0.0.1:3000",
     "http://127.0.0.1:5173",
-    "https://shop-ease-frontend-sooty.vercel.app",
+    "https://shop-ease-final.vercel.app",
 ]
 
 frontend_origins.extend(_split_origins(os.getenv("CORS_ORIGINS")))

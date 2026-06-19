@@ -4,7 +4,7 @@ from sendgrid.helpers.mail import Mail
 
 
 def send_verification_email(to_email: str, token: str) -> bool:
-    frontend_url = os.getenv("FRONTEND_URL", "https://shop-ease-frontend-sooty.vercel.app")
+    frontend_url = os.getenv("FRONTEND_URL", "https://shop-ease-final.vercel.app")
     verify_link = f"{frontend_url}/verify-email?token={token}"
 
     message = Mail(
