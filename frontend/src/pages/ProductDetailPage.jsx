@@ -1,5 +1,5 @@
-import { useState, useEffect, useRef } from 'react'
-import { useParams, Link, useNavigate } from 'react-router-dom'
+import { useState, useEffect } from 'react'
+import { useParams, Link } from 'react-router-dom'
 import { ShoppingCart, Heart, ArrowLeft, Star, ShieldCheck, Truck, RotateCcw, ChevronLeft, ChevronRight, MessageSquare, Share2 } from 'lucide-react'
 import { useCart } from '../context/CartContext'
 import { useAuth } from '../context/AuthContext'
@@ -8,7 +8,6 @@ import ProductVariants from '../components/product/ProductVariants'
 
 export default function ProductDetailPage() {
   const { productSlug } = useParams()
-  const navigate = useNavigate()
   const { user } = useAuth()
   const { addToCart, toggleWishlist, isWishlisted } = useCart()
 
@@ -26,48 +25,38 @@ export default function ProductDetailPage() {
   const [copied, setCopied] = useState(false)
 
   const token = productSlug || ''
-  const done = useRef(false)
-  const prevToken = useRef(token)
 
   useEffect(() => {
-    if (token !== prevToken.current) {
-      done.current = false
-      prevToken.current = token
-    }
-    if (done.current) return
-
+    let cancelled = false
     async function fetchProductDetails() {
       try {
         setLoading(true)
         setError(null)
-
-        if (!token) {
-          throw new Error('Missing product token.')
-        }
+        if (!token) { throw new Error('Missing product token.') }
 
         const { data } = await productsApi.getByToken(token)
+        if (cancelled) return
 
         setProduct(Array.isArray(data) ? data[0] : data)
         setCurrentImageIndex(0)
 
         if (data && data.view_token && data.view_token !== token) {
-          done.current = true
-          navigate(`/p/${data.view_token}`, { replace: true })
+          window.history.replaceState(null, '', `/p/${data.view_token}`)
         }
       } catch (err) {
-        console.error("Product fetch error:", err.message)
-        setError(err.message)
+        if (!cancelled) {
+          console.error("Product fetch error:", err.message)
+          setError(err.message)
+        }
       } finally {
-        setLoading(false)
+        if (!cancelled) setLoading(false)
       }
     }
 
-    if (token) {
-      fetchProductDetails()
-    } else {
-      setLoading(false)
-      setError("Missing product token.")
-    }
+    if (token) { fetchProductDetails() }
+    else { setLoading(false); setError("Missing product token.") }
+
+    return () => { cancelled = true }
   }, [token])
 
   useEffect(() => {
