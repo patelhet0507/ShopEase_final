@@ -434,20 +434,26 @@ export default function AdminDashboard() {
   const [error, setError] = useState('')
 
   useEffect(() => {
-    Promise.all([
-      categoriesApi.list(),
-      subcategoriesApi.list(),
-      productsApi.list(),
-      usersApi.list(),
-      ordersApi.adminList(),
-    ]).then(([c, s, p, u, o]) => {
-      setCategories(c.data)
-      setSubcategories(s.data)
-      setProducts(p.data)
-      setUsers(u.data)
-      setOrders(o.data)
+    async function fetchAll() {
+      try {
+        const [c, s, p, u] = await Promise.all([
+          categoriesApi.list().catch(() => ({ data: [] })),
+          subcategoriesApi.list().catch(() => ({ data: [] })),
+          productsApi.list().catch(() => ({ data: [] })),
+          usersApi.list().catch(() => ({ data: [] })),
+        ])
+        setCategories(c.data)
+        setSubcategories(s.data)
+        setProducts(p.data)
+        setUsers(u.data)
+      } catch {}
+      try {
+        const { data: o } = await ordersApi.adminList()
+        setOrders(o)
+      } catch {}
       setLoading(false)
-    }).catch(() => setLoading(false))
+    }
+    fetchAll()
   }, [])
 
   // ── Category CRUD ──
