@@ -1,209 +1,192 @@
-"""
-Seed script for ShopEase backend.
-
-Run with:
-    python seed.py
-"""
-
 from database import SessionLocal, engine, Base
 import models
 import auth
+import random
 
 Base.metadata.create_all(bind=engine)
 
 db = SessionLocal()
 
-# Clear existing data in dependency order
 db.query(models.Product).delete()
 db.query(models.SubCategory).delete()
 db.query(models.Category).delete()
 db.query(models.User).delete()
 db.commit()
 
+def slugify(value):
+    return value.lower().replace("&", "and").replace("'", "").replace("/", "-").replace(" ", "-")
 
-def slugify(value: str) -> str:
-    return (
-        value.lower()
-        .replace("&", "and")
-        .replace("'", "")
-        .replace("/", "-")
-        .replace(" ", "-")
-    )
-
-
-# Default users
-admin_user = models.User(
-    email="admin@shopease.com",
-    hashed_password=auth.hash_password("admin123"),
-    role="admin",
-)
-demo_user = models.User(
-    email="user@shopease.com",
-    hashed_password=auth.hash_password("user123"),
-    role="user",
-)
-db.add_all([admin_user, demo_user])
-db.commit()
-
-# Categories
-electronics = models.Category(name="Electronics", slug="electronics")
-fashion = models.Category(name="Fashion", slug="fashion")
-home_kitchen = models.Category(name="Home & Kitchen", slug="home-kitchen")
-db.add_all([electronics, fashion, home_kitchen])
-db.commit()
-db.refresh(electronics)
-db.refresh(fashion)
-db.refresh(home_kitchen)
-
-# Subcategories
-mobiles = models.SubCategory(name="Mobiles", slug="mobiles", category_id=electronics.id)
-laptops = models.SubCategory(name="Laptops", slug="laptops", category_id=electronics.id)
-audio = models.SubCategory(name="Audio", slug="audio", category_id=electronics.id)
-mens_wear = models.SubCategory(name="Men's Wear", slug="mens-wear", category_id=fashion.id)
-womens_wear = models.SubCategory(name="Women's Wear", slug="womens-wear", category_id=fashion.id)
-footwear = models.SubCategory(name="Footwear", slug="footwear", category_id=fashion.id)
-cookware = models.SubCategory(name="Cookware", slug="cookware", category_id=home_kitchen.id)
-furniture = models.SubCategory(name="Furniture", slug="furniture", category_id=home_kitchen.id)
-db.add_all([mobiles, laptops, audio, mens_wear, womens_wear, footwear, cookware, furniture])
-db.commit()
-
-for sub in [mobiles, laptops, audio, mens_wear, womens_wear, footwear, cookware, furniture]:
-    db.refresh(sub)
-
-# Products
-products = [
-    models.Product(
-        name="Galaxy Z Fold 6",
-        slug="galaxy-z-fold-6",
-        price=149999,
-        description="Premium foldable smartphone with a large flexible display and top-tier performance.",
-        category_id=electronics.id,
-        subcategory_id=mobiles.id,
-    ),
-    models.Product(
-        name="Pixel 9",
-        slug="pixel-9",
-        price=79999,
-        description="Google's flagship phone with a clean Android experience and excellent camera.",
-        category_id=electronics.id,
-        subcategory_id=mobiles.id,
-    ),
-    models.Product(
-        name="MacBook Air M3",
-        slug="macbook-air-m3",
-        price=114900,
-        description="Lightweight laptop with Apple's M3 chip, all-day battery life, and a stunning display.",
-        category_id=electronics.id,
-        subcategory_id=laptops.id,
-    ),
-    models.Product(
-        name="Dell XPS 13",
-        slug="dell-xps-13",
-        price=99990,
-        description="Compact ultrabook with a sleek design and powerful Intel processor.",
-        category_id=electronics.id,
-        subcategory_id=laptops.id,
-    ),
-    models.Product(
-        name="Sony WH-1000XM5",
-        slug="sony-wh-1000xm5",
-        price=29990,
-        description="Industry-leading noise cancelling headphones with rich, detailed sound.",
-        category_id=electronics.id,
-        subcategory_id=audio.id,
-    ),
-    models.Product(
-        name="Boat Airdopes 141",
-        slug="boat-airdopes-141",
-        price=1299,
-        description="Affordable true wireless earbuds with long battery backup.",
-        category_id=electronics.id,
-        subcategory_id=audio.id,
-    ),
-    models.Product(
-        name="Men's Cotton Shirt",
-        slug="mens-cotton-shirt",
-        price=899,
-        description="Casual cotton shirt, breathable fabric, perfect for everyday wear.",
-        category_id=fashion.id,
-        subcategory_id=mens_wear.id,
-    ),
-    models.Product(
-        name="Men's Denim Jacket",
-        slug="mens-denim-jacket",
-        price=2499,
-        description="Classic denim jacket with a comfortable regular fit.",
-        category_id=fashion.id,
-        subcategory_id=mens_wear.id,
-    ),
-    models.Product(
-        name="Women's Floral Dress",
-        slug="womens-floral-dress",
-        price=1599,
-        description="Lightweight floral dress, ideal for summer outings.",
-        category_id=fashion.id,
-        subcategory_id=womens_wear.id,
-    ),
-    models.Product(
-        name="Women's Kurti",
-        slug="womens-kurti",
-        price=999,
-        description="Elegant printed kurti made from soft, breathable fabric.",
-        category_id=fashion.id,
-        subcategory_id=womens_wear.id,
-    ),
-    models.Product(
-        name="Running Shoes",
-        slug="running-shoes",
-        price=3499,
-        description="Lightweight running shoes with cushioned soles for all-day comfort.",
-        category_id=fashion.id,
-        subcategory_id=footwear.id,
-    ),
-    models.Product(
-        name="Leather Loafers",
-        slug="leather-loafers",
-        price=2999,
-        description="Premium leather loafers, perfect for formal and casual occasions.",
-        category_id=fashion.id,
-        subcategory_id=footwear.id,
-    ),
-    models.Product(
-        name="Non-Stick Frying Pan",
-        slug="non-stick-frying-pan",
-        price=799,
-        description="Durable non-stick frying pan, ideal for everyday cooking.",
-        category_id=home_kitchen.id,
-        subcategory_id=cookware.id,
-    ),
-    models.Product(
-        name="Stainless Steel Cookware Set",
-        slug="stainless-steel-cookware-set",
-        price=3999,
-        description="5-piece stainless steel cookware set, induction compatible.",
-        category_id=home_kitchen.id,
-        subcategory_id=cookware.id,
-    ),
-    models.Product(
-        name="Wooden Study Table",
-        slug="wooden-study-table",
-        price=5499,
-        description="Sturdy wooden study table with spacious storage drawers.",
-        category_id=home_kitchen.id,
-        subcategory_id=furniture.id,
-    ),
-    models.Product(
-        name="Ergonomic Office Chair",
-        slug="ergonomic-office-chair",
-        price=7999,
-        description="Adjustable ergonomic chair with lumbar support for long working hours.",
-        category_id=home_kitchen.id,
-        subcategory_id=furniture.id,
-    ),
+# ── 100 Categories ──
+category_names = [
+    "Mobiles", "Laptops", "Tablets", "Headphones", "Speakers", "Cameras", "Smartwatches",
+    "Gaming Consoles", "Printers", "Monitors", "Keyboards", "Mice", "USB Drives",
+    "Hard Drives", "SSD", "RAM", "Graphics Cards", "Motherboards", "Processors",
+    "Cooling Fans", "Power Banks", "Chargers", "Cables", "Phone Cases",
+    "Screen Protectors", "Smart Home", "Security Cameras", "Doorbells", "Light Bulbs",
+    "Power Strips", "Men's T-Shirts", "Men's Shirts", "Men's Jeans", "Men's Shorts",
+    "Men's Jackets", "Men's Suits", "Men's Ethnic Wear", "Men's Footwear",
+    "Men's Sandals", "Men's Watches", "Women's Tops", "Women's Dresses",
+    "Women's Jeans", "Women's Kurtis", "Women's Sarees", "Women's Footwear",
+    "Women's Sandals", "Women's Watches", "Women's Handbags", "Women's Jewelry",
+    "Kids Clothing", "Kids Footwear", "Kids Toys", "Kids Books", "Kids School Bags",
+    "Sofa Sets", "Dining Tables", "Beds", "Wardrobes", "Bookshelves",
+    "Office Chairs", "Study Tables", "Coffee Tables", "Shoe Racks", "TV Units",
+    "Cookware Sets", "Frying Pans", "Pressure Cookers", "Mixer Grinders",
+    "Induction Cooktops", "Microwaves", "Refrigerators", "Washing Machines",
+    "Air Conditioners", "Water Purifiers", "Vacuum Cleaners", "Irons",
+    "Towels", "Bed Sheets", "Pillows", "Blankets", "Curtains",
+    "Bathroom Fittings", "Shampoos", "Soaps", "Sunscreens", "Deodorants",
+    "Perfumes", "Lipsticks", "Face Creams", "Serums", "Hair Oils",
+    "Protein Powders", "Vitamins", "Yoga Mats", "Dumbbells", "Treadmills",
+    "Bicycles", "Car Accessories", "Bike Helmets", "Pet Food", "Pet Toys"
 ]
+
+categories = []
+for i, name in enumerate(category_names, 1):
+    c = models.Category(name=name, slug=slugify(name))
+    db.add(c)
+    categories.append(c)
+db.commit()
+for c in categories:
+    db.refresh(c)
+
+# ── 100 Subcategories (1 per category) ──
+subcategory_names = [
+    "Smartphones", "Ultrabooks", "Android Tablets", "Over-Ear", "Bluetooth Speakers",
+    "DSLR Cameras", "Fitness Bands", "Handheld Consoles", "Inkjet Printers",
+    "LED Monitors", "Mechanical Keyboards", "Wireless Mice", "Pen Drives",
+    "External HDD", "NVMe SSD", "DDR5 RAM", "NVIDIA GPUs", "ATX Boards",
+    "Intel Processors", "CPU Coolers", "Portable Banks", "Fast Chargers",
+    "USB Cables", "Silicone Cases", "Tempered Glass", "Smart Plugs",
+    "Indoor Cameras", "Video Doorbells", "LED Bulbs", "Extension Cords",
+    "Casual T-Shirts", "Formal Shirts", "Slim Jeans", "Cargo Shorts",
+    "Denim Jackets", "Blazers", "Kurta Sets", "Sports Shoes",
+    "Flip Flops", "Chronograph", "Crop Tops", "Maxi Dresses",
+    "Skinny Jeans", "Cotton Kurtis", "Silk Sarees", "Heels",
+    "Flat Sandals", "Analog Watches", "Tote Bags", "Gold Plated",
+    "T-Shirts Kids", "School Shoes", "Action Figures", "Picture Books",
+    "Backpacks", "Fabric Sofas", "Wooden Tables", "Queen Beds",
+    "Sliding Wardrobes", "Wall Shelves", "Ergonomic Chairs", "Writing Desks",
+    "Glass Tables", "Metal Racks", "Entertainment Units",
+    "Non-Stick Sets", "Cast Iron", "Aluminum Cookers", "Juicer Mixer",
+    "Portable Cooktops", "Convection Ovens", "French Door", "Front Load",
+    "Split ACs", "RO Purifiers", "Robot Vacuums", "Steam Irons",
+    "Bath Towels", "Cotton Sheets", "Memory Foam", "Comforters", "Blackout",
+    "Shower Heads", "Anti-Dandruff", "Organic Soaps", "SPF 50",
+    "Roll-On", "Eau de Parfum", "Matte Lipsticks", "Anti-Aging",
+    "Vitamin C Serum", "Coconut Oil", "Whey Isolate", "Multivitamins",
+    "Exercise Mats", "Adjustable Weights", "Electric Treadmills", "Mountain Bikes",
+    "Dash Cams", "Full Face", "Dog Food", "Chew Toys"
+]
+
+subcategories = []
+for i, name in enumerate(subcategory_names, 1):
+    cat = categories[i % len(categories)]
+    s = models.SubCategory(name=name, slug=slugify(name), category_id=cat.id)
+    db.add(s)
+    subcategories.append(s)
+db.commit()
+for s in subcategories:
+    db.refresh(s)
+
+# ── 500 Products ──
+brands = ["Apple", "Samsung", "Sony", "LG", "Dell", "HP", "Lenovo", "Asus", "Acer", "Xiaomi",
+          "OnePlus", "Realme", "Vivo", "Oppo", "Boat", "Noise", "Mivi", "pTron", "Zebronics",
+          "JBL", "Bose", "Sennheiser", "Skullcandy", "Whirlpool", "Bosch", "IFB", "Haier",
+          "Panasonic", "Toshiba", "Voltas", "Usha", "Bajaj", "Prestige", "Hawkins", "Puma",
+          "Nike", "Adidas", "Reebok", "Levis", "Wrangler", "US Polo", "Louis Philippe",
+          "Van Heusen", "Arrow", "Blackberry", "Mango", "H&M", "Zara", "Max", "Westside"]
+
+product_adjectives = ["Premium", "Ultra", "Pro", "Elite", "Smart", "Classic", "Essential",
+                      "Advanced", "Deluxe", "Slim", "Compact", "Portable", "Heavy Duty",
+                      "Elegant", "Modern", "Trendy", "Stylish", "Comfort", "Performance"]
+
+product_nouns = ["Edition", "Series", "Plus", "Max", "Lite", "Air", "Mini", "Prime", "Neo"]
+
+prices = [299, 399, 499, 599, 699, 799, 899, 999, 1299, 1499, 1799, 1999, 2499, 2999, 3499,
+          3999, 4499, 4999, 5999, 6999, 7999, 8999, 9999, 11999, 14999, 17999, 19999, 24999,
+          29999, 34999, 39999, 44999, 49999, 59999, 69999, 79999, 89999, 99999, 119999, 149999]
+
+products = []
+used_slugs = set()
+
+for i in range(500):
+    brand = random.choice(brands)
+    adj = random.choice(product_adjectives)
+    noun = random.choice(product_nouns) if random.random() > 0.3 else ""
+    cat = random.choice(categories)
+    subs_for_cat = [s for s in subcategories if s.category_id == cat.id]
+    if not subs_for_cat:
+        sub = random.choice(subcategories)
+    else:
+        sub = random.choice(subs_for_cat)
+    name = f"{brand} {adj} {cat.name} {noun}".strip()
+    base_slug = slugify(name)
+    slug = base_slug
+    while slug in used_slugs:
+        slug = f"{base_slug}-{random.randint(1,999)}"
+    used_slugs.add(slug)
+    price = random.choice(prices)
+    stock = random.randint(5, 200)
+    description = f"{adj} product from {brand}. Perfect for everyday use with great quality and performance. Ideal for those who appreciate quality."
+    products.append(models.Product(
+        name=name, slug=slug, price=price, description=description,
+        category_id=cat.id, subcategory_id=sub.id, stock=stock
+    ))
 
 db.add_all(products)
 db.commit()
+
+# ── Multiple Users with varied profiles ──
+first_names = ["Rahul", "Priya", "Amit", "Sneha", "Vikram", "Ananya", "Rajesh", "Neha",
+               "Deepak", "Kavita", "Arjun", "Pooja", "Suresh", "Meera", "Rohan"]
+last_names = ["Sharma", "Patel", "Verma", "Gupta", "Singh", "Reddy", "Joshi", "Das",
+              "Kumar", "Nair", "Menon", "Kapoor", "Malhotra", "Chopra", "Thakur"]
+streets = ["MG Road", "Park Street", "Main Road", "Sector 18", "Lake View Road",
+           "Church Street", "Commercial Street", "Banjara Hills", "Jubilee Hills",
+           "Koramangala", "Indiranagar", "Whitefield", "Hauz Khas", "Connaught Place",
+           "Salt Lake"]
+cities = ["Mumbai", "Delhi", "Bangalore", "Hyderabad", "Chennai", "Kolkata", "Pune",
+          "Ahmedabad", "Jaipur", "Lucknow"]
+
+users = []
+for i, (fn, ln) in enumerate(zip(first_names[:10], last_names[:10])):
+    street = random.choice(streets)
+    city = random.choice(cities)
+    users.append(models.User(
+        email=f"{fn.lower()}.{ln.lower()}@email.com",
+        hashed_password=auth.hash_password("password123"),
+        role="user" if i > 0 else "admin",
+        first_name=fn, last_name=ln,
+        address=f"{random.randint(1,999)}, {street}, {city} - {random.randint(100000,999999)}",
+        mobile_number=f"+91-{random.randint(7000000000, 9999999999)}"
+    ))
+
+# Add the default admin and demo user too
+users.append(models.User(
+    email="admin@shopease.com",
+    hashed_password=auth.hash_password("admin123"),
+    role="admin",
+    first_name="Admin", last_name="User",
+    address="1, Admin Office, Mumbai - 400001",
+    mobile_number="+91-9876543210"
+))
+users.append(models.User(
+    email="user@shopease.com",
+    hashed_password=auth.hash_password("user123"),
+    role="user",
+    first_name="Demo", last_name="User",
+    address="2, Demo Street, Delhi - 110001",
+    mobile_number="+91-9876543211"
+))
+
+db.add_all(users)
+db.commit()
+
 db.close()
 
 print("Database seeded successfully!")
+print(f"  Categories: {len(categories)}")
+print(f"  Subcategories: {len(subcategories)}")
+print(f"  Products: {len(products)}")
+print(f"  Users: {len(users)}")

@@ -3,7 +3,7 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   LayoutDashboard, Package, Layers, Grid3x3, Users, Plus, Pencil, Trash2,
   X, Check, AlertCircle, TrendingUp, ShoppingBag, Tag, ChevronDown, 
-  Upload, Move, Calendar, DollarSign, Archive, ShoppingCart, UserPlus
+  Upload, Move, Calendar, DollarSign, Archive, ShoppingCart, UserPlus, Search
 } from 'lucide-react'
 import { categoriesApi, subcategoriesApi, productsApi, usersApi, ordersApi } from '../api'
 import { FadeIn, StaggerChildren, StaggerItem, Skeleton, Modal } from '../components/ui'
@@ -254,6 +254,9 @@ export default function AdminDashboard() {
   const [formVariants, setFormVariants] = useState([])
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState('')
+  const [productSearch, setProductSearch] = useState('')
+  const [userSearch, setUserSearch] = useState('')
+  const [userRoleFilter, setUserRoleFilter] = useState('all')
 
   useEffect(() => {
     async function fetchAll() {
@@ -612,18 +615,35 @@ export default function AdminDashboard() {
                   <Plus size={14} /> Add Product
                 </button>
               </div>
-              <AdminTable
-                columns={[
-                  { key: 'id', label: 'ID', render: v => <span className="badge-purple">#{v}</span> },
-                  { key: 'name', label: 'Name' },
-                  { key: 'price', label: 'Price', render: v => <span className="font-semibold text-gradient">₹{v.toLocaleString()}</span> },
-                  { key: 'category_name', label: 'Category', render: v => v || '—' },
-                  { key: 'subcategory_name', label: 'Subcategory', render: v => v || '—' },
-                ]}
-                rows={products}
-                onEdit={(row) => openProductModal(row)}
-                onDelete={(row) => handleDelete(row, 'product')}
-              />
+              <div className="relative mb-4">
+                <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--text-muted)' }} />
+                <input
+                  type="text"
+                  placeholder="Search products by name..."
+                  value={productSearch}
+                  onChange={e => setProductSearch(e.target.value)}
+                  className="input-field w-full pl-10 text-sm"
+                />
+              </div>
+              {(() => {
+                const filtered = productSearch
+                  ? products.filter(p => p.name?.toLowerCase().includes(productSearch.toLowerCase()))
+                  : products
+                return (
+                  <AdminTable
+                    columns={[
+                      { key: 'id', label: 'ID', render: v => <span className="badge-purple">#{v}</span> },
+                      { key: 'name', label: 'Name' },
+                      { key: 'price', label: 'Price', render: v => <span className="font-semibold text-gradient">₹{v.toLocaleString()}</span> },
+                      { key: 'category_name', label: 'Category', render: v => v || '—' },
+                      { key: 'subcategory_name', label: 'Subcategory', render: v => v || '—' },
+                    ]}
+                    rows={filtered}
+                    onEdit={(row) => openProductModal(row)}
+                    onDelete={(row) => handleDelete(row, 'product')}
+                  />
+                )
+              })()}
             </FadeIn>
           )}
 
@@ -631,36 +651,77 @@ export default function AdminDashboard() {
           {tab === 'Users' && (
             <FadeIn>
               <h2 className="font-bold text-lg mb-5" style={{ color: 'var(--text-primary)' }}>Users ({users.length})</h2>
-              <AdminTable
-                columns={[
-                  { key: 'id', label: 'ID', render: v => <span className="badge-purple">#{v}</span> },
-                  { key: 'email', label: 'Email' },
-                  {
-                    key: 'role', label: 'Role',
-                    render: (v, row) => (
-                      <div className="relative inline-block">
-                        <select
-                          value={v}
-                          onChange={e => updateRole(row.id, e.target.value)}
-                          className="text-xs px-3 py-1.5 rounded-lg outline-none cursor-pointer appearance-none pr-7"
-                          style={{
-                            background: v === 'admin' ? 'rgba(168,85,247,0.15)' : 'rgba(34,197,94,0.15)',
-                            color: v === 'admin' ? '#a855f7' : '#22c55e',
-                            border: `1px solid ${v === 'admin' ? 'rgba(168,85,247,0.3)' : 'rgba(34,197,94,0.3)'}`,
-                          }}
-                        >
-                          <option value="user">user</option>
-                          <option value="admin">admin</option>
-                        </select>
-                        <ChevronDown size={10} className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: v === 'admin' ? '#a855f7' : '#22c55e' }} />
-                      </div>
-                    )
-                  },
-                ]}
-                rows={users}
-                onEdit={() => {}}
-                onDelete={() => {}}
-              />
+              <div className="flex flex-col sm:flex-row gap-3 mb-4">
+                <div className="relative flex-1">
+                  <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--text-muted)' }} />
+                  <input
+                    type="text"
+                    placeholder="Search by email or name..."
+                    value={userSearch}
+                    onChange={e => setUserSearch(e.target.value)}
+                    className="input-field w-full pl-10 text-sm"
+                  />
+                </div>
+                <select
+                  value={userRoleFilter}
+                  onChange={e => setUserRoleFilter(e.target.value)}
+                  className="input-field text-sm w-full sm:w-40"
+                >
+                  <option value="all">All Roles</option>
+                  <option value="user">Users</option>
+                  <option value="admin">Admins</option>
+                </select>
+              </div>
+              {(() => {
+                let filtered = users
+                if (userRoleFilter !== 'all') {
+                  filtered = filtered.filter(u => u.role === userRoleFilter)
+                }
+                if (userSearch) {
+                  const q = userSearch.toLowerCase()
+                  filtered = filtered.filter(u =>
+                    (u.email && u.email.toLowerCase().includes(q)) ||
+                    (u.first_name && u.first_name.toLowerCase().includes(q)) ||
+                    (u.last_name && u.last_name.toLowerCase().includes(q))
+                  )
+                }
+                return (
+                  <AdminTable
+                    columns={[
+                      { key: 'id', label: 'ID', render: v => <span className="badge-purple">#{v}</span> },
+                      {
+                        key: 'name', label: 'Name',
+                        render: (v, row) => `${row.first_name || ''} ${row.last_name || ''}`.trim() || '—'
+                      },
+                      { key: 'email', label: 'Email' },
+                      {
+                        key: 'role', label: 'Role',
+                        render: (v, row) => (
+                          <div className="relative inline-block">
+                            <select
+                              value={v}
+                              onChange={e => updateRole(row.id, e.target.value)}
+                              className="text-xs px-3 py-1.5 rounded-lg outline-none cursor-pointer appearance-none pr-7"
+                              style={{
+                                background: v === 'admin' ? 'rgba(168,85,247,0.15)' : 'rgba(34,197,94,0.15)',
+                                color: v === 'admin' ? '#a855f7' : '#22c55e',
+                                border: `1px solid ${v === 'admin' ? 'rgba(168,85,247,0.3)' : 'rgba(34,197,94,0.3)'}`,
+                              }}
+                            >
+                              <option value="user">user</option>
+                              <option value="admin">admin</option>
+                            </select>
+                            <ChevronDown size={10} className="absolute right-2 top-1/2 -translate-y-1/2 pointer-events-none" style={{ color: v === 'admin' ? '#a855f7' : '#22c55e' }} />
+                          </div>
+                        )
+                      },
+                    ]}
+                    rows={filtered}
+                    onEdit={() => {}}
+                    onDelete={() => {}}
+                  />
+                )
+              })()}
             </FadeIn>
           )}
 
