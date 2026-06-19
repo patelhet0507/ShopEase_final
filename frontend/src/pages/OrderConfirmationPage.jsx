@@ -5,8 +5,6 @@ import { CheckCircle, Download, ShoppingBag, Home, ArrowRight, Package, Truck } 
 import { useCart } from '../context/CartContext'
 import { useAuth } from '../context/AuthContext'
 import { ordersApi } from '../api'
-import { jsPDF } from 'jspdf'
-import 'jspdf-autotable'
 
 export default function OrderConfirmationPage() {
   const { orderNumber } = useParams()
@@ -57,193 +55,131 @@ export default function OrderConfirmationPage() {
 
     setDownloading(true)
     try {
-      const doc = new jsPDF('p', 'mm', 'a4')
-      const pageW = 210
-      const pageH = 297
-      const margin = 18
-      const contentW = pageW - margin * 2
-
-      // Watermark
-      doc.setTextColor(245, 235, 255)
-      doc.setFontSize(68)
-      doc.setFont('helvetica', 'bold')
-      for (let y = -60; y < pageH + 60; y += 70) {
-        for (let x = -60; x < pageW + 60; x += 110) {
-          doc.text('ShopEase', x, y, { angle: 30 })
-        }
-      }
-
-      // Draw border
-      doc.setDrawColor(168, 85, 247)
-      doc.setLineWidth(0.8)
-      doc.rect(margin - 2, margin - 2, contentW + 4, pageH - margin * 2 + 4)
-      doc.setDrawColor(200, 160, 240)
-      doc.setLineWidth(0.3)
-      doc.rect(margin - 1, margin - 1, contentW + 2, pageH - margin * 2 + 2)
-
-      // Logo
-      doc.setFillColor(168, 85, 247)
-      doc.rect(margin, 24, 14, 14, 'F')
-      doc.setTextColor(255, 255, 255)
-      doc.setFontSize(10)
-      doc.setFont('helvetica', 'bold')
-      doc.text('SE', margin + 2.5, 34.5)
-
-      doc.setTextColor(30, 30, 30)
-      doc.setFontSize(22)
-      doc.setFont('helvetica', 'bold')
-      doc.text('ShopEase', margin + 20, 35)
-
-      doc.setFontSize(15)
-      doc.setFont('helvetica', 'normal')
-      doc.setTextColor(168, 85, 247)
-      doc.text('INVOICE', margin + 20, 45)
-
-      // Invoice meta right side
-      doc.setFontSize(8)
-      doc.setFont('helvetica', 'normal')
-      doc.setTextColor(120, 120, 120)
-      doc.text('Invoice #', pageW - margin - 60, 28)
-      doc.setTextColor(30, 30, 30)
-      doc.setFont('helvetica', 'bold')
-      doc.setFontSize(9)
-      doc.text(`${order.order_number}`, pageW - margin - 60, 35)
-      doc.setTextColor(120, 120, 120)
-      doc.setFont('helvetica', 'normal')
-      doc.setFontSize(8)
-      doc.text('Date:', pageW - margin - 60, 44)
-      doc.setTextColor(30, 30, 30)
-      doc.setFont('helvetica', 'bold')
-      doc.setFontSize(9)
-      doc.text(new Date(order.created_at).toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric' }), pageW - margin - 60, 51)
-
-      // Divider
-      doc.setDrawColor(220, 220, 220)
-      doc.setLineWidth(0.3)
-      doc.line(margin, 54, pageW - margin, 54)
-
-      // Bill To
-      doc.setTextColor(120, 120, 120)
-      doc.setFontSize(8)
-      doc.setFont('helvetica', 'normal')
-      doc.text('BILL TO', margin, 66)
-      doc.setTextColor(30, 30, 30)
-      doc.setFont('helvetica', 'bold')
-      doc.setFontSize(10)
-      let billY = 73
-      doc.text(order.shipping_name || 'N/A', margin, billY)
-      billY += 6
-      doc.setFont('helvetica', 'normal')
-      doc.setFontSize(9)
-      doc.setTextColor(80, 80, 80)
-      doc.text(order.shipping_mobile || '', margin, billY)
-      billY += 5
-      const addrLines = doc.splitTextToSize(order.shipping_address || '', 80)
-      addrLines.forEach(line => { doc.text(line, margin, billY); billY += 4.5 })
-
-      // Payment info right side
-      doc.setTextColor(120, 120, 120)
-      doc.setFontSize(8)
-      doc.setFont('helvetica', 'normal')
-      doc.text('PAYMENT', pageW - margin - 55, 66)
-      doc.setFontSize(9)
-      doc.setTextColor(80, 80, 80)
-      doc.setFont('helvetica', 'normal')
-      doc.text('Method:', pageW - margin - 55, 74)
-      doc.setTextColor(30, 30, 30)
-      doc.setFont('helvetica', 'bold')
-      doc.text('Cash on Delivery', pageW - margin - 22, 74)
-      doc.setTextColor(80, 80, 80)
-      doc.setFont('helvetica', 'normal')
-      doc.text('Status:', pageW - margin - 55, 81)
-      doc.setTextColor(34, 197, 94)
-      doc.setFont('helvetica', 'bold')
-      doc.text((order.status || 'Pending').toUpperCase(), pageW - margin - 22, 81)
-
-      // Items table
-      let tableY = billY + 8
       const items = order.order_items || []
-      const tableData = items.map((item, i) => [
-        `${i + 1}`,
-        item.product_name || 'Product',
-        `${item.quantity}`,
-        `₹${Number(item.product_price || 0).toLocaleString()}`,
-        `₹${(Number(item.product_price || 0) * item.quantity).toLocaleString()}`
-      ])
+      const itemsHtml = items.map((item, i) => `
+        <tr${i % 2 === 0 ? ' style="background:#f8f5ff"' : ''}>
+          <td style="padding:10px 12px;text-align:center;border-bottom:1px solid #eee">${i + 1}</td>
+          <td style="padding:10px 12px;border-bottom:1px solid #eee">${item.product_name || 'Product'}</td>
+          <td style="padding:10px 12px;text-align:center;border-bottom:1px solid #eee">${item.quantity}</td>
+          <td style="padding:10px 12px;text-align:right;border-bottom:1px solid #eee">₹${Number(item.product_price || 0).toLocaleString()}</td>
+          <td style="padding:10px 12px;text-align:right;border-bottom:1px solid #eee;font-weight:600">₹${(Number(item.product_price || 0) * item.quantity).toLocaleString()}</td>
+        </tr>
+      `).join('')
 
-      doc.autoTable({
-        startY: tableY,
-        head: [['#', 'Item', 'Qty', 'Unit Price', 'Total']],
-        body: tableData,
-        theme: 'plain',
-        headStyles: {
-          fillColor: [168, 85, 247],
-          textColor: [255, 255, 255],
-          fontStyle: 'bold',
-          fontSize: 9,
-          cellPadding: 4,
-        },
-        bodyStyles: {
-          fontSize: 9,
-          textColor: [60, 60, 60],
-          cellPadding: 3.5,
-        },
-        alternateRowStyles: {
-          fillColor: [248, 245, 255],
-        },
-        columnStyles: {
-          0: { cellWidth: 12, halign: 'center' },
-          1: { cellWidth: 'auto' },
-          2: { cellWidth: 16, halign: 'center' },
-          3: { cellWidth: 30, halign: 'right' },
-          4: { cellWidth: 30, halign: 'right' },
-        },
-        margin: { left: margin, right: margin },
-        tableLineColor: [230, 230, 230],
-        tableLineWidth: 0.2,
-      })
+      const html = `<!DOCTYPE html>
+<html>
+<head><meta charset="UTF-8"><title>Receipt ${order.order_number}</title>
+<style>
+  @page { margin: 0; }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: 'Segoe UI', Helvetica, Arial, sans-serif; color: #1a1a1a; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .page { width: 210mm; min-height: 297mm; padding: 16mm 14mm; position: relative; overflow: hidden; }
+  .watermark { position: absolute; top: 0; left: 0; width: 100%; height: 100%; pointer-events: none; overflow: hidden; }
+  .watermark span { position: absolute; font-size: 60px; font-weight: 900; color: #f0e8ff; letter-spacing: 8px; white-space: nowrap; transform-origin: center; }
+  .border-outer { position: absolute; top: 12mm; left: 12mm; right: 12mm; bottom: 12mm; border: 2px solid #a855f7; border-radius: 4px; pointer-events: none; }
+  .border-inner { position: absolute; top: 13mm; left: 13mm; right: 13mm; bottom: 13mm; border: 1px solid #d4b8f0; border-radius: 3px; pointer-events: none; }
+  .header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; position: relative; z-index: 1; }
+  .logo-area { display: flex; align-items: center; gap: 12px; }
+  .logo { width: 36px; height: 36px; background: #a855f7; border-radius: 6px; display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 900; font-size: 14px; }
+  .brand { font-size: 26px; font-weight: 800; color: #1a1a1a; }
+  .brand-sub { font-size: 16px; color: #a855f7; font-weight: 500; letter-spacing: 2px; }
+  .meta { text-align: right; font-size: 11px; }
+  .meta-label { color: #888; }
+  .meta-value { font-weight: 700; color: #1a1a1a; font-size: 12px; margin-bottom: 2px; }
+  .divider { border: none; border-top: 1px solid #ddd; margin: 14px 0; }
+  .section-title { font-size: 10px; font-weight: 600; color: #888; letter-spacing: 1.5px; text-transform: uppercase; margin-bottom: 6px; }
+  .bill-to { font-size: 13px; font-weight: 700; color: #1a1a1a; }
+  .bill-detail { font-size: 11px; color: #555; line-height: 1.6; }
+  .info-grid { display: flex; justify-content: space-between; margin-bottom: 18px; position: relative; z-index: 1; }
+  table { width: 100%; border-collapse: collapse; font-size: 11px; position: relative; z-index: 1; }
+  th { background: #a855f7; color: #fff; padding: 10px 12px; text-align: left; font-weight: 600; font-size: 10px; letter-spacing: 0.5px; }
+  th:first-child { text-align: center; width: 30px; }
+  th:nth-child(3) { text-align: center; width: 50px; }
+  th:nth-child(4), th:nth-child(5) { text-align: right; width: 80px; }
+  .total-row { display: flex; justify-content: space-between; align-items: center; padding: 12px 0; margin-top: 8px; border-top: 2px solid #ddd; position: relative; z-index: 1; }
+  .total-label { font-size: 14px; font-weight: 600; color: #555; }
+  .total-value { font-size: 20px; font-weight: 800; color: #1a1a1a; }
+  .footer { position: absolute; bottom: 16mm; left: 14mm; right: 14mm; border-top: 1px solid #ddd; padding-top: 10px; display: flex; justify-content: space-between; align-items: end; }
+  .footer-brand { font-size: 11px; font-weight: 700; color: #a855f7; }
+  .footer-text { font-size: 9px; color: #999; margin-top: 2px; }
+  .footer-right { font-size: 9px; color: #bbb; text-align: right; }
+  @media print { .no-print { display: none; } }
+</style></head>
+<body>
+<div class="page">
+  <div class="border-outer"></div>
+  <div class="border-inner"></div>
+  <div class="watermark">
+    ${Array.from({length: 20}).map((_, i) => {
+      const x = (i % 5) * 210 - 40
+      const y = Math.floor(i / 5) * 280 - 40
+      return '<span style="top:' + y + 'px;left:' + x + 'px;transform:rotate(-30deg)">ShopEase</span>'
+    }).join('')}
+  </div>
 
-      // Total section
-      const finalY = doc.lastAutoTable.finalY + 8
-      doc.setDrawColor(220, 220, 220)
-      doc.setLineWidth(0.3)
-      doc.line(margin, finalY, pageW - margin, finalY)
+  <div class="header">
+    <div class="logo-area">
+      <div class="logo">SE</div>
+      <div><div class="brand">ShopEase</div><div class="brand-sub">INVOICE</div></div>
+    </div>
+    <div class="meta">
+      <div class="meta-label">Invoice #</div>
+      <div class="meta-value">${order.order_number}</div>
+      <div class="meta-label" style="margin-top:4px">Date</div>
+      <div class="meta-value">${new Date(order.created_at).toLocaleDateString('en-IN', { year: 'numeric', month: 'long', day: 'numeric' })}</div>
+    </div>
+  </div>
 
-      const totalY = finalY + 8
-      doc.setTextColor(80, 80, 80)
-      doc.setFontSize(9)
-      doc.setFont('helvetica', 'normal')
-      doc.text('Total Amount:', margin, totalY)
-      doc.setTextColor(30, 30, 30)
-      doc.setFont('helvetica', 'bold')
-      doc.setFontSize(14)
-      doc.text(`₹${Number(order.total_amount || 0).toLocaleString()}`, pageW - margin - 30, totalY, { align: 'right' })
+  <hr class="divider">
 
-      // Footer
-      const footerY = pageH - margin - 20
-      doc.setDrawColor(220, 220, 220)
-      doc.setLineWidth(0.3)
-      doc.line(margin, footerY, pageW - margin, footerY)
+  <div class="info-grid">
+    <div>
+      <div class="section-title">Bill To</div>
+      <div class="bill-to">${order.shipping_name || 'N/A'}</div>
+      <div class="bill-detail">${order.shipping_mobile || ''}</div>
+      <div class="bill-detail">${(order.shipping_address || '').replace(/\\n/g, '<br>')}</div>
+    </div>
+    <div style="text-align:right">
+      <div class="section-title">Payment</div>
+      <div class="bill-detail">Method: <strong>Cash on Delivery</strong></div>
+      <div class="bill-detail">Status: <strong style="color:#22c55e">${(order.status || 'Pending').toUpperCase()}</strong></div>
+    </div>
+  </div>
 
-      doc.setTextColor(168, 85, 247)
-      doc.setFontSize(8)
-      doc.setFont('helvetica', 'bold')
-      doc.text('ShopEase', margin, footerY + 8)
+  <table>
+    <thead><tr><th>#</th><th>Item</th><th>Qty</th><th>Unit Price</th><th>Total</th></tr></thead>
+    <tbody>${itemsHtml}</tbody>
+  </table>
 
-      doc.setTextColor(150, 150, 150)
-      doc.setFont('helvetica', 'normal')
-      doc.setFontSize(7)
-      doc.text('Thank you for your purchase!', margin, footerY + 15)
-      doc.text('For any queries, contact support@shopease.com', margin, footerY + 20)
+  <div class="total-row">
+    <span class="total-label">Total Amount</span>
+    <span class="total-value">₹${Number(order.total_amount || 0).toLocaleString()}</span>
+  </div>
 
-      doc.setFontSize(7)
-      doc.setTextColor(180, 180, 180)
-      doc.text('Page 1 of 1', pageW - margin, footerY + 15, { align: 'right' })
+  <div class="footer">
+    <div>
+      <div class="footer-brand">ShopEase</div>
+      <div class="footer-text">Thank you for your purchase!</div>
+      <div class="footer-text">support@shopease.com</div>
+    </div>
+    <div class="footer-right">Page 1 of 1</div>
+  </div>
+</div>
+</body>
+</html>`
 
-      doc.save(`receipt_${order.order_number}.pdf`)
+      const blob = new Blob([html], { type: 'text/html' })
+      const url = URL.createObjectURL(blob)
+      const a = document.createElement('a')
+      a.href = url
+      a.download = `receipt_${order.order_number}.html`
+      document.body.appendChild(a)
+      a.click()
+      document.body.removeChild(a)
+      URL.revokeObjectURL(url)
     } catch (error) {
-      console.error('Error generating PDF:', error)
-      alert('Failed to generate PDF receipt. Please try again.')
+      console.error('Error generating receipt:', error)
+      alert('Failed to generate receipt. Please try again.')
     } finally {
       setDownloading(false)
     }
