@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import { useAuth } from '../context/AuthContext'
 import { usersApi } from '../api/index'
 import { motion } from 'framer-motion'
-import { User, Mail, MapPin, Smartphone, PenLine, ShieldCheck, Star } from 'lucide-react'
+import { User, Mail, MapPin, Smartphone, PenLine, ShieldCheck, Star, AlertTriangle, RefreshCw, CheckCircle } from 'lucide-react'
 
 const LEVELS = [
   { level: 1, minExp: 0, title: 'New Reviewer' },
@@ -164,6 +164,20 @@ export default function ProfilePage() {
             )}
           </div>
 
+          {/* Email Verification Status */}
+          {user && (
+            <div className="mx-8 mb-6">
+              {user.is_verified ? (
+                <div className="flex items-center gap-2 p-3 rounded-xl" style={{ background: 'rgba(34,197,94,0.08)', border: '1px solid rgba(34,197,94,0.2)' }}>
+                  <CheckCircle size={16} className="text-green-500 flex-shrink-0" />
+                  <span className="text-sm font-medium" style={{ color: '#22c55e' }}>Email Verified</span>
+                </div>
+              ) : (
+                <VerificationCard email={user.email} />
+              )}
+            </div>
+          )}
+
           {success && (
             <motion.div
               initial={{ opacity: 0, y: -10 }}
@@ -244,5 +258,49 @@ export default function ProfilePage() {
         </motion.div>
       </div>
     </motion.div>
+  )
+}
+
+function VerificationCard({ email }) {
+  const { resendVerification } = useAuth()
+  const [sending, setSending] = useState(false)
+  const [sent, setSent] = useState(false)
+
+  const handleResend = async () => {
+    setSending(true)
+    const res = await resendVerification(email)
+    setSending(false)
+    if (res.success) setSent(true)
+  }
+
+  return (
+    <div className="p-4 rounded-xl" style={{ background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.2)' }}>
+      <div className="flex items-start gap-3">
+        <AlertTriangle size={18} className="text-red-400 flex-shrink-0 mt-0.5" />
+        <div className="flex-1 min-w-0">
+          <p className="text-sm font-semibold mb-1" style={{ color: '#ef4444' }}>Email Not Verified</p>
+          <p className="text-xs mb-3" style={{ color: 'rgba(255,255,255,0.4)' }}>
+            Please verify your email address. If you don't see the email, check your spam folder.
+          </p>
+          {sent ? (
+            <p className="text-xs font-medium" style={{ color: '#22c55e' }}>Verification email sent!</p>
+          ) : (
+            <button
+              onClick={handleResend}
+              disabled={sending}
+              className="flex items-center gap-1.5 text-xs font-medium transition-colors cursor-pointer"
+              style={{ color: '#a855f7' }}
+            >
+              {sending ? (
+                <span className="w-3 h-3 border border-purple-400/30 border-t-purple-400 rounded-full animate-spin" />
+              ) : (
+                <RefreshCw size={12} />
+              )}
+              Resend Verification Email
+            </button>
+          )}
+        </div>
+      </div>
+    </div>
   )
 }
