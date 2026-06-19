@@ -273,8 +273,6 @@ class ReviewOut(BaseModel):
 class OrderItemCreate(BaseModel):
     product_id: int
     quantity: int
-    variant_type: Optional[str] = None
-    variant_value: Optional[str] = None
 
 
 class OrderCreate(BaseModel):
@@ -290,8 +288,6 @@ class OrderItemOut(BaseModel):
     product_name: str
     product_price: int
     quantity: int
-    variant_type: Optional[str] = None
-    variant_value: Optional[str] = None
 
     class Config:
         from_attributes = True

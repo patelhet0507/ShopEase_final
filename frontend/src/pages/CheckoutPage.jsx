@@ -1,4 +1,3 @@
-import { useState } from 'react'
 import { useNavigate, Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { useCart } from '../context/CartContext'
@@ -15,7 +14,7 @@ export default function CheckoutPage() {
     shipping_mobile: user?.mobile_number || '',
     shipping_address: user?.address || '',
   })
-  const [selectedVariants, setSelectedVariants] = useState({})
+
 
   if (!cart.items || cart.items.length === 0) {
     return (
@@ -47,14 +46,10 @@ export default function CheckoutPage() {
       shipping_name: formData.shipping_name,
       shipping_mobile: formData.shipping_mobile,
       shipping_address: formData.shipping_address,
-      order_items: cart.items.map(item => {
-        const sel = selectedVariants[item.id]
-        return {
+      order_items: cart.items.map(item => ({
           product_id: item.product_id,
           quantity: item.quantity,
-          ...(sel ? { variant_type: sel.type, variant_value: sel.value } : {}),
-        }
-      }),
+      })),
     }
 
     console.log("ORDER PAYLOAD:", orderPayload)
@@ -103,52 +98,24 @@ export default function CheckoutPage() {
             <h2 className="text-2xl font-bold mb-6" style={{ color: 'var(--text-primary)' }}>Order Summary</h2>
 
             <div className="space-y-4 mb-6 border-b pb-6" style={{ borderColor: 'var(--border)' }}>
-              {cart.items.map((item, idx) => {
-                const productVariants = item.product?.variants || []
-                const grouped = {}
-                productVariants.forEach(v => {
-                  if (!grouped[v.type]) grouped[v.type] = []
-                  grouped[v.type].push(v)
-                })
-                const variantTypes = Object.keys(grouped)
-                return (
-                  <motion.div
-                    key={item.id}
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ delay: idx * 0.1 }}
-                    className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-4 rounded-lg gap-2"
-                    style={{ background: 'var(--surface-raised)' }}
-                  >
-                    <div className="flex-1">
-                      <p className="font-semibold" style={{ color: 'var(--text-primary)' }}>{item.product_name || item.product?.name}</p>
-                      <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>Qty: {item.quantity}</p>
-                      {variantTypes.map(type => (
-                        <select
-                          key={type}
-                          value={selectedVariants[item.id]?.type === type ? selectedVariants[item.id].value : ''}
-                          onChange={e => {
-                            const val = e.target.value
-                            if (val) {
-                              setSelectedVariants(prev => ({ ...prev, [item.id]: { type, value: val } }))
-                            }
-                          }}
-                          className="mt-1 text-xs px-2 py-1 rounded-lg outline-none"
-                          style={{ background: 'var(--surface)', color: 'var(--text-primary)', border: '1px solid var(--border)' }}
-                        >
-                          <option value="">Select {type}…</option>
-                          {grouped[type].map(v => (
-                            <option key={v.id} value={v.value}>{v.value}{v.price_adjustment > 0 ? ` (+₹${v.price_adjustment})` : ''}</option>
-                          ))}
-                        </select>
-                      ))}
-                    </div>
-                    <p className="font-bold" style={{ color: 'var(--text-primary)' }}>
-                      ₹{((item.product_price || item.product?.price || 0) * item.quantity).toLocaleString()}
-                    </p>
-                  </motion.div>
-                )
-              })}
+              {cart.items.map((item, idx) => (
+                <motion.div
+                  key={item.id}
+                  initial={{ opacity: 0, y: 10 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: idx * 0.1 }}
+                  className="flex flex-col sm:flex-row justify-between items-start sm:items-center p-4 rounded-lg gap-2"
+                  style={{ background: 'var(--surface-raised)' }}
+                >
+                  <div className="flex-1">
+                    <p className="font-semibold" style={{ color: 'var(--text-primary)' }}>{item.product_name || item.product?.name}</p>
+                    <p className="text-sm" style={{ color: 'var(--text-secondary)' }}>Qty: {item.quantity}</p>
+                  </div>
+                  <p className="font-bold" style={{ color: 'var(--text-primary)' }}>
+                    ₹{((item.product_price || item.product?.price || 0) * item.quantity).toLocaleString()}
+                  </p>
+                </motion.div>
+              ))}
             </div>
 
             <h2 className="text-2xl font-bold mb-6" style={{ color: 'var(--text-primary)' }}>Shipping Information</h2>

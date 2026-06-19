@@ -247,8 +247,6 @@ class OrderItem(Base):
     product_name = Column(String(255), nullable=False)  # Snapshot of product name
     product_price = Column(Integer, nullable=False)  # Snapshot of price at order time
     quantity = Column(Integer, nullable=False, default=1)
-    variant_type = Column(String(50), nullable=True)
-    variant_value = Column(String(100), nullable=True)
     
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
 
