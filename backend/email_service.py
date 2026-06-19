@@ -66,6 +66,8 @@ def send_order_status_email(to_email: str, order_number: str, status: str) -> bo
     frontend_url = os.getenv("FRONTEND_URL", "https://shop-ease-final.vercel.app")
     order_link = f"{frontend_url}/order-tracking/{order_number}"
 
+    body_html = info["body"].format(order_number=order_number)
+
     message = Mail(
         from_email=os.getenv("SENDGRID_FROM_EMAIL", "patelhet.0507@gmail.com"),
         to_emails=to_email,
@@ -75,7 +77,7 @@ def send_order_status_email(to_email: str, order_number: str, status: str) -> bo
             <div style="text-align: center; font-size: 48px; margin: 24px 0;">{info['icon']}</div>
             <h2 style="color: #D4AF7A; text-align: center;">ShopEase</h2>
             <p style="font-size: 15px; line-height: 1.6; color: #333;">
-                {info['body']}
+                {body_html}
             </p>
             <div style="text-align: center; margin: 24px 0;">
                 <a href="{order_link}"
