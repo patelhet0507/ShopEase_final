@@ -12,6 +12,7 @@ import auth
 from database import get_db, Base
 from datetime import datetime
 import uuid
+import email_service
 
 print("Initialising....")
 
@@ -34,6 +35,21 @@ try:
             SET exp = (SELECT COUNT(*) * 10 FROM reviews WHERE reviews.user_id = users.id)
             WHERE exp IS NULL OR exp = 0
         """))
+        conn.commit()
+except Exception:
+    pass
+
+# Add verification columns if missing on existing database
+try:
+    with engine.connect() as conn:
+        conn.execute(text("ALTER TABLE users ADD COLUMN is_verified BOOLEAN NOT NULL DEFAULT FALSE"))
+        conn.commit()
+except Exception:
+    pass
+
+try:
+    with engine.connect() as conn:
+        conn.execute(text("ALTER TABLE users ADD COLUMN verification_token VARCHAR(255)"))
         conn.commit()
 except Exception:
     pass
@@ -102,14 +118,20 @@ def register(payload: schemas.UserCreate, db: Session = Depends(get_db)):
     user_count = db.query(models.User).count()
     role = "admin" if user_count == 0 else "user"
 
+    verification_token = str(uuid.uuid4())
     user = models.User(
         email=payload.email,
         hashed_password=auth.hash_password(payload.password),
         role=role,
+        is_verified=False,
+        verification_token=verification_token,
     )
     db.add(user)
     db.commit()
     db.refresh(user)
+
+    email_service.send_verification_email(user.email, verification_token)
+
     access_token = auth.create_access_token(user.id)
     return {"access_token": access_token, "token_type": "bearer", "user": user}
 
@@ -121,6 +143,32 @@ def login(payload: schemas.LoginRequest, db: Session = Depends(get_db)):
         raise HTTPException(status_code=401, detail="Invalid email or password")
     access_token = auth.create_access_token(user.id)
     return {"access_token": access_token, "token_type": "bearer", "user": user}
+
+
+@app.get("/api/auth/verify-email")
+def verify_email(token: str = Query(...), db: Session = Depends(get_db)):
+    user = db.query(models.User).filter(models.User.verification_token == token).first()
+    if not user:
+        raise HTTPException(status_code=400, detail="Invalid or expired verification token")
+    if user.is_verified:
+        return {"message": "Email already verified"}
+    user.is_verified = True
+    user.verification_token = None
+    db.commit()
+    return {"message": "Email verified successfully"}
+
+
+@app.post("/api/auth/resend-verification")
+def resend_verification(payload: schemas.EmailRequest, db: Session = Depends(get_db)):
+    user = db.query(models.User).filter(models.User.email == payload.email).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    if user.is_verified:
+        raise HTTPException(status_code=400, detail="Email already verified")
+    user.verification_token = str(uuid.uuid4())
+    db.commit()
+    email_service.send_verification_email(user.email, user.verification_token)
+    return {"message": "Verification email sent"}
 
 
 # ===== User Profile Endpoints (NEW) =====

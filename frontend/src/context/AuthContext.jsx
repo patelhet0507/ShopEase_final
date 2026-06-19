@@ -70,11 +70,31 @@ export function AuthProvider({ children }) {
     localStorage.removeItem('token')
   }, [])
 
+  const verifyEmail = useCallback(async (token) => {
+    try {
+      const { data } = await authApi.verifyEmail(token)
+      return { success: true, message: data.message }
+    } catch (err) {
+      return { success: false, error: err.response?.data?.detail || 'Verification failed' }
+    }
+  }, [])
+
+  const resendVerification = useCallback(async (email) => {
+    try {
+      const { data } = await authApi.resendVerification(email)
+      return { success: true, message: data.message }
+    } catch (err) {
+      return { success: false, error: err.response?.data?.detail || 'Failed to resend' }
+    }
+  }, [])
+
   const refreshUser = useCallback(async () => {
     try {
       const { data } = await usersApi.getProfile()
-      setUser(data)
-      localStorage.setItem('shopease_user', JSON.stringify(data))
+      if (data) {
+        setUser(data)
+        localStorage.setItem('shopease_user', JSON.stringify(data))
+      }
       return data
     } catch (err) {
       return null
@@ -82,7 +102,7 @@ export function AuthProvider({ children }) {
   }, [])
 
   return (
-    <AuthContext.Provider value={{ user, loading, error, login, register, logout, refreshUser, setUser, setError }}>
+    <AuthContext.Provider value={{ user, loading, error, login, register, logout, verifyEmail, resendVerification, refreshUser, setUser, setError }}>
       {children}
     </AuthContext.Provider>
   )

@@ -26,6 +26,7 @@ class UserOut(BaseModel):
     address: Optional[str] = None
     mobile_number: Optional[str] = None
     exp: int = 0
+    is_verified: bool = False
     created_at: datetime
     updated_at: datetime
 
@@ -42,6 +43,10 @@ class TokenOut(BaseModel):
     access_token: str
     token_type: str = "bearer"
     user: UserOut
+
+
+class EmailRequest(BaseModel):
+    email: EmailStr
 
 
 class RoleUpdate(BaseModel):

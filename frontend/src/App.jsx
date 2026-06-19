@@ -5,6 +5,7 @@ import { ThemeProvider } from './context/ThemeContext'
 import Layout from './components/layout/Layout'
 import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
+import VerifyEmailPage from './pages/VerifyEmailPage'
 import HomePage from './pages/HomePage'
 import CategoriesPage from './pages/CategoriesPage'
 import CategoryDetailPage from './pages/CategoryDetailPage'
@@ -57,10 +58,11 @@ function AppInner() {
       <Routes>
         <Route path="/login" element={<GuestRoute><LoginPage /></GuestRoute>} />
         <Route path="/register" element={<GuestRoute><RegisterPage /></GuestRoute>} />
+        <Route path="/verify-email" element={<VerifyEmailPage />} />
         <Route path="/" element={<Layout />}>
           <Route index element={<HomePage />} />
           <Route path="categories" element={<CategoriesPage />} />
-          <Route path="categories/:categorySlug" element={<CategoryDetailPage />} />
+          <Route path="categories/:categorySlug/:subSlug?" element={<CategoryDetailPage />} />
           <Route path="products" element={<ProductsPage />} />
           <Route path="products/:productSlug" element={<ProductDetailPage />} />
           <Route path="cart" element={<PrivateRoute><CartPage /></PrivateRoute>} />

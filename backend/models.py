@@ -30,6 +30,8 @@ class User(Base):
     address = Column(Text, nullable=True)
     mobile_number = Column(String(20), nullable=True)
     exp = Column(Integer, nullable=False, default=0)
+    is_verified = Column(Boolean, nullable=False, default=False)
+    verification_token = Column(String(255), nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
 

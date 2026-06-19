@@ -11,9 +11,7 @@ const api = axios.create({
 api.interceptors.request.use((config) => {
   const token = localStorage.getItem('token')
   const storedUser = localStorage.getItem('shopease_user')
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`
-  } else if (storedUser) {
+  if (storedUser) {
     try {
       const user = JSON.parse(storedUser)
       if (user && user.id) {
@@ -22,6 +20,9 @@ api.interceptors.request.use((config) => {
       }
     } catch (e) {
     }
+  }
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`
   }
   return config
 }, (error) => Promise.reject(error))
@@ -41,6 +42,8 @@ api.interceptors.response.use(
 export const authApi = {
   register: (email, password) => api.post('/api/auth/register', { email, password }),
   login: (email, password) => api.post('/api/auth/login', { email, password }),
+  verifyEmail: (token) => api.get('/api/auth/verify-email', { params: { token } }),
+  resendVerification: (email) => api.post('/api/auth/resend-verification', { email }),
 }
 
 export const usersApi = {
