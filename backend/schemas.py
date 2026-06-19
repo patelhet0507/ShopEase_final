@@ -293,14 +293,6 @@ class OrderOut(BaseModel):
 
     class Config:
         from_attributes = True
-    id: int
-    order_id: int
-    status: str
-    note: Optional[str] = None
-    created_at: datetime
-
-    class Config:
-        from_attributes = True
 
 
 class OrderListOut(BaseModel):
