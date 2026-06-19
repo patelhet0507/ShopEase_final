@@ -51,6 +51,7 @@ class Category(Base):
     name = Column(String(100), nullable=False)
     # NEW: Slug field for SEO-friendly URLs
     slug = Column(String(150), unique=True, nullable=False, index=True)
+    view_token = Column(String(50), unique=True, nullable=True, index=True)
     description = Column(Text, nullable=True)
     color = Column(String(7), nullable=True)  # Hex color for category
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
@@ -74,6 +75,7 @@ class SubCategory(Base):
     name = Column(String(100), nullable=False)
     # NEW: Slug field for SEO-friendly URLs
     slug = Column(String(150), unique=True, nullable=False, index=True)
+    view_token = Column(String(50), unique=True, nullable=True, index=True)
     category_id = Column(Integer, ForeignKey("categories.id", ondelete="CASCADE"))
     description = Column(Text, nullable=True)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)

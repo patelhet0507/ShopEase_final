@@ -63,6 +63,7 @@ function AppInner() {
           <Route index element={<HomePage />} />
           <Route path="categories" element={<CategoriesPage />} />
           <Route path="categories/:categorySlug/:subSlug?" element={<CategoryDetailPage />} />
+          <Route path="c/:categoryToken/:subToken?" element={<CategoryDetailPage />} />
           <Route path="products" element={<ProductsPage />} />
           <Route path="products/:productSlug" element={<ProductDetailPage />} />
           <Route path="p/:productSlug" element={<ProductDetailPage />} />

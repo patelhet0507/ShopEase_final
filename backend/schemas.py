@@ -59,6 +59,7 @@ class CategoryBasic(BaseModel):
     id: int
     name: str
     slug: str
+    view_token: Optional[str] = None
     color: Optional[str] = None
 
     class Config:
@@ -83,6 +84,7 @@ class SubCategoryBasic(BaseModel):
     id: int
     name: str
     slug: str
+    view_token: Optional[str] = None
     category_id: int
 
     class Config:
@@ -203,6 +205,8 @@ class CategoryWithProducts(BaseModel):
     id: int
     name: str
     slug: str
+    view_token: Optional[str] = None
+    subcategories: List[SubCategoryBasic] = []
     products: List[ProductBasic] = []
 
     class Config:

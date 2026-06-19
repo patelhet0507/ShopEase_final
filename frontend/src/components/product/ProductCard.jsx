@@ -317,7 +317,7 @@ export default function ProductCard({ product, index = 0, onQuickView }) {
               )}
               
               <Link
-                to={`/p/${product.view_token || generateSlug(product.name, product.id)}`}
+                to={`/p/${product.view_token}`}
                 className="btn-secondary flex items-center justify-center gap-1.5 text-xs py-2 w-full relative z-20"
                 onClick={e => e.stopPropagation()}
               >

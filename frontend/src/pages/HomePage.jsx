@@ -79,7 +79,7 @@ function SpotlightCard({ children, cat, idx }) {
       onMouseLeave={() => setIsHovered(false)}
     >
       <Link
-        to={`/categories/${cat.slug}`}
+        to={`/c/${cat.view_token || cat.slug}`}
         className={`block p-8 rounded-3xl card-premium text-center transition-all duration-300 relative overflow-hidden bg-gradient-to-br ${CATEGORY_BADGES[idx % CATEGORY_BADGES.length].color}`}
       >
         <div

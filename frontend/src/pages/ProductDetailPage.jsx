@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useParams, Link } from 'react-router-dom'
+import { useParams, Link, useNavigate } from 'react-router-dom'
 import { ShoppingCart, Heart, ArrowLeft, Star, ShieldCheck, Truck, RotateCcw, ChevronLeft, ChevronRight, MessageSquare } from 'lucide-react'
 import { useCart } from '../context/CartContext'
 import { useAuth } from '../context/AuthContext'
@@ -8,6 +8,7 @@ import ProductVariants from '../components/product/ProductVariants'
 
 export default function ProductDetailPage() {
   const { productSlug } = useParams()
+  const navigate = useNavigate()
   const { user } = useAuth()
   const { addToCart, toggleWishlist, isWishlisted } = useCart()
 
@@ -47,6 +48,9 @@ export default function ProductDetailPage() {
         } else {
           setProduct(data)
           setCurrentImageIndex(0)
+          if (data.view_token && data.view_token !== token) {
+            navigate(`/p/${data.view_token}`, { replace: true })
+          }
         }
       } catch (err) {
         console.error("Product fetch error:", err.message)

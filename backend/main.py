@@ -79,6 +79,28 @@ try:
 except Exception:
     pass
 
+# Add view_token columns for categories and subcategories
+for table in ("categories", "subcategories"):
+    try:
+        with engine.connect() as conn:
+            conn.execute(text(f"ALTER TABLE {table} ADD COLUMN view_token VARCHAR(50)"))
+            conn.commit()
+    except Exception:
+        pass
+    try:
+        with engine.connect() as conn:
+            result = conn.execute(text(f"SELECT id FROM {table} WHERE view_token IS NULL"))
+            for row in result.fetchall():
+                tid = row[0]
+                token = secrets.token_urlsafe(8)
+                conn.execute(
+                    text(f"UPDATE {table} SET view_token = :token WHERE id = :tid AND view_token IS NULL"),
+                    {"token": token, "tid": tid}
+                )
+            conn.commit()
+    except Exception:
+        pass
+
 print("Database Connected Successfully")
 
 app = FastAPI(title="ShopEase API")
@@ -252,6 +274,7 @@ def list_categories(db: Session = Depends(get_db)):
         if not category.slug:
             category.slug = f"{_slugify(category.name)}-{category.id}"
             updated = True
+        category.view_token = auth.create_view_token(category.id)
 
     if updated:
         db.commit()
@@ -275,11 +298,13 @@ def list_categories_with_structure(db: Session = Depends(get_db)):
             "id": cat.id,
             "name": cat.name,
             "slug": cat.slug,
+            "view_token": auth.create_view_token(cat.id),
             "subcategories": [
                 {
                     "id": sub.id,
                     "name": sub.name,
                     "slug": sub.slug,
+                    "view_token": sub.view_token,
                     "category_id": sub.category_id,
                     "product_count": len(sub.products),
                 }
@@ -290,20 +315,38 @@ def list_categories_with_structure(db: Session = Depends(get_db)):
 
 
 # Get by slug (NEW: slug-based routing)
+def _category_with_data(category, db):
+    products = db.query(models.Product).filter(models.Product.category_id == category.id).all()
+    subcategories = db.query(models.SubCategory).filter(models.SubCategory.category_id == category.id).all()
+    for p in products:
+        p.view_token = auth.create_view_token(p.id)
+    return {
+        "id": category.id,
+        "name": category.name,
+        "slug": category.slug,
+        "view_token": auth.create_view_token(category.id),
+        "subcategories": subcategories,
+        "products": products,
+    }
+
+
 @app.get("/api/categories/slug/{slug}", response_model=schemas.CategoryWithProducts)
 def get_category_by_slug(slug: str, db: Session = Depends(get_db)):
     category = db.query(models.Category).filter(models.Category.slug == slug).first()
     if not category:
         raise HTTPException(status_code=404, detail="Category not found")
+    return _category_with_data(category, db)
 
-    products = db.query(models.Product).filter(models.Product.category_id == category.id).all()
 
-    return {
-        "id": category.id,
-        "name": category.name,
-        "slug": category.slug,
-        "products": products,
-    }
+@app.get("/api/categories/by-token/{token}", response_model=schemas.CategoryWithProducts)
+def get_category_by_token(token: str, db: Session = Depends(get_db)):
+    category_id = auth.verify_view_token(token)
+    if not category_id:
+        raise HTTPException(status_code=404, detail="Invalid or expired token")
+    category = db.query(models.Category).filter(models.Category.id == category_id).first()
+    if not category:
+        raise HTTPException(status_code=404, detail="Category not found")
+    return _category_with_data(category, db)
 
 
 # Get by ID (kept for backward compatibility)
@@ -312,15 +355,7 @@ def get_category(category_id: int, db: Session = Depends(get_db)):
     category = db.query(models.Category).filter(models.Category.id == category_id).first()
     if not category:
         raise HTTPException(status_code=404, detail="Category not found")
-
-    products = db.query(models.Product).filter(models.Product.category_id == category_id).all()
-
-    return {
-        "id": category.id,
-        "name": category.name,
-        "slug": category.slug,
-        "products": products,
-    }
+    return _category_with_data(category, db)
 
 
 @app.post("/api/categories/", response_model=schemas.CategoryBasic)
@@ -338,6 +373,7 @@ def create_category(payload: schemas.CategoryCreate, db: Session = Depends(get_d
     db.add(category)
     db.commit()
     db.refresh(category)
+    category.view_token = auth.create_view_token(category.id)
     return category
 
 
@@ -359,6 +395,7 @@ def update_category(category_id: int, payload: schemas.CategoryUpdate, db: Sessi
     category.color = payload.color
     db.commit()
     db.refresh(category)
+    category.view_token = auth.create_view_token(category.id)
     return category
 
 
@@ -406,6 +443,25 @@ def get_subcategory_by_slug(slug: str, db: Session = Depends(get_db)):
         "id": subcategory.id,
         "name": subcategory.name,
         "slug": subcategory.slug,
+        "view_token": subcategory.view_token,
+        "category_id": subcategory.category_id,
+        "products": products,
+    }
+
+
+@app.get("/api/subcategories/by-token/{token}")
+def get_subcategory_by_token(token: str, db: Session = Depends(get_db)):
+    subcategory = db.query(models.SubCategory).filter(models.SubCategory.view_token == token).first()
+    if not subcategory:
+        raise HTTPException(status_code=404, detail="SubCategory not found")
+
+    products = db.query(models.Product).filter(models.Product.subcategory_id == subcategory.id).all()
+
+    return {
+        "id": subcategory.id,
+        "name": subcategory.name,
+        "slug": subcategory.slug,
+        "view_token": subcategory.view_token,
         "category_id": subcategory.category_id,
         "products": products,
     }
@@ -492,6 +548,7 @@ def list_products(
         if not product.slug:
             product.slug = f"{_slugify(product.name)}-{product.id}"
             updated = True
+        product.view_token = auth.create_view_token(product.id)
 
     if updated:
         db.commit()
@@ -507,14 +564,19 @@ def get_product_by_slug(slug: str, db: Session = Depends(get_db)):
     product = db.query(models.Product).filter(models.Product.slug == slug).first()
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
+    product.view_token = auth.create_view_token(product.id)
     return product
 
 
 @app.get("/api/products/by-token/{token}", response_model=schemas.ProductOut)
 def get_product_by_token(token: str, db: Session = Depends(get_db)):
-    product = db.query(models.Product).filter(models.Product.view_token == token).first()
+    product_id = auth.verify_view_token(token)
+    if not product_id:
+        raise HTTPException(status_code=404, detail="Invalid or expired token")
+    product = db.query(models.Product).filter(models.Product.id == product_id).first()
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
+    product.view_token = auth.create_view_token(product.id)
     return product
 
 
@@ -524,6 +586,7 @@ def get_product(product_id: int, db: Session = Depends(get_db)):
     product = db.query(models.Product).filter(models.Product.id == product_id).first()
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
+    product.view_token = auth.create_view_token(product.id)
     return product
 
 
@@ -537,14 +600,9 @@ def create_product(payload: schemas.ProductCreate, db: Session = Depends(get_db)
     if not category:
         raise HTTPException(status_code=400, detail="Invalid category_id")
 
-    token = secrets.token_urlsafe(8)
-    while db.query(models.Product).filter(models.Product.view_token == token).first():
-        token = secrets.token_urlsafe(8)
-
     product = models.Product(
         name=payload.name,
         slug=payload.slug,
-        view_token=token,
         price=payload.price,
         description=payload.description,
         images=payload.images or [],
@@ -555,6 +613,7 @@ def create_product(payload: schemas.ProductCreate, db: Session = Depends(get_db)
     db.add(product)
     db.commit()
     db.refresh(product)
+    product.view_token = auth.create_view_token(product.id)
     return product
 
 
@@ -589,6 +648,7 @@ def update_product(product_id: int, payload: schemas.ProductUpdate, db: Session 
     product.updated_at = datetime.utcnow()
     db.commit()
     db.refresh(product)
+    product.view_token = auth.create_view_token(product.id)
     return product
 
 
