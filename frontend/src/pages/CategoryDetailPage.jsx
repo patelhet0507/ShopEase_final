@@ -24,7 +24,7 @@ export default function CategoryDetailPage() {
           const path = subToken && subToken !== 'all'
             ? `/c/${data.view_token}/${subToken}`
             : `/c/${data.view_token}`
-          navigate(path, { replace: true })
+          window.history.replaceState(null, '', path)
         }
       })
       .catch(() => {

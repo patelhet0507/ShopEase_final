@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
-import { ShoppingCart, Heart, ArrowLeft, Star, ShieldCheck, Truck, RotateCcw, ChevronLeft, ChevronRight, MessageSquare } from 'lucide-react'
+import { ShoppingCart, Heart, ArrowLeft, Star, ShieldCheck, Truck, RotateCcw, ChevronLeft, ChevronRight, MessageSquare, Share2 } from 'lucide-react'
 import { useCart } from '../context/CartContext'
 import { useAuth } from '../context/AuthContext'
 import { productsApi, reviewsApi } from '../api'
@@ -23,10 +23,12 @@ export default function ProductDetailPage() {
   const [newReview, setNewReview] = useState({ rating: 5, title: '', comment: '' })
   const [submittingReview, setSubmittingReview] = useState(false)
   const [selectedVariants, setSelectedVariants] = useState({})
+  const [copied, setCopied] = useState(false)
 
   const token = productSlug || ''
 
   useEffect(() => {
+    let cancelled = false
     async function fetchProductDetails() {
       try {
         setLoading(true)
@@ -37,6 +39,7 @@ export default function ProductDetailPage() {
         }
 
         const { data } = await productsApi.getByToken(token)
+        if (cancelled) return
 
         if (Array.isArray(data)) {
           if (data.length > 0) {
@@ -49,14 +52,16 @@ export default function ProductDetailPage() {
           setProduct(data)
           setCurrentImageIndex(0)
           if (data.view_token && data.view_token !== token) {
-            navigate(`/p/${data.view_token}`, { replace: true })
+            window.history.replaceState(null, '', `/p/${data.view_token}`)
           }
         }
       } catch (err) {
-        console.error("Product fetch error:", err.message)
-        setError(err.message)
+        if (!cancelled) {
+          console.error("Product fetch error:", err.message)
+          setError(err.message)
+        }
       } finally {
-        setLoading(false)
+        if (!cancelled) setLoading(false)
       }
     }
 
@@ -66,6 +71,8 @@ export default function ProductDetailPage() {
       setLoading(false)
       setError("Missing product token.")
     }
+
+    return () => { cancelled = true }
   }, [token])
 
   useEffect(() => {
@@ -295,6 +302,24 @@ export default function ProductDetailPage() {
                   />
                 </button>
               )}
+
+              <button
+                onClick={() => {
+                  navigator.clipboard.writeText(window.location.href)
+                  setCopied(true)
+                  setTimeout(() => setCopied(false), 2000)
+                }}
+                className="relative w-12 h-12 rounded-xl border border-border flex items-center justify-center transition-all hover:bg-surface-raised group"
+                title="Share product"
+              >
+                <Share2 size={18} className="transition-transform group-hover:scale-110 active:scale-95" style={{ color: 'var(--text-secondary)' }} />
+                {copied && (
+                  <span className="absolute -top-8 left-1/2 -translate-x-1/2 px-2 py-1 rounded-lg text-[10px] font-medium whitespace-nowrap"
+                    style={{ background: 'rgba(34,197,94,0.12)', color: '#22c55e', border: '1px solid rgba(34,197,94,0.3)' }}>
+                    Link copied!
+                  </span>
+                )}
+              </button>
             </div>
 
             {/* Value Propositions */}
