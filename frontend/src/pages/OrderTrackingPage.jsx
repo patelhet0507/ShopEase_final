@@ -45,6 +45,7 @@ export default function OrderTrackingPage() {
 
   const currentStepIndex = order ? STEPS.indexOf(order.status) : -1
   const isCancelled = order?.status === 'cancelled'
+  const StatusIcon = STATUS_META[order?.status]?.icon
 
   if (loading) {
     return (
@@ -88,7 +89,7 @@ export default function OrderTrackingPage() {
               background: `${STATUS_META[order.status]?.color}18`,
               color: STATUS_META[order.status]?.color,
             }}>
-              {STATUS_META[order.status]?.icon && <STATUS_META[order.status].icon size={16} />}
+              {StatusIcon && <StatusIcon size={16} />}
               {STATUS_META[order.status]?.label}
             </div>
           </div>

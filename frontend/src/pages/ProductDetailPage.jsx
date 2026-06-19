@@ -238,10 +238,10 @@ export default function ProductDetailPage() {
             <div className="flex items-center gap-4 mt-3">
               <div className="flex items-center gap-0.5">
                 {[1, 2, 3, 4, 5].map(s => (
-                  <Star key={s} size={16} className={s <= (reviewStats?.average_rating || 4.8) ? 'fill-amber-500 text-amber-500' : 'text-gray-300'} />
+                  <Star key={s} size={16} style={{ color: s <= (reviewStats?.average_rating || 4.8) ? '#f59e0b' : 'var(--text-muted)' }} className={s <= (reviewStats?.average_rating || 4.8) ? 'fill-amber-500' : ''} />
                 ))}
               </div>
-              <span className="text-xs text-muted font-medium">({reviewStats?.average_rating?.toFixed(1) || '4.8'} / 5.0 Rating, {reviewStats?.total_reviews || reviews.length} reviews)</span>
+              <span className="text-xs font-medium" style={{ color: 'var(--text-muted)' }}>({reviewStats?.average_rating?.toFixed(1) || '4.8'} / 5.0 Rating, {reviewStats?.total_reviews || reviews.length} reviews)</span>
             </div>
 
             <div className="mt-6 text-3xl font-display font-bold text-gradient">
@@ -298,9 +298,9 @@ export default function ProductDetailPage() {
 
       {/* Reviews Section */}
       <div className="max-w-6xl mx-auto px-4 py-8 mt-8">
-        <div className="bg-surface rounded-2xl p-6 md:p-8 border border-subtle">
+        <div className="rounded-2xl p-6 md:p-8" style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
           <div className="flex items-center justify-between mb-6">
-            <h2 className="text-2xl font-bold text-primary flex items-center gap-2">
+            <h2 className="text-2xl font-bold flex items-center gap-2" style={{ color: 'var(--text-primary)' }}>
               <MessageSquare size={24} className="text-purple-500" />
               Customer Reviews
             </h2>
@@ -315,10 +315,11 @@ export default function ProductDetailPage() {
           </div>
 
           {showReviewForm && user && (
-            <form onSubmit={handleSubmitReview} className="mb-8 p-6 bg-surface-raised rounded-xl border border-subtle">
-              <h3 className="font-semibold text-primary mb-4">Write Your Review</h3>
+            <form onSubmit={handleSubmitReview} className="mb-8 p-6 rounded-xl"
+              style={{ background: 'var(--surface-raised)', border: '1px solid var(--border)' }}>
+              <h3 className="font-semibold mb-4" style={{ color: 'var(--text-primary)' }}>Write Your Review</h3>
               <div className="mb-4">
-                <label className="block text-sm text-secondary mb-2">Rating</label>
+                <label className="block text-sm mb-2" style={{ color: 'var(--text-secondary)' }}>Rating</label>
                 <div className="flex gap-2">
                   {[1, 2, 3, 4, 5].map(star => (
                     <button
@@ -329,31 +330,42 @@ export default function ProductDetailPage() {
                     >
                       <Star
                         size={24}
-                        className={star <= newReview.rating ? 'fill-amber-500 text-amber-500' : 'text-gray-300'}
+                        style={{ color: star <= newReview.rating ? '#f59e0b' : 'var(--text-muted)' }}
+                        className={star <= newReview.rating ? 'fill-amber-500' : ''}
                       />
                     </button>
                   ))}
                 </div>
               </div>
               <div className="mb-4">
-                <label className="block text-sm text-secondary mb-2">Review Title</label>
+                <label className="block text-sm mb-2" style={{ color: 'var(--text-secondary)' }}>Review Title</label>
                 <input
                   type="text"
                   value={newReview.title}
                   onChange={(e) => setNewReview(prev => ({ ...prev, title: e.target.value }))}
                   required
-                  className="w-full px-4 py-3 border-2 border-slate-300 rounded-lg focus:border-purple-500 focus:outline-none transition font-medium text-primary placeholder-slate-500 bg-background"
+                  className="w-full px-4 py-3 rounded-lg transition font-medium"
+                  style={{
+                    background: 'var(--surface)',
+                    border: '2px solid var(--border)',
+                    color: 'var(--text-primary)',
+                  }}
                   placeholder="Great product!"
                 />
               </div>
               <div className="mb-4">
-                <label className="block text-sm text-secondary mb-2">Your Review</label>
+                <label className="block text-sm mb-2" style={{ color: 'var(--text-secondary)' }}>Your Review</label>
                 <textarea
                   value={newReview.comment}
                   onChange={(e) => setNewReview(prev => ({ ...prev, comment: e.target.value }))}
                   rows="4"
                   required
-                  className="w-full px-4 py-3 border-2 border-slate-300 rounded-lg focus:border-purple-500 focus:outline-none transition font-medium text-primary placeholder-slate-500 bg-background"
+                  className="w-full px-4 py-3 rounded-lg transition font-medium resize-none"
+                  style={{
+                    background: 'var(--surface)',
+                    border: '2px solid var(--border)',
+                    color: 'var(--text-primary)',
+                  }}
                   placeholder="Share your experience with this product..."
                 />
               </div>
@@ -369,21 +381,21 @@ export default function ProductDetailPage() {
 
           {reviews.length === 0 ? (
             <div className="text-center py-12">
-              <MessageSquare size={48} className="text-muted mx-auto mb-4" />
-              <p className="text-secondary">No reviews yet. Be the first to review this product!</p>
+              <MessageSquare size={48} className="mx-auto mb-4" style={{ color: 'var(--text-muted)' }} />
+              <p style={{ color: 'var(--text-secondary)' }}>No reviews yet. Be the first to review this product!</p>
             </div>
           ) : (
             <div className="space-y-4">
               {reviews.map(review => (
-                <div key={review.id} className="p-4 bg-surface-raised rounded-xl border border-subtle">
+                <div key={review.id} className="p-4 rounded-xl" style={{ background: 'var(--surface-raised)', border: '1px solid var(--border)' }}>
                   <div className="flex items-center justify-between mb-2">
                     <div className="flex items-center gap-2">
-                      <div className="w-10 h-10 rounded-full bg-purple-100 flex items-center justify-center text-purple-600 font-bold">
+                      <div className="w-10 h-10 rounded-full flex items-center justify-center font-bold" style={{ background: 'rgba(168,85,247,0.15)', color: '#a855f7' }}>
                         {review.user_email?.[0]?.toUpperCase() || 'U'}
                       </div>
                       <div>
-                        <p className="font-semibold text-primary">{review.user_email?.split('@')[0] || 'User'}</p>
-                        <p className="text-xs text-muted">{new Date(review.created_at).toLocaleDateString()}</p>
+                        <p className="font-semibold" style={{ color: 'var(--text-primary)' }}>{review.user_email?.split('@')[0] || 'User'}</p>
+                        <p className="text-xs" style={{ color: 'var(--text-muted)' }}>{new Date(review.created_at).toLocaleDateString()}</p>
                       </div>
                     </div>
                     <div className="flex items-center gap-0.5">
@@ -391,12 +403,13 @@ export default function ProductDetailPage() {
                         <Star
                           key={star}
                           size={14}
-                          className={star <= review.rating ? 'fill-amber-500 text-amber-500' : 'text-gray-300'}
+                          style={{ color: star <= review.rating ? '#f59e0b' : 'var(--text-muted)' }}
+                          className={star <= review.rating ? 'fill-amber-500' : ''}
                         />
                       ))}
                     </div>
                   </div>
-                  <p className="text-secondary mt-2">{review.comment}</p>
+                  <p className="mt-2" style={{ color: 'var(--text-secondary)' }}>{review.comment}</p>
                 </div>
               ))}
             </div>

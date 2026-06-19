@@ -1,4 +1,4 @@
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, Field
 from datetime import datetime
 from typing import List, Optional
 
@@ -213,8 +213,7 @@ class WishlistItemOut(BaseModel):
 # ===== Review Schemas =====
 
 class ReviewCreate(BaseModel):
-    product_id: int
-    rating: int
+    rating: int = Field(..., ge=1, le=5)
     title: str
     comment: str
     verified_purchase: bool = False
@@ -266,6 +265,17 @@ class OrderItemOut(BaseModel):
         from_attributes = True
 
 
+class OrderEventOut(BaseModel):
+    id: int
+    order_id: int
+    status: str
+    note: Optional[str] = None
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
 class OrderOut(BaseModel):
     id: int
     user_id: int
@@ -283,9 +293,6 @@ class OrderOut(BaseModel):
 
     class Config:
         from_attributes = True
-
-
-class OrderEventOut(BaseModel):
     id: int
     order_id: int
     status: str
