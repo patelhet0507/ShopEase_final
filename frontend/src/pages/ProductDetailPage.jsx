@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useParams, Link } from 'react-router-dom'
+import { useParams, Link, useNavigate } from 'react-router-dom'
 import { ShoppingCart, Heart, ArrowLeft, Star, ShieldCheck, Truck, RotateCcw, ChevronLeft, ChevronRight, MessageSquare, Share2 } from 'lucide-react'
 import { useCart } from '../context/CartContext'
 import { useAuth } from '../context/AuthContext'
@@ -8,6 +8,7 @@ import ProductVariants from '../components/product/ProductVariants'
 
 export default function ProductDetailPage() {
   const { productSlug } = useParams()
+  const navigate = useNavigate()
   const { user } = useAuth()
   const { addToCart, toggleWishlist, isWishlisted } = useCart()
 
@@ -15,6 +16,7 @@ export default function ProductDetailPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [adding, setAdding] = useState(false)
+  const [buying, setBuying] = useState(false)
   const [currentImageIndex, setCurrentImageIndex] = useState(0)
   const [reviews, setReviews] = useState([])
   const [reviewStats, setReviewStats] = useState(null)
@@ -93,6 +95,20 @@ export default function ProductDetailPage() {
       console.error("Failed to add item to context layer:", err)
     } finally {
       setAdding(false)
+    }
+  }
+
+  const handleBuyNow = async () => {
+    if (!product) return
+    setBuying(true)
+    try {
+      const cleanId = parseInt(product.id, 10)
+      if (isNaN(cleanId)) return
+      await addToCart(cleanId, 1)
+      navigate('/checkout')
+    } catch (err) {
+      console.error("Buy now failed:", err)
+      setBuying(false)
     }
   }
 
@@ -261,14 +277,28 @@ export default function ProductDetailPage() {
               <button
                 onClick={handleAddToCart}
                 disabled={adding}
-                className="btn-primary flex-1 py-3 justify-center text-sm font-semibold rounded-xl shadow-lg shadow-purple-500/20 transition-all flex items-center gap-2"
+                className="btn-primary flex-1 py-3 justify-center text-sm font-semibold rounded-xl transition-all flex items-center gap-2"
               >
                 {adding ? (
                   <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                 ) : (
                   <>
                     <ShoppingCart size={18} /> 
-                    Add to Shopping Cart
+                    Add to Cart
+                  </>
+                )}
+              </button>
+
+              <button
+                onClick={handleBuyNow}
+                disabled={buying}
+                className="btn-secondary flex-1 py-3 justify-center text-sm font-semibold rounded-xl transition-all flex items-center gap-2"
+              >
+                {buying ? (
+                  <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                ) : (
+                  <>
+                    🚀 Buy Now
                   </>
                 )}
               </button>
@@ -276,7 +306,7 @@ export default function ProductDetailPage() {
               {user && typeof toggleWishlist === 'function' && (
                 <button
                   onClick={() => toggleWishlist(product.id)}
-                  className="w-12 h-12 rounded-xl border border-border flex items-center justify-center transition-all hover:bg-surface-raised group"
+                  className="w-12 h-12 rounded-xl border border-border flex items-center justify-center transition-all hover:bg-surface-raised group shrink-0"
                 >
                   <Heart 
                     size={20} 
@@ -293,7 +323,7 @@ export default function ProductDetailPage() {
                   setCopied(true)
                   setTimeout(() => setCopied(false), 2000)
                 }}
-                className="relative w-12 h-12 rounded-xl border border-border flex items-center justify-center transition-all hover:bg-surface-raised group"
+                className="relative w-12 h-12 rounded-xl border border-border flex items-center justify-center transition-all hover:bg-surface-raised group shrink-0"
                 title="Share product"
               >
                 <Share2 size={18} className="transition-transform group-hover:scale-110 active:scale-95" style={{ color: 'var(--text-secondary)' }} />
@@ -303,6 +333,15 @@ export default function ProductDetailPage() {
                     Link copied!
                   </span>
                 )}
+              </button>
+
+              <button
+                onClick={handleBuyNow}
+                disabled={buying}
+                className="w-12 h-12 rounded-xl border border-border flex items-center justify-center transition-all hover:bg-surface-raised group shrink-0 text-lg"
+                title="Buy now"
+              >
+                🛒
               </button>
             </div>
 
