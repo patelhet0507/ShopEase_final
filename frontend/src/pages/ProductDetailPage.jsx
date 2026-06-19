@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import { ShoppingCart, Heart, ArrowLeft, Star, ShieldCheck, Truck, RotateCcw, ChevronLeft, ChevronRight, MessageSquare, Share2 } from 'lucide-react'
 import { useCart } from '../context/CartContext'
@@ -26,9 +26,16 @@ export default function ProductDetailPage() {
   const [copied, setCopied] = useState(false)
 
   const token = productSlug || ''
+  const done = useRef(false)
+  const prevToken = useRef(token)
 
   useEffect(() => {
-    let cancelled = false
+    if (token !== prevToken.current) {
+      done.current = false
+      prevToken.current = token
+    }
+    if (done.current) return
+
     async function fetchProductDetails() {
       try {
         setLoading(true)
@@ -39,29 +46,19 @@ export default function ProductDetailPage() {
         }
 
         const { data } = await productsApi.getByToken(token)
-        if (cancelled) return
 
-        if (Array.isArray(data)) {
-          if (data.length > 0) {
-            setProduct(data[0])
-            setCurrentImageIndex(0)
-          } else {
-            throw new Error('Product not found.')
-          }
-        } else {
-          setProduct(data)
-          setCurrentImageIndex(0)
-          if (data.view_token && data.view_token !== token) {
-            window.history.replaceState(null, '', `/p/${data.view_token}`)
-          }
+        setProduct(Array.isArray(data) ? data[0] : data)
+        setCurrentImageIndex(0)
+
+        if (data && data.view_token && data.view_token !== token) {
+          done.current = true
+          navigate(`/p/${data.view_token}`, { replace: true })
         }
       } catch (err) {
-        if (!cancelled) {
-          console.error("Product fetch error:", err.message)
-          setError(err.message)
-        }
+        console.error("Product fetch error:", err.message)
+        setError(err.message)
       } finally {
-        if (!cancelled) setLoading(false)
+        setLoading(false)
       }
     }
 
@@ -71,8 +68,6 @@ export default function ProductDetailPage() {
       setLoading(false)
       setError("Missing product token.")
     }
-
-    return () => { cancelled = true }
   }, [token])
 
   useEffect(() => {

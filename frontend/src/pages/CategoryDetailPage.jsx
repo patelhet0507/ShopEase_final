@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useRef } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
 import { ChevronRight, Package, ArrowLeft, Layers } from 'lucide-react'
 import { categoriesApi } from '../api'
@@ -12,19 +12,27 @@ export default function CategoryDetailPage() {
   const [category, setCategory] = useState(null)
   const [loading, setLoading] = useState(true)
 
-  const activeSubToken = subToken || 'all'
+  const prevCatToken = useRef(categoryToken)
+  const done = useRef(false)
 
   useEffect(() => {
+    if (categoryToken !== prevCatToken.current) {
+      done.current = false
+      prevCatToken.current = categoryToken
+    }
+    if (done.current) return
+
     setLoading(true)
     categoriesApi.getByToken(categoryToken)
       .then(({ data }) => {
         setCategory(data)
         setLoading(false)
         if (data.view_token && data.view_token !== categoryToken) {
+          done.current = true
           const path = subToken && subToken !== 'all'
             ? `/c/${data.view_token}/${subToken}`
             : `/c/${data.view_token}`
-          window.history.replaceState(null, '', path)
+          navigate(path, { replace: true })
         }
       })
       .catch(() => {
