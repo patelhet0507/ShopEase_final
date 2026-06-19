@@ -353,17 +353,17 @@ function ConfirmModal({ open, onClose, onConfirm, label }) {
 // ─── Table ─────────────────────────────────────────────
 function AdminTable({ columns, rows, onEdit, onDelete }) {
   return (
-    <div className="overflow-x-auto rounded-2xl" style={{ border: '1px solid var(--border)' }}>
-      <table className="w-full text-sm">
+    <div className="w-full overflow-x-auto rounded-2xl" style={{ border: '1px solid var(--border)' }}>
+      <table className="w-full text-sm min-w-[600px] md:min-w-0">
         <thead>
           <tr style={{ background: 'var(--surface-raised)', borderBottom: '1px solid var(--border)' }}>
             {columns.map(col => (
-              <th key={col.key} className="text-left px-5 py-3 font-semibold text-xs uppercase tracking-wider"
+              <th key={col.key} className="text-left px-3 md:px-5 py-3 font-semibold text-xs uppercase tracking-wider whitespace-nowrap"
                 style={{ color: 'var(--text-muted)' }}>
                 {col.label}
               </th>
             ))}
-            <th className="text-right px-5 py-3 font-semibold text-xs uppercase tracking-wider"
+            <th className="text-right px-3 md:px-5 py-3 font-semibold text-xs uppercase tracking-wider whitespace-nowrap"
               style={{ color: 'var(--text-muted)' }}>
               Actions
             </th>
@@ -382,13 +382,13 @@ function AdminTable({ columns, rows, onEdit, onDelete }) {
                 style={{ borderColor: 'var(--border)', background: i % 2 === 0 ? 'var(--surface)' : 'transparent' }}
               >
                 {columns.map(col => (
-                  <td key={col.key} className="px-5 py-3.5" style={{ color: 'var(--text-primary)' }}>
+                  <td key={col.key} className="px-3 md:px-5 py-3 md:py-3.5" style={{ color: 'var(--text-primary)' }}>
                     {col.render ? col.render(row[col.key], row) : (
-                      <span className="truncate block max-w-xs">{row[col.key]}</span>
+                      <span className="truncate block max-w-[120px] md:max-w-xs">{row[col.key]}</span>
                     )}
                   </td>
                 ))}
-                <td className="px-5 py-3.5">
+                <td className="px-3 md:px-5 py-3 md:py-3.5">
                   <div className="flex items-center gap-1 justify-end">
                     <button onClick={() => onEdit(row)} className="p-1.5 rounded-lg hover:bg-surface-raised transition-colors text-purple-500 cursor-pointer">
                       <Pencil size={13} />
@@ -679,9 +679,9 @@ export default function AdminDashboard() {
           {/* ── Categories ── */}
           {tab === 'Categories' && (
             <FadeIn>
-              <div className="flex items-center justify-between mb-5">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-5">
                 <h2 className="font-bold text-lg" style={{ color: 'var(--text-primary)' }}>Categories ({categories.length})</h2>
-                <button onClick={() => openCategoryModal()} className="btn-primary text-sm px-4 py-2.5 cursor-pointer">
+                <button onClick={() => openCategoryModal()} className="btn-primary text-sm px-4 py-2.5 cursor-pointer w-full sm:w-auto justify-center">
                   <Plus size={14} /> Add Category
                 </button>
               </div>
@@ -701,9 +701,9 @@ export default function AdminDashboard() {
           {/* ── Subcategories ── */}
           {tab === 'Subcategories' && (
             <FadeIn>
-              <div className="flex items-center justify-between mb-5">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-5">
                 <h2 className="font-bold text-lg" style={{ color: 'var(--text-primary)' }}>Subcategories ({subcategories.length})</h2>
-                <button onClick={() => openSubModal()} className="btn-primary text-sm px-4 py-2.5 cursor-pointer">
+                <button onClick={() => openSubModal()} className="btn-primary text-sm px-4 py-2.5 cursor-pointer w-full sm:w-auto justify-center">
                   <Plus size={14} /> Add Subcategory
                 </button>
               </div>
@@ -723,9 +723,9 @@ export default function AdminDashboard() {
           {/* ── Products ── */}
           {tab === 'Products' && (
             <FadeIn>
-              <div className="flex items-center justify-between mb-5">
+              <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-5">
                 <h2 className="font-bold text-lg" style={{ color: 'var(--text-primary)' }}>Products ({products.length})</h2>
-                <button onClick={() => openProductModal()} className="btn-primary text-sm px-4 py-2.5 cursor-pointer">
+                <button onClick={() => openProductModal()} className="btn-primary text-sm px-4 py-2.5 cursor-pointer w-full sm:w-auto justify-center">
                   <Plus size={14} /> Add Product
                 </button>
               </div>
