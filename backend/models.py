@@ -29,6 +29,7 @@ class User(Base):
     last_name = Column(String(100), nullable=True)
     address = Column(Text, nullable=True)
     mobile_number = Column(String(20), nullable=True)
+    exp = Column(Integer, nullable=False, default=0)
     created_at = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
     updated_at = Column(DateTime(timezone=True), server_default=func.now(), onupdate=func.now(), nullable=False)
 
@@ -187,6 +188,14 @@ class Review(Base):
 
     user = relationship("User", back_populates="reviews")
     product = relationship("Product", back_populates="reviews")
+
+    @property
+    def user_email(self):
+        return self.user.email if self.user else None
+
+    @property
+    def user_exp(self):
+        return self.user.exp if self.user else 0
 
     __table_args__ = (
         UniqueConstraint("user_id", "product_id", name="uq_review_user_product"),

@@ -2,7 +2,7 @@ import os
 from fastapi import Depends, HTTPException, Query, Header, status
 from fastapi.middleware.cors import CORSMiddleware
 from sqlalchemy.orm import Session, joinedload
-from sqlalchemy import func
+from sqlalchemy import func, text
 from typing import List
 from fastapi import FastAPI
 from database import engine
@@ -15,10 +15,30 @@ import uuid
 
 print("Initialising....")
 
-print("Database Connected Successfully")
-
 # Create tables
 Base.metadata.create_all(bind=engine)
+
+# Add exp column if missing on existing database
+try:
+    with engine.connect() as conn:
+        conn.execute(text("ALTER TABLE users ADD COLUMN exp INTEGER NOT NULL DEFAULT 0"))
+        conn.commit()
+except Exception:
+    pass  # Column already exists
+
+# Backfill exp from existing review counts
+try:
+    with engine.connect() as conn:
+        conn.execute(text("""
+            UPDATE users
+            SET exp = (SELECT COUNT(*) * 10 FROM reviews WHERE reviews.user_id = users.id)
+            WHERE exp IS NULL OR exp = 0
+        """))
+        conn.commit()
+except Exception:
+    pass
+
+print("Database Connected Successfully")
 
 app = FastAPI(title="ShopEase API")
 
@@ -687,9 +707,9 @@ def remove_from_wishlist(user_id: int, wishlist_item_id: int, db: Session = Depe
 
 # ===== Reviews =====
 
-@app.get("/api/products/{product_id}/reviews/")
+@app.get("/api/products/{product_id}/reviews/", response_model=List[schemas.ReviewOut])
 def get_product_reviews(product_id: int, db: Session = Depends(get_db)):
-    reviews = db.query(models.Review).filter(models.Review.product_id == product_id).all()
+    reviews = db.query(models.Review).options(joinedload(models.Review.user)).filter(models.Review.product_id == product_id).all()
     return reviews
 
 
@@ -737,6 +757,7 @@ def create_review(product_id: int, payload: schemas.ReviewCreate = None, current
         verified_purchase=payload.verified_purchase
     )
     db.add(review)
+    current_user.exp = (current_user.exp or 0) + 10
     db.commit()
     db.refresh(review)
     return review

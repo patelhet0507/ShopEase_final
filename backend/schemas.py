@@ -25,6 +25,7 @@ class UserOut(BaseModel):
     last_name: Optional[str] = None
     address: Optional[str] = None
     mobile_number: Optional[str] = None
+    exp: int = 0
     created_at: datetime
     updated_at: datetime
 
@@ -256,6 +257,8 @@ class ReviewUpdate(BaseModel):
 class ReviewOut(BaseModel):
     id: int
     user_id: int
+    user_email: str
+    user_exp: Optional[int] = 0
     product_id: int
     rating: int
     title: str
