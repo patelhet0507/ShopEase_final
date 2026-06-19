@@ -259,7 +259,7 @@ export default function ProductsPage() {
               <div>
                 <div className="flex justify-between items-center mb-2">
                   <label className="text-xs font-semibold uppercase tracking-widest block" style={{ color: 'var(--text-muted)' }}>Price Target</label>
-                  <span className="text-xs font-semibold text-purple-500">Max: â‚¹{priceRange[1].toLocaleString()}</span>
+                  <span className="text-xs font-semibold text-purple-500">Max: {priceRange[1].toLocaleString()}</span>
                 </div>
                 <input
                   type="range"
@@ -270,8 +270,8 @@ export default function ProductsPage() {
                   className="w-full accent-accent-500 cursor-pointer"
                 />
                 <div className="flex justify-between text-[10px] mt-1" style={{ color: 'var(--text-muted)' }}>
-                  <span>â‚¹0</span>
-                  <span>â‚¹{maxPrice.toLocaleString()}</span>
+                  <span>0</span>
+                  <span>{maxPrice.toLocaleString()}</span>
                 </div>
               </div>
 
@@ -357,7 +357,7 @@ export default function ProductsPage() {
 
                   <div>
                     <label className="text-xs font-semibold uppercase tracking-widest mb-2 block" style={{ color: 'var(--text-muted)' }}>
-                      Price: â‚¹{priceRange[0].toLocaleString()} - â‚¹{priceRange[1].toLocaleString()}
+                      Price: {priceRange[0].toLocaleString()} - {priceRange[1].toLocaleString()}
                     </label>
                     <input
                       type="range"
