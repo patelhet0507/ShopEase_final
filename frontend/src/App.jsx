@@ -65,6 +65,7 @@ function AppInner() {
           <Route path="categories/:categorySlug/:subSlug?" element={<CategoryDetailPage />} />
           <Route path="products" element={<ProductsPage />} />
           <Route path="products/:productSlug" element={<ProductDetailPage />} />
+          <Route path="p/:productSlug" element={<ProductDetailPage />} />
           <Route path="cart" element={<PrivateRoute><CartPage /></PrivateRoute>} />
           <Route path="wishlist" element={<PrivateRoute><WishlistPage /></PrivateRoute>} />
           <Route path="checkout" element={<PrivateRoute><CheckoutPage /></PrivateRoute>} />

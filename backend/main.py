@@ -12,6 +12,7 @@ import auth
 from database import get_db, Base
 from datetime import datetime
 import uuid
+import secrets
 import email_service
 
 print("Initialising....")
@@ -50,6 +51,30 @@ except Exception:
 try:
     with engine.connect() as conn:
         conn.execute(text("ALTER TABLE users ADD COLUMN verification_token VARCHAR(255)"))
+        conn.commit()
+except Exception:
+    pass
+
+# Add view_token column if missing
+try:
+    with engine.connect() as conn:
+        conn.execute(text("ALTER TABLE products ADD COLUMN view_token VARCHAR(50)"))
+        conn.commit()
+except Exception:
+    pass
+
+# Backfill view_token for existing products
+try:
+    with engine.connect() as conn:
+        result = conn.execute(text("SELECT id FROM products WHERE view_token IS NULL"))
+        rows = result.fetchall()
+        for row in rows:
+            pid = row[0]
+            token = secrets.token_urlsafe(8)
+            conn.execute(
+                text("UPDATE products SET view_token = :token WHERE id = :pid AND view_token IS NULL"),
+                {"token": token, "pid": pid}
+            )
         conn.commit()
 except Exception:
     pass
@@ -485,6 +510,14 @@ def get_product_by_slug(slug: str, db: Session = Depends(get_db)):
     return product
 
 
+@app.get("/api/products/by-token/{token}", response_model=schemas.ProductOut)
+def get_product_by_token(token: str, db: Session = Depends(get_db)):
+    product = db.query(models.Product).filter(models.Product.view_token == token).first()
+    if not product:
+        raise HTTPException(status_code=404, detail="Product not found")
+    return product
+
+
 # Get by ID (kept for backward compatibility)
 @app.get("/api/products/{product_id}/", response_model=schemas.ProductOut)
 def get_product(product_id: int, db: Session = Depends(get_db)):
@@ -504,9 +537,14 @@ def create_product(payload: schemas.ProductCreate, db: Session = Depends(get_db)
     if not category:
         raise HTTPException(status_code=400, detail="Invalid category_id")
 
+    token = secrets.token_urlsafe(8)
+    while db.query(models.Product).filter(models.Product.view_token == token).first():
+        token = secrets.token_urlsafe(8)
+
     product = models.Product(
         name=payload.name,
         slug=payload.slug,
+        view_token=token,
         price=payload.price,
         description=payload.description,
         images=payload.images or [],

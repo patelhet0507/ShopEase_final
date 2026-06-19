@@ -95,6 +95,7 @@ class Product(Base):
     name = Column(String(100), nullable=False)
     # NEW: Slug field for SEO-friendly URLs
     slug = Column(String(150), unique=True, nullable=False, index=True)
+    view_token = Column(String(50), unique=True, nullable=True, index=True)
     price = Column(Integer, nullable=False)
     description = Column(Text, nullable=False)
     # NEW: Images array for carousel

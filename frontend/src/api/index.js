@@ -75,6 +75,7 @@ export const subcategoriesApi = {
 export const productsApi = {
   list: (filters) => api.get('/api/products/', { params: filters || {} }),
   getBySlug: (slug) => api.get(`/api/products/slug/${slug}`),
+  getByToken: (token) => api.get(`/api/products/by-token/${token}`),
   get: (id) => api.get(`/api/products/${id}/`),
   create: (data) => api.post('/api/products/', data),
   update: (id, data) => api.put(`/api/products/${id}/`, data),

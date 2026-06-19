@@ -1,7 +1,8 @@
 import { useEffect, useState, useRef } from 'react'
 import { useSearchParams, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { Zap, CheckCircle, XCircle } from 'lucide-react'
+import { Link } from 'react-router-dom'
+import { Zap, CheckCircle, XCircle, ArrowRight } from 'lucide-react'
 import { useAuth } from '../context/AuthContext'
 
 export default function VerifyEmailPage() {
@@ -19,59 +20,116 @@ export default function VerifyEmailPage() {
     verifyEmail(token).then(async res => {
       if (res.success) {
         if (user) await refreshUser()
-        setTimeout(() => navigate('/products', { replace: true }), 1500)
       }
       setStatus(res.success ? 'success' : 'error')
     })
-  }, [searchParams, verifyEmail, user, refreshUser, navigate])
+  }, [searchParams, verifyEmail, user, refreshUser])
 
   return (
-    <div className="min-h-screen flex items-center justify-center px-4" style={{ background: 'var(--bg)' }}>
+    <div className="min-h-screen flex items-center justify-center px-4 relative overflow-hidden"
+      style={{ background: 'linear-gradient(135deg, #0f0f18 0%, #1a0a2e 50%, #0f0f18 100%)' }}
+    >
+      {/* Animated orbs */}
+      {[
+        { cx: '20%', cy: '30%', r: '200px', color: 'rgba(168,85,247,0.15)' },
+        { cx: '70%', cy: '60%', r: '280px', color: 'rgba(124,58,237,0.1)' },
+        { cx: '50%', cy: '80%', r: '150px', color: 'rgba(236,72,153,0.08)' },
+      ].map((orb, i) => (
+        <motion.div
+          key={i}
+          className="absolute rounded-full"
+          style={{
+            left: orb.cx, top: orb.cy,
+            width: orb.r, height: orb.r,
+            background: `radial-gradient(circle, ${orb.color}, transparent 70%)`,
+            transform: 'translate(-50%, -50%)',
+          }}
+          animate={{ scale: [1, 1.15, 1], opacity: [0.6, 1, 0.6] }}
+          transition={{ duration: 4 + i * 1.5, repeat: Infinity, ease: 'easeInOut', delay: i * 0.8 }}
+        />
+      ))}
+
       <motion.div
         initial={{ opacity: 0, y: 20 }}
         animate={{ opacity: 1, y: 0 }}
-        className="text-center max-w-sm"
+        className="relative z-10 text-center max-w-sm w-full"
       >
-        <Link to="/" className="flex items-center justify-center gap-2 mb-8">
-          <div className="w-9 h-9 rounded-xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #a855f7, #7c3aed)' }}>
-            <Zap size={18} className="text-white" />
+        <Link to="/" className="flex items-center justify-center gap-2 mb-10">
+          <div className="w-10 h-10 rounded-xl flex items-center justify-center" style={{ background: 'linear-gradient(135deg, #a855f7, #7c3aed)' }}>
+            <Zap size={20} className="text-white" />
           </div>
-          <span className="font-display font-bold text-xl" style={{ color: 'var(--text-primary)' }}>ShopEase</span>
+          <span className="font-display font-bold text-2xl text-white">
+            Shop<span className="text-gradient">Ease</span>
+          </span>
         </Link>
 
         {status === 'verifying' && (
-          <div>
-            <span className="w-10 h-10 border-2 border-purple-500/30 border-t-purple-500 rounded-full animate-spin inline-block mb-4" />
-            <p style={{ color: 'var(--text-secondary)' }}>Verifying your email...</p>
+          <div className="p-10 rounded-2xl" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+            <span className="w-12 h-12 border-2 border-purple-500/30 border-t-purple-500 rounded-full animate-spin inline-block mb-5" />
+            <p style={{ color: 'rgba(255,255,255,0.5)' }}>Verifying your email...</p>
           </div>
         )}
 
         {status === 'success' && (
-          <div>
-            <CheckCircle size={48} className="text-green-500 mx-auto mb-4" />
-            <h2 className="font-display font-bold text-2xl mb-2" style={{ color: 'var(--text-primary)' }}>Email Verified!</h2>
-            <p className="mb-6" style={{ color: 'var(--text-secondary)' }}>Redirecting you...</p>
-          </div>
+          <motion.div
+            initial={{ scale: 0.9 }}
+            animate={{ scale: 1 }}
+            className="p-10 rounded-2xl" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}
+          >
+            <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-5"
+              style={{ background: 'rgba(34,197,94,0.12)', border: '1px solid rgba(34,197,94,0.3)' }}>
+              <CheckCircle size={36} className="text-green-500" />
+            </div>
+            <h2 className="font-display font-bold text-3xl mb-2 text-white">Email Verified!</h2>
+            <p className="mb-8" style={{ color: 'rgba(255,255,255,0.5)' }}>
+              Your account is now active. Start exploring ShopEase.
+            </p>
+            <Link
+              to="/products"
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-medium text-sm transition-all hover:scale-[1.02]"
+              style={{ background: 'linear-gradient(135deg, #a855f7, #7c3aed)', color: 'white' }}
+            >
+              Continue Shopping <ArrowRight size={16} />
+            </Link>
+          </motion.div>
         )}
 
         {status === 'error' && (
-          <div>
-            <XCircle size={48} className="text-red-500 mx-auto mb-4" />
-            <h2 className="font-display font-bold text-2xl mb-2" style={{ color: 'var(--text-primary)' }}>Verification Failed</h2>
-            <p className="mb-6" style={{ color: 'var(--text-secondary)' }}>The link is invalid or expired. Try logging in to resend the verification email.</p>
-            <Link to="/login" className="btn-primary inline-flex items-center gap-2">
-              Go to Login
+          <div className="p-10 rounded-2xl" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+            <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-5"
+              style={{ background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.3)' }}>
+              <XCircle size={36} className="text-red-500" />
+            </div>
+            <h2 className="font-display font-bold text-3xl mb-2 text-white">Verification Failed</h2>
+            <p className="mb-8" style={{ color: 'rgba(255,255,255,0.5)' }}>
+              The link is invalid or expired. Try logging in to resend the verification email.
+            </p>
+            <Link
+              to="/login"
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-medium text-sm transition-all hover:scale-[1.02]"
+              style={{ background: 'linear-gradient(135deg, #a855f7, #7c3aed)', color: 'white' }}
+            >
+              Go to Login <ArrowRight size={16} />
             </Link>
           </div>
         )}
 
         {status === 'invalid' && (
-          <div>
-            <XCircle size={48} className="text-red-500 mx-auto mb-4" />
-            <h2 className="font-display font-bold text-2xl mb-2" style={{ color: 'var(--text-primary)' }}>Invalid Link</h2>
-            <p className="mb-6" style={{ color: 'var(--text-secondary)' }}>No verification token found in the URL.</p>
-            <Link to="/login" className="btn-primary inline-flex items-center gap-2">
-              Go to Login
+          <div className="p-10 rounded-2xl" style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)' }}>
+            <div className="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-5"
+              style={{ background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.3)' }}>
+              <XCircle size={36} className="text-red-500" />
+            </div>
+            <h2 className="font-display font-bold text-3xl mb-2 text-white">Invalid Link</h2>
+            <p className="mb-8" style={{ color: 'rgba(255,255,255,0.5)' }}>
+              No verification token found in the URL.
+            </p>
+            <Link
+              to="/login"
+              className="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-medium text-sm transition-all hover:scale-[1.02]"
+              style={{ background: 'linear-gradient(135deg, #a855f7, #7c3aed)', color: 'white' }}
+            >
+              Go to Login <ArrowRight size={16} />
             </Link>
           </div>
         )}

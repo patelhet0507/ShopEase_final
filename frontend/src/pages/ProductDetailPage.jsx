@@ -23,9 +23,7 @@ export default function ProductDetailPage() {
   const [submittingReview, setSubmittingReview] = useState(false)
   const [selectedVariants, setSelectedVariants] = useState({})
 
-  // BULLETPROOF REGEX: Extract ONLY the database ID digits (\d+) found at the very end ($) of the slug string
-  const match = productSlug ? productSlug.match(/\d+$/) : null
-  const idFromSlug = match ? parseInt(match[0], 10) : null
+  const token = productSlug || ''
 
   useEffect(() => {
     async function fetchProductDetails() {
@@ -33,47 +31,48 @@ export default function ProductDetailPage() {
         setLoading(true)
         setError(null)
 
-        if (!idFromSlug || isNaN(idFromSlug)) {
-          throw new Error('Could not resolve a valid numerical record ID from the web path.')
+        if (!token) {
+          throw new Error('Missing product token.')
         }
 
-        const { data } = await productsApi.get(idFromSlug)
-        
-        // Handle array wrap variations securely if your individual lookup endpoint wraps objects in an array structure
+        const { data } = await productsApi.getByToken(token)
+
         if (Array.isArray(data)) {
           if (data.length > 0) {
             setProduct(data[0])
             setCurrentImageIndex(0)
           } else {
-            throw new Error('The product collection response returned empty.')
+            throw new Error('Product not found.')
           }
         } else {
           setProduct(data)
           setCurrentImageIndex(0)
         }
       } catch (err) {
-        console.error("Product fetch breakdown trace:", err.message)
+        console.error("Product fetch error:", err.message)
         setError(err.message)
       } finally {
         setLoading(false)
       }
     }
 
-    if (idFromSlug) {
+    if (token) {
       fetchProductDetails()
     } else {
       setLoading(false)
-      setError("No visible application identification index supplied inside routing sequence.")
+      setError("Missing product token.")
     }
-  }, [idFromSlug, productSlug])
+  }, [token])
 
   useEffect(() => {
     async function fetchReviews() {
-      if (!idFromSlug || isNaN(idFromSlug)) return
+      if (!product?.id) return
+      const pid = Number(product.id)
+      if (!pid) return
       try {
         const [reviewsRes, statsRes] = await Promise.all([
-          reviewsApi.list(idFromSlug),
-          reviewsApi.getStats(idFromSlug)
+          reviewsApi.list(pid),
+          reviewsApi.getStats(pid)
         ])
         setReviews(reviewsRes.data || [])
         setReviewStats(statsRes.data || null)
@@ -82,7 +81,7 @@ export default function ProductDetailPage() {
       }
     }
     fetchReviews()
-  }, [idFromSlug])
+  }, [product?.id])
 
   // 🟢 FIXED: Maps parameters exactly to what CartContext expects (productId, quantity)
   const handleAddToCart = async () => {

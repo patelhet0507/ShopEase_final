@@ -145,6 +145,7 @@ class ProductBasic(BaseModel):
     id: int
     name: str
     slug: str
+    view_token: Optional[str] = None
     price: int
     description: str
     images: Optional[List[str]] = []
@@ -183,6 +184,7 @@ class ProductOut(BaseModel):
     id: int
     name: str
     slug: str
+    view_token: Optional[str] = None
     price: int
     description: str
     images: Optional[List[str]] = []
