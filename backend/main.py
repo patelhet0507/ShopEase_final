@@ -315,27 +315,23 @@ def list_categories_with_structure(db: Session = Depends(get_db)):
 
 
 # Get by slug (NEW: slug-based routing)
-def _category_with_data(category, db):
-    products = db.query(models.Product).filter(models.Product.category_id == category.id).all()
-    subcategories = db.query(models.SubCategory).filter(models.SubCategory.category_id == category.id).all()
-    for p in products:
-        p.view_token = auth.create_view_token(p.id)
-    return {
-        "id": category.id,
-        "name": category.name,
-        "slug": category.slug,
-        "view_token": auth.create_view_token(category.id),
-        "subcategories": subcategories,
-        "products": products,
-    }
+def _enrich_category(category):
+    category.view_token = auth.create_view_token(category.id)
+    if category.products:
+        for p in category.products:
+            p.view_token = auth.create_view_token(p.id)
+    return category
 
 
 @app.get("/api/categories/slug/{slug}", response_model=schemas.CategoryWithProducts)
 def get_category_by_slug(slug: str, db: Session = Depends(get_db)):
-    category = db.query(models.Category).filter(models.Category.slug == slug).first()
+    category = db.query(models.Category).options(
+        joinedload(models.Category.subcategories),
+        joinedload(models.Category.products)
+    ).filter(models.Category.slug == slug).first()
     if not category:
         raise HTTPException(status_code=404, detail="Category not found")
-    return _category_with_data(category, db)
+    return _enrich_category(category)
 
 
 @app.get("/api/categories/by-token/{token}", response_model=schemas.CategoryWithProducts)
@@ -343,19 +339,25 @@ def get_category_by_token(token: str, db: Session = Depends(get_db)):
     category_id = auth.verify_view_token(token)
     if not category_id:
         raise HTTPException(status_code=404, detail="Invalid or expired token")
-    category = db.query(models.Category).filter(models.Category.id == category_id).first()
+    category = db.query(models.Category).options(
+        joinedload(models.Category.subcategories),
+        joinedload(models.Category.products)
+    ).filter(models.Category.id == category_id).first()
     if not category:
         raise HTTPException(status_code=404, detail="Category not found")
-    return _category_with_data(category, db)
+    return _enrich_category(category)
 
 
 # Get by ID (kept for backward compatibility)
 @app.get("/api/categories/{category_id}/", response_model=schemas.CategoryWithProducts)
 def get_category(category_id: int, db: Session = Depends(get_db)):
-    category = db.query(models.Category).filter(models.Category.id == category_id).first()
+    category = db.query(models.Category).options(
+        joinedload(models.Category.subcategories),
+        joinedload(models.Category.products)
+    ).filter(models.Category.id == category_id).first()
     if not category:
         raise HTTPException(status_code=404, detail="Category not found")
-    return _category_with_data(category, db)
+    return _enrich_category(category)
 
 
 @app.post("/api/categories/", response_model=schemas.CategoryBasic)
