@@ -111,7 +111,15 @@ for table in ("categories", "subcategories"):
 for view_table in ("products", "categories", "subcategories"):
     try:
         with engine.connect() as conn:
-            conn.execute(text(f"ALTER TABLE {view_table} ALTER COLUMN view_token TYPE VARCHAR(255)"))
+            conn.execute(text(f"ALTER TABLE {view_table} ALTER COLUMN view_token TYPE VARCHAR(255) USING view_token::VARCHAR(255)"))
+            conn.commit()
+    except Exception:
+        pass
+    # Fallback: drop and recreate column if ALTER TYPE failed (e.g. unique constraint)
+    try:
+        with engine.connect() as conn:
+            conn.execute(text(f"ALTER TABLE {view_table} DROP COLUMN IF EXISTS view_token"))
+            conn.execute(text(f"ALTER TABLE {view_table} ADD COLUMN view_token VARCHAR(255)"))
             conn.commit()
     except Exception:
         pass
@@ -331,14 +339,17 @@ def list_categories(db: Session = Depends(get_db)):
         if not category.slug or category.slug.endswith(f"-{category.id}"):
             new_slug = _make_slug(category.name, models.Category, db, category.id, reserved)
             if new_slug != category.slug:
-                category.slug = new_slug
+                db.execute(
+                    text("UPDATE categories SET slug = :slug, updated_at = now() WHERE id = :id"),
+                    {"slug": new_slug, "id": category.id}
+                )
                 reserved.add(new_slug)
                 updated = True
 
     if updated:
         db.commit()
-        for category in categories:
-            db.refresh(category)
+        db.expire_all()
+        categories = db.query(models.Category).all()
 
     return [
         {
@@ -509,14 +520,17 @@ def list_subcategories(db: Session = Depends(get_db)):
         if not subcategory.slug or subcategory.slug.endswith(f"-{subcategory.id}"):
             new_slug = _make_slug(subcategory.name, models.SubCategory, db, subcategory.id, reserved)
             if new_slug != subcategory.slug:
-                subcategory.slug = new_slug
+                db.execute(
+                    text("UPDATE subcategories SET slug = :slug, updated_at = now() WHERE id = :id"),
+                    {"slug": new_slug, "id": subcategory.id}
+                )
                 reserved.add(new_slug)
                 updated = True
 
     if updated:
         db.commit()
-        for subcategory in subcategories:
-            db.refresh(subcategory)
+        db.expire_all()
+        subcategories = db.query(models.SubCategory).all()
 
     result = []
     for s in subcategories:
@@ -645,14 +659,22 @@ def list_products(
         if not product.slug or product.slug.endswith(f"-{product.id}"):
             new_slug = _make_slug(product.name, models.Product, db, product.id, reserved)
             if new_slug != product.slug:
-                product.slug = new_slug
+                db.execute(
+                    text("UPDATE products SET slug = :slug, updated_at = now() WHERE id = :id"),
+                    {"slug": new_slug, "id": product.id}
+                )
                 reserved.add(new_slug)
                 updated = True
 
     if updated:
         db.commit()
-        for product in products:
-            db.refresh(product)
+        db.expire_all()
+        query = db.query(models.Product)
+        if category_id:
+            query = query.filter(models.Product.category_id == category_id)
+        if subcategory_id:
+            query = query.filter(models.Product.subcategory_id == subcategory_id)
+        products = query.offset(skip).limit(limit).all()
 
     result = []
     for p in products:
