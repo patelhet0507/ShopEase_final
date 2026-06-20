@@ -107,15 +107,6 @@ for table in ("categories", "subcategories"):
     except Exception:
         pass
 
-# Widen slug columns to match String(150) in models
-for table in ("categories", "subcategories", "products"):
-    try:
-        with engine.connect() as conn:
-            conn.execute(text(f"ALTER TABLE {table} ALTER COLUMN slug TYPE VARCHAR(150)"))
-            conn.commit()
-    except Exception:
-        pass
-
 print("Database Connected Successfully")
 
 app = FastAPI(title="ShopEase API")
@@ -154,6 +145,8 @@ def _make_slug(name: str, model_cls, db: Session, exclude_id: int = None, reserv
     base = _slugify(name)
     if not base:
         base = "item"
+    if len(base) > 45:
+        base = base[:45].rstrip("-")
     slug = base
     counter = 1
     query = db.query(model_cls).filter(model_cls.slug == slug)
