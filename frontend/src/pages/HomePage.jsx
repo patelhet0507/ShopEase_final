@@ -1,7 +1,7 @@
 import { useEffect, useState, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ArrowRight, Sparkles, Truck, Lock, Award, Zap, Flame, Clock } from 'lucide-react'
+import { ArrowRight, Sparkles, Truck, Lock, Award, Zap, Flame, Clock, Monitor, Shirt, Home, Palette, BookOpen, Music, Cpu, Smartphone, Headphones, Watch, Gamepad2, Dumbbell, Car, UtensilsCrossed, Gem, ShoppingBag, ArrowUpRight } from 'lucide-react'
 import { productsApi, categoriesApi } from '../api'
 import ProductCard from '../components/product/ProductCard'
 import { Skeleton } from '../components/ui'
@@ -13,13 +13,24 @@ const FEATURES = [
   { icon: Zap, title: 'Quick Returns', desc: '30-day hassle-free return policy', size: 'md:col-span-2' },
 ]
 
-const CATEGORY_BADGES = [
-  { color: '', icon: '✨' },
-  { color: '', icon: '💎' },
-  { color: '', icon: '🌿' },
-  { color: '', icon: '👑' },
-  { color: '', icon: '🎯' },
-  { color: '', icon: '⭐' },
+const CATEGORY_ICONS = {
+  electronics: Monitor, clothing: Shirt, fashion: Shirt, home: Home, beauty: Palette,
+  books: BookOpen, music: Music, computers: Cpu, phones: Smartphone, headphones: Headphones,
+  watches: Watch, gaming: Gamepad2, sports: Dumbbell, automotive: Car, food: UtensilsCrossed,
+  jewelry: Gem, accessories: ShoppingBag, default: ShoppingBag,
+}
+
+const CATEGORY_GRADIENTS = [
+  'from-violet-600/20 via-fuchsia-600/10 to-transparent',
+  'from-blue-600/20 via-cyan-600/10 to-transparent',
+  'from-emerald-600/20 via-teal-600/10 to-transparent',
+  'from-amber-600/20 via-orange-600/10 to-transparent',
+  'from-rose-600/20 via-pink-600/10 to-transparent',
+  'from-indigo-600/20 via-purple-600/10 to-transparent',
+]
+
+const CATEGORY_ACCENTS = [
+  '#8b5cf6', '#06b6d4', '#10b981', '#f59e0b', '#e11d48', '#6366f1',
 ]
 
 // Mock stream data for Live Social Proof Toasts
@@ -57,8 +68,11 @@ function MagneticButton({ children }) {
 
 // ─── 2. Spotlight Card Component Wrapper ───
 function SpotlightCard({ children, cat, idx }) {
-  const [mousePos, setMousePos] = useState({ x: 0, y: 0 });
+  const [mousePos, setMousePos] = useState({ x: -100, y: -100 });
   const [isHovered, setIsHovered] = useState(false);
+  const CatIcon = CATEGORY_ICONS[cat.name?.toLowerCase()] || CATEGORY_ICONS.default
+  const accent = CATEGORY_ACCENTS[idx % CATEGORY_ACCENTS.length]
+  const gradient = CATEGORY_GRADIENTS[idx % CATEGORY_GRADIENTS.length]
 
   const handleMouseMove = (e) => {
     const { currentTarget, clientX, clientY } = e;
@@ -72,24 +86,59 @@ function SpotlightCard({ children, cat, idx }) {
         hidden: { opacity: 0, y: 10 },
         visible: { opacity: 1, y: 0, transition: { duration: 0.3 } }
       }}
-      whileHover={{ y: -3 }}
+      whileHover={{ y: -4, scale: 1.01 }}
       className="group cursor-pointer relative overflow-hidden rounded-3xl"
       onMouseMove={handleMouseMove}
       onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
+      onMouseLeave={() => { setIsHovered(false); setMousePos({ x: -100, y: -100 }); }}
     >
       <Link
         to={`/category/${cat.slug}`}
-        className={`block p-8 rounded-3xl card-premium text-center transition-all duration-300 relative overflow-hidden bg-gradient-to-br ${CATEGORY_BADGES[idx % CATEGORY_BADGES.length].color}`}
+        className="block rounded-3xl transition-all duration-300 relative overflow-hidden"
+        style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}
       >
+        {/* Gradient overlays */}
+        <div className={`absolute inset-0 bg-gradient-to-br ${gradient} opacity-60 group-hover:opacity-100 transition-opacity duration-500`} />
         <div
           className="absolute inset-0 pointer-events-none transition-opacity duration-300"
           style={{
-            background: `radial-gradient(350px circle at ${mousePos.x}px ${mousePos.y}px, var(--neon-glow), transparent 80%)`,
+            background: `radial-gradient(400px circle at ${mousePos.x}px ${mousePos.y}px, ${accent}22, transparent 80%)`,
             opacity: isHovered ? 1 : 0
           }}
         />
-        {children}
+
+        {/* Decorative corner accent */}
+        <div
+          className="absolute -top-8 -right-8 w-24 h-24 rounded-full opacity-20 group-hover:opacity-40 transition-opacity duration-500"
+          style={{ background: `radial-gradient(circle, ${accent}, transparent 70%)` }}
+        />
+
+        {/* Icon circle */}
+        <div className="relative z-10 flex flex-col items-center p-8 text-center">
+          <div
+            className="w-16 h-16 rounded-2xl flex items-center justify-center mb-5 transition-all duration-300 group-hover:scale-110 group-hover:shadow-lg"
+            style={{
+              background: `linear-gradient(135deg, ${accent}22, ${accent}11)`,
+              border: `1px solid ${accent}33`,
+              color: accent,
+            }}
+          >
+            <CatIcon size={28} strokeWidth={1.5} />
+          </div>
+
+          {children}
+
+          {/* Arrow indicator on hover */}
+          <motion.div
+            initial={{ opacity: 0, y: 5 }}
+            animate={{ opacity: isHovered ? 1 : 0, y: isHovered ? 0 : 5 }}
+            transition={{ duration: 0.2 }}
+            className="mt-3 flex items-center gap-1 text-xs font-semibold uppercase tracking-wider"
+            style={{ color: accent }}
+          >
+            Explore <ArrowUpRight size={12} />
+          </motion.div>
+        </div>
       </Link>
     </motion.div>
   );
@@ -482,20 +531,44 @@ export default function HomePage() {
                 const itemCount = allProductsForCount.filter(
                   (product) => product.category_id === cat.id || product.category === cat.name
                 ).length;
+                const accent = CATEGORY_ACCENTS[idx % CATEGORY_ACCENTS.length]
 
                 return (
                   <SpotlightCard key={cat.id} cat={cat} idx={idx}>
-                    <div className="text-4xl mb-4 relative z-10">{CATEGORY_BADGES[idx % CATEGORY_BADGES.length].icon}</div>
-                    <h3 className="font-display font-bold text-xl mb-2 text-primary relative z-10">{cat.name}</h3>
-                    <p className="text-sm text-secondary group-hover:text-purple-500 transition-colors relative z-10">
-                      Browse {itemCount} {itemCount === 1 ? 'Design' : 'Designs'}
+                    <h3 className="font-display font-bold text-xl mb-1 text-primary relative z-10">{cat.name}</h3>
+                    <p className="text-sm relative z-10" style={{ color: 'var(--text-muted)' }}>
+                      {itemCount} {itemCount === 1 ? 'item' : 'items'}
                     </p>
-                    <motion.div
-                      className="absolute inset-0 rounded-3xl bg-white/0 group-hover:bg-white/5 transition-all duration-300"
-                    />
+                    <div className="mt-4 relative z-10 flex gap-1.5">
+                      {itemCount > 0 && (
+                        <span
+                          className="inline-block text-[10px] font-semibold px-3 py-1 rounded-full"
+                          style={{
+                            background: `${accent}18`,
+                            color: accent,
+                            border: `1px solid ${accent}22`,
+                          }}
+                        >
+                          {itemCount > 9 ? '9+' : itemCount} Products
+                        </span>
+                      )}
+                    </div>
                   </SpotlightCard>
                 );
               })}
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              transition={{ delay: 0.5 }}
+              viewport={{ once: true }}
+              className="text-center mt-14"
+            >
+              <Link to="/categories" className="btn-secondary text-base px-10 py-4 inline-flex gap-2 items-center">
+                View All Categories
+                <ArrowRight size={16} />
+              </Link>
             </motion.div>
           </div>
         </section>
