@@ -141,7 +141,7 @@ def _slugify(value: str) -> str:
         cleaned = cleaned.replace("--", "-")
     return cleaned.strip("-")
 
-def _make_slug(name: str, model_cls, db: Session, exclude_id: int = None) -> str:
+def _make_slug(name: str, model_cls, db: Session, exclude_id: int = None, reserved: set = None) -> str:
     base = _slugify(name)
     if not base:
         base = "item"
@@ -150,7 +150,7 @@ def _make_slug(name: str, model_cls, db: Session, exclude_id: int = None) -> str
     query = db.query(model_cls).filter(model_cls.slug == slug)
     if exclude_id:
         query = query.filter(model_cls.id != exclude_id)
-    while query.first():
+    while query.first() or (reserved and slug in reserved):
         counter += 1
         slug = f"{base}-{counter}"
         query = db.query(model_cls).filter(model_cls.slug == slug)
@@ -315,11 +315,13 @@ def list_categories(db: Session = Depends(get_db)):
     categories = db.query(models.Category).all()
     updated = False
 
+    reserved = set()
     for category in categories:
         if not category.slug or category.slug.endswith(f"-{category.id}"):
-            new_slug = _make_slug(category.name, models.Category, db, category.id)
+            new_slug = _make_slug(category.name, models.Category, db, category.id, reserved)
             if new_slug != category.slug:
                 category.slug = new_slug
+                reserved.add(new_slug)
                 updated = True
         category.view_token = auth.create_view_token(category.id)
 
@@ -466,11 +468,13 @@ def list_subcategories(db: Session = Depends(get_db)):
     subcategories = db.query(models.SubCategory).all()
     updated = False
 
+    reserved = set()
     for subcategory in subcategories:
         if not subcategory.slug or subcategory.slug.endswith(f"-{subcategory.id}"):
-            new_slug = _make_slug(subcategory.name, models.SubCategory, db, subcategory.id)
+            new_slug = _make_slug(subcategory.name, models.SubCategory, db, subcategory.id, reserved)
             if new_slug != subcategory.slug:
                 subcategory.slug = new_slug
+                reserved.add(new_slug)
                 updated = True
 
     if updated:
@@ -595,11 +599,13 @@ def list_products(
     products = query.offset(skip).limit(limit).all()
     updated = False
 
+    reserved = set()
     for product in products:
         if not product.slug or product.slug.endswith(f"-{product.id}"):
-            new_slug = _make_slug(product.name, models.Product, db, product.id)
+            new_slug = _make_slug(product.name, models.Product, db, product.id, reserved)
             if new_slug != product.slug:
                 product.slug = new_slug
+                reserved.add(new_slug)
                 updated = True
         product.view_token = auth.create_view_token(product.id)
 
