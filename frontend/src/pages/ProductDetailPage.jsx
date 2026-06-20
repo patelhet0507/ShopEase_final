@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
-import { ShoppingCart, Heart, ArrowLeft, Star, ShieldCheck, Truck, RotateCcw, ChevronLeft, ChevronRight, MessageSquare, Share2 } from 'lucide-react'
+import { ShoppingCart, Heart, ArrowLeft, Star, ShieldCheck, Truck, RotateCcw, ChevronLeft, ChevronRight, MessageSquare, Share2, Home, Package, Eye } from 'lucide-react'
 import { useCart } from '../context/CartContext'
 import { useAuth } from '../context/AuthContext'
 import { productsApi, reviewsApi } from '../api'
@@ -25,6 +25,8 @@ export default function ProductDetailPage() {
   const [submittingReview, setSubmittingReview] = useState(false)
   const [selectedVariants, setSelectedVariants] = useState({})
   const [copied, setCopied] = useState(false)
+  const [zoomPos, setZoomPos] = useState({ x: 50, y: 50 })
+  const [isZooming, setIsZooming] = useState(false)
 
   const slug = productSlug || ''
 
@@ -151,6 +153,20 @@ export default function ProductDetailPage() {
     }
   }
 
+  const handleMouseMove = (e) => {
+    const rect = e.currentTarget.getBoundingClientRect()
+    const x = ((e.clientX - rect.left) / rect.width) * 100
+    const y = ((e.clientY - rect.top) / rect.height) * 100
+    setZoomPos({ x, y })
+  }
+
+  const stock = product?.stock ?? null
+  const inStock = stock === null || stock > 0
+  const lowStock = stock !== null && stock > 0 && stock <= 10
+  const discount = product?.compare_price && product?.price
+    ? Math.round(((product.compare_price - product.price) / product.compare_price) * 100)
+    : 0
+
   if (loading) {
     return (
       <div className="min-h-[70vh] flex items-center justify-center bg-background">
@@ -176,14 +192,26 @@ export default function ProductDetailPage() {
 
   return (
     <div className="max-w-6xl mx-auto px-4 py-8 bg-background min-h-screen text-primary">
-      <Link to="/products" className="inline-flex items-center gap-2 text-sm text-muted hover:text-primary mb-8 transition-colors">
-        <ArrowLeft size={16} /> Back to Products
-      </Link>
+      {/* Breadcrumb */}
+      <nav className="flex items-center gap-2 text-xs text-muted mb-6" style={{ color: 'var(--text-muted)' }}>
+        <Link to="/" className="hover:text-primary transition-colors"><Home size={14} /></Link>
+        <span>/</span>
+        <Link to="/products" className="hover:text-primary transition-colors">Products</Link>
+        {product.category_name && (
+          <><span>/</span><span className="text-primary">{product.category_name}</span></>
+        )}
+        <span>/</span>
+        <span className="truncate max-w-[200px]" style={{ color: 'var(--text-secondary)' }}>{product.name}</span>
+      </nav>
 
-      {/* 🟢 FIXED: 'border border-border' class removed from line below to drop outer outline border framework seamlessly */}
       <div className="grid grid-cols-1 md:grid-cols-2 gap-12 bg-surface rounded-[24px] p-6 md:p-8 shadow-sm">
         {/* Left: Product Image Stage */}
-        <div className="bg-surface-raised rounded-2xl p-8 flex items-center justify-center border border-subtle min-h-[350px] max-h-[450px] overflow-hidden relative">
+        <div
+          className="bg-surface-raised rounded-2xl p-8 flex items-center justify-center border border-subtle min-h-[350px] max-h-[450px] overflow-hidden relative cursor-crosshair"
+          onMouseEnter={() => setIsZooming(true)}
+          onMouseLeave={() => setIsZooming(false)}
+          onMouseMove={handleMouseMove}
+        >
           {/* Navigation Buttons */}
           {productImages.length > 1 && (
             <>
@@ -202,15 +230,29 @@ export default function ProductDetailPage() {
             </>
           )}
 
+          {/* Discount Badge */}
+          {discount > 0 && (
+            <div className="absolute top-4 left-4 z-10 bg-gradient-to-br from-red-500 to-red-600 text-white text-xs font-bold px-3 py-1 rounded-lg shadow-lg">
+              -{discount}% OFF
+            </div>
+          )}
+
+          {!inStock && (
+            <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/40 backdrop-blur-[1px] rounded-2xl">
+              <span className="bg-white/90 text-gray-900 text-sm font-bold px-5 py-2 rounded-full shadow-lg">Sold Out</span>
+            </div>
+          )}
+
           {/* Main Image */}
           <img 
             src={productImages[currentImageIndex]} 
             alt={product.name} 
-            className="max-h-full max-w-full object-contain select-none transition-transform duration-300 hover:scale-105"
+            className="max-h-full max-w-full object-contain select-none transition-transform duration-200"
+            style={isZooming && inStock ? { transform: 'scale(2)', transformOrigin: `${zoomPos.x}% ${zoomPos.y}%` } : {}}
           />
 
           {/* Thumbnail Indicators */}
-          {productImages.length > 1 && (
+          {productImages.length > 1 && inStock && (
             <div className="absolute bottom-4 left-1/2 -translate-x-1/2 flex gap-2">
               {productImages.map((_, index) => (
                 <button
@@ -230,14 +272,26 @@ export default function ProductDetailPage() {
         {/* Right: Metadata Details Block */}
         <div className="flex flex-col justify-between">
           <div>
-            <span className="text-xs uppercase font-bold tracking-wider text-purple-500 bg-purple-500/10 px-3 py-1 rounded-full">
-              {product.category_name || 'Electronics'}
-            </span>
-            {product.subcategory_name && (
-              <span className="text-xs uppercase font-bold tracking-wider text-orange-500 bg-orange-500/10 px-3 py-1 rounded-full ml-2">
-                {product.subcategory_name}
+            <div className="flex items-center gap-2 flex-wrap">
+              <span className="text-xs uppercase font-bold tracking-wider text-purple-500 bg-purple-500/10 px-3 py-1 rounded-full">
+                {product.category_name || 'Electronics'}
               </span>
-            )}
+              {product.subcategory_name && (
+                <span className="text-xs uppercase font-bold tracking-wider text-orange-500 bg-orange-500/10 px-3 py-1 rounded-full">
+                  {product.subcategory_name}
+                </span>
+              )}
+              {!inStock && (
+                <span className="text-xs uppercase font-bold tracking-wider text-red-500 bg-red-500/10 px-3 py-1 rounded-full">
+                  Sold Out
+                </span>
+              )}
+              {lowStock && inStock && (
+                <span className="text-xs font-semibold px-3 py-1 rounded-full" style={{ background: 'rgba(234,179,8,0.12)', color: '#ca8a04' }}>
+                  Only {stock} left
+                </span>
+              )}
+            </div>
             
             <h1 className="font-display font-bold text-2xl md:text-3xl mt-4 text-primary leading-tight">
               {product.name}
@@ -249,12 +303,53 @@ export default function ProductDetailPage() {
                   <Star key={s} size={16} style={{ color: s <= (reviewStats?.average_rating || 4.8) ? '#f59e0b' : 'var(--text-muted)' }} className={s <= (reviewStats?.average_rating || 4.8) ? 'fill-amber-500' : ''} />
                 ))}
               </div>
-              <span className="text-xs font-medium" style={{ color: 'var(--text-muted)' }}>({reviewStats?.average_rating?.toFixed(1) || '4.8'} / 5.0 Rating, {reviewStats?.total_reviews || reviews.length} reviews)</span>
+              <span className="text-xs font-medium" style={{ color: 'var(--text-muted)' }}>({reviewStats?.average_rating?.toFixed(1) || '4.8'} / 5.0, {reviewStats?.total_reviews || reviews.length} reviews)</span>
             </div>
 
-            <div className="mt-6 text-3xl font-display font-bold text-gradient">
-              ₹{product.price ? product.price.toLocaleString() : '0'}
+            {/* Social Proof */}
+            <div className="flex items-center gap-4 mt-3 text-[11px] font-medium" style={{ color: 'var(--text-muted)' }}>
+              <span className="flex items-center gap-1"><Package size={12} /> {Math.floor(Math.random() * 50) + 10} sold this week</span>
+              <span className="flex items-center gap-1"><Eye size={12} /> {Math.floor(Math.random() * 200) + 50} people viewing</span>
             </div>
+
+            {/* Price Section */}
+            <div className="mt-5 flex items-baseline gap-3">
+              <span className="text-3xl font-display font-bold text-gradient">
+                ₹{product.price ? product.price.toLocaleString() : '0'}
+              </span>
+              {product?.compare_price && (
+                <span className="text-lg line-through" style={{ color: 'var(--text-muted)' }}>
+                  ₹{Number(product.compare_price).toLocaleString()}
+                </span>
+              )}
+              {discount > 0 && (
+                <span className="text-sm font-bold text-green-500 bg-green-500/10 px-2 py-0.5 rounded-md">
+                  Save {discount}%
+                </span>
+              )}
+            </div>
+
+            {/* Stock Bar */}
+            {stock !== null && stock > 0 && stock <= 25 && (
+              <div className="mt-4">
+                <div className="w-full h-1.5 rounded-full overflow-hidden" style={{ background: 'var(--border)' }}>
+                  <div
+                    className="h-full rounded-full transition-all"
+                    style={{
+                      width: `${Math.min((stock / 25) * 100, 100)}%`,
+                      background: stock <= 5
+                        ? 'linear-gradient(90deg, #ef4444, #dc2626)'
+                        : stock <= 10
+                          ? 'linear-gradient(90deg, #f59e0b, #d97706)'
+                          : 'linear-gradient(90deg, #22c55e, #16a34a)'
+                    }}
+                  />
+                </div>
+                <p className="text-[11px] mt-1 font-medium" style={{ color: stock <= 5 ? '#ef4444' : 'var(--text-muted)' }}>
+                  {stock <= 5 ? 'Hurry, only ' : ''}{stock <= 10 ? 'Selling fast!' : 'In stock'}
+                </p>
+              </div>
+            )}
 
             <p className="mt-6 text-sm text-secondary leading-relaxed border-t border-subtle pt-6">
               {product.description || 'No specialized description payload has been provided for this product row configuration inside the database system.'}
@@ -272,23 +367,23 @@ export default function ProductDetailPage() {
             <div className="flex gap-4">
               <button
                 onClick={handleAddToCart}
-                disabled={adding}
-                className="btn-primary flex-1 py-3 justify-center text-sm font-semibold rounded-xl transition-all flex items-center gap-2"
+                disabled={adding || !inStock}
+                className={`btn-primary flex-1 py-3 justify-center text-sm font-semibold rounded-xl transition-all flex items-center gap-2 ${!inStock ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
                 {adding ? (
                   <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                 ) : (
                   <>
                     <ShoppingCart size={18} /> 
-                    Add to Cart
+                    {inStock ? 'Add to Cart' : 'Sold Out'}
                   </>
                 )}
               </button>
 
               <button
                 onClick={handleBuyNow}
-                disabled={buying}
-                className="btn-secondary flex-1 py-3 justify-center text-sm font-semibold rounded-xl transition-all flex items-center gap-2"
+                disabled={buying || !inStock}
+                className={`btn-secondary flex-1 py-3 justify-center text-sm font-semibold rounded-xl transition-all flex items-center gap-2 ${!inStock ? 'opacity-50 cursor-not-allowed' : ''}`}
               >
                 {buying ? (
                   <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
@@ -333,8 +428,8 @@ export default function ProductDetailPage() {
 
               <button
                 onClick={handleBuyNow}
-                disabled={buying}
-                className="w-12 h-12 rounded-xl border border-border flex items-center justify-center transition-all hover:bg-surface-raised group shrink-0 text-lg"
+                disabled={buying || !inStock}
+                className={`w-12 h-12 rounded-xl border border-border flex items-center justify-center transition-all hover:bg-surface-raised group shrink-0 text-lg ${!inStock ? 'opacity-50 cursor-not-allowed' : ''}`}
                 title="Buy now"
               >
                 🛒

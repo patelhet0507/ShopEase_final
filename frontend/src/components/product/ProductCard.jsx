@@ -31,7 +31,9 @@ export default function ProductCard({ product, index = 0, onQuickView }) {
   const [adding, setAdding] = useState(false)
   const [imageLoaded, setImageLoaded] = useState(false)
   const [currentImgIndex, setCurrentImgIndex] = useState(0)
+  const [hovering, setHovering] = useState(false)
   const cardRef = useRef(null)
+  const rotateRef = useRef(null)
 
   const wishlisted = isWishlisted?.(Number(product.id)) || false
   const productImages = product?.images?.length > 0
@@ -41,6 +43,33 @@ export default function ProductCard({ product, index = 0, onQuickView }) {
       : [productImage(product.id, product.name || 'Product')]
 
   const activeImageUrl = productImages[currentImgIndex]
+
+  const discount = product?.compare_price && product?.price
+    ? Math.round(((product.compare_price - product.price) / product.compare_price) * 100)
+    : 0
+
+  const stock = product?.stock ?? null
+  const inStock = stock === null || stock > 0
+  const lowStock = stock !== null && stock > 0 && stock <= 5
+
+  const avgRating = product?.rating || product?.average_rating || 0
+
+  // Auto-rotate images on hover
+  const startAutoRotate = () => {
+    if (productImages.length <= 1) return
+    setHovering(true)
+    rotateRef.current = setInterval(() => {
+      setCurrentImgIndex((prev) => (prev === productImages.length - 1 ? 0 : prev + 1))
+    }, 2000)
+  }
+
+  const stopAutoRotate = () => {
+    setHovering(false)
+    if (rotateRef.current) {
+      clearInterval(rotateRef.current)
+      rotateRef.current = null
+    }
+  }
 
   const handlePrevImage = (e) => {
     e.preventDefault(); e.stopPropagation()
@@ -75,20 +104,34 @@ export default function ProductCard({ product, index = 0, onQuickView }) {
 
   return (
     <div className="h-full" ref={cardRef}>
-      <div className="card-premium h-full flex flex-col overflow-hidden group/card">
+      <div className="card-premium h-full flex flex-col overflow-hidden group/card"
+        onMouseEnter={startAutoRotate} onMouseLeave={stopAutoRotate}>
         {/* Image */}
         <div className="relative overflow-hidden flex-shrink-0" style={{ background: 'var(--surface-raised)', minHeight: 180, maxHeight: 200 }}>
           {!imageLoaded && <div className="absolute inset-0 shimmer" />}
+
+          {discount > 0 && (
+            <div className="absolute top-2 left-2 z-10 bg-gradient-to-br from-red-500 to-red-600 text-white text-[10px] font-bold px-2 py-0.5 rounded-md shadow-lg">
+              -{discount}%
+            </div>
+          )}
+
+          {!inStock && (
+            <div className="absolute inset-0 z-10 flex items-center justify-center bg-black/40 backdrop-blur-[1px]">
+              <span className="bg-white/90 text-gray-900 text-xs font-bold px-4 py-1.5 rounded-full shadow-lg">Sold Out</span>
+            </div>
+          )}
+
           <img
             key={currentImgIndex}
             src={activeImageUrl}
             alt={product.name}
-            className={`w-full h-full object-contain p-4 transition-all duration-500 ${imageLoaded ? 'opacity-100 scale-100' : 'opacity-0 scale-95'}`}
+            className={`w-full h-full object-contain p-4 transition-all duration-500 ${imageLoaded ? 'opacity-100 scale-100' : 'opacity-0 scale-95'} ${hovering && inStock ? 'scale-110' : ''}`}
             onLoad={() => setImageLoaded(true)}
           />
 
           {/* Image nav */}
-          {productImages.length > 1 && (
+          {productImages.length > 1 && inStock && (
             <>
               <button onClick={handlePrevImage}
                 className="absolute left-1.5 top-1/2 -translate-y-1/2 w-6 h-6 rounded-full flex items-center justify-center opacity-0 group-hover/card:opacity-100 transition-opacity"
@@ -136,6 +179,11 @@ export default function ProductCard({ product, index = 0, onQuickView }) {
             {product.subcategory_name && (
               <span className="badge-sage text-[10px] px-2 py-0.5">{product.subcategory_name}</span>
             )}
+            {lowStock && (
+              <span className="text-[10px] font-semibold px-2 py-0.5 rounded-full" style={{ background: 'rgba(234,179,8,0.12)', color: '#ca8a04' }}>
+                Only {stock} left
+              </span>
+            )}
           </div>
 
           <h3 className="font-display font-semibold text-sm leading-snug line-clamp-2" style={{ color: 'var(--text-primary)' }}>
@@ -144,18 +192,32 @@ export default function ProductCard({ product, index = 0, onQuickView }) {
 
           <div className="flex items-center gap-1">
             {[1, 2, 3, 4, 5].map(s => (
-              <Star key={s} size={10} className="star-filled fill-current" style={{ color: '#C4A87C' }} />
+              <Star key={s} size={10}
+                style={{ color: s <= avgRating ? '#C4A87C' : 'var(--text-muted)' }}
+                className={s <= avgRating ? 'star-filled fill-current' : ''} />
             ))}
+            {inStock ? (
+              <span className="ml-1.5 text-[9px] font-medium" style={{ color: lowStock ? '#ca8a04' : '#22c55e' }}>
+                {lowStock ? 'Low Stock' : 'In Stock'}
+              </span>
+            ) : (
+              <span className="ml-1.5 text-[9px] font-medium" style={{ color: '#ef4444' }}>Out of Stock</span>
+            )}
           </div>
 
           <div className="mt-auto flex items-center justify-between pt-2" style={{ borderTop: '1px solid var(--border)' }}>
-            <div>
+            <div className="flex items-center gap-1.5 flex-wrap">
+              {product?.compare_price && (
+                <span className="text-[11px] line-through" style={{ color: 'var(--text-muted)' }}>
+                  ₹{Number(product.compare_price).toLocaleString()}
+                </span>
+              )}
               <span className="font-display font-bold text-base text-gradient">₹{Number(product?.price || 0).toLocaleString()}</span>
             </div>
           </div>
 
           <div className="flex gap-2">
-            {user && (
+            {user && inStock && (
               <button onClick={handleAddToCart} disabled={adding}
                 className="btn-primary flex-1 justify-center text-xs py-2.5">
                 {adding ? (
