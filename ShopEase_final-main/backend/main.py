@@ -107,6 +107,16 @@ for table in ("categories", "subcategories"):
     except Exception:
         pass
 
+# Widen view_token column to prevent truncation errors
+try:
+    with engine.connect() as conn:
+        conn.execute(text("ALTER TABLE products ALTER COLUMN view_token TYPE VARCHAR(255)"))
+        conn.execute(text("ALTER TABLE categories ALTER COLUMN view_token TYPE VARCHAR(255)"))
+        conn.execute(text("ALTER TABLE subcategories ALTER COLUMN view_token TYPE VARCHAR(255)"))
+        conn.commit()
+except Exception:
+    pass
+
 print("Database Connected Successfully")
 
 app = FastAPI(title="ShopEase API")
