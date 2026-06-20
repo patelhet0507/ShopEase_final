@@ -20,18 +20,7 @@ const CATEGORY_ICONS = {
   jewelry: Gem, accessories: ShoppingBag, default: ShoppingBag,
 }
 
-const CATEGORY_GRADIENTS = [
-  'from-violet-600/20 via-fuchsia-600/10 to-transparent',
-  'from-blue-600/20 via-cyan-600/10 to-transparent',
-  'from-emerald-600/20 via-teal-600/10 to-transparent',
-  'from-amber-600/20 via-orange-600/10 to-transparent',
-  'from-rose-600/20 via-pink-600/10 to-transparent',
-  'from-indigo-600/20 via-purple-600/10 to-transparent',
-]
 
-const CATEGORY_ACCENTS = [
-  '#8b5cf6', '#06b6d4', '#10b981', '#f59e0b', '#e11d48', '#6366f1',
-]
 
 // Mock stream data for Live Social Proof Toasts
 const NOTIFICATION_STREAM = [
@@ -66,82 +55,54 @@ function MagneticButton({ children }) {
   );
 }
 
-// ─── 2. Spotlight Card Component Wrapper ───
-function SpotlightCard({ children, cat, idx }) {
-  const [mousePos, setMousePos] = useState({ x: -100, y: -100 });
-  const [isHovered, setIsHovered] = useState(false);
-  const CatIcon = CATEGORY_ICONS[cat.name?.toLowerCase()] || CATEGORY_ICONS.default
-  const accent = CATEGORY_ACCENTS[idx % CATEGORY_ACCENTS.length]
-  const gradient = CATEGORY_GRADIENTS[idx % CATEGORY_GRADIENTS.length]
+// ─── 2. Category Card ───
+const CATEGORY_BG = [
+  'linear-gradient(135deg, #8b5cf6, #6d28d9)',
+  'linear-gradient(135deg, #06b6d4, #0891b2)',
+  'linear-gradient(135deg, #10b981, #059669)',
+  'linear-gradient(135deg, #f59e0b, #d97706)',
+  'linear-gradient(135deg, #e11d48, #be123c)',
+  'linear-gradient(135deg, #6366f1, #4f46e5)',
+]
 
-  const handleMouseMove = (e) => {
-    const { currentTarget, clientX, clientY } = e;
-    const { left, top } = currentTarget.getBoundingClientRect();
-    setMousePos({ x: clientX - left, y: clientY - top });
-  };
+function CategoryCard({ cat, idx, itemCount }) {
+  const CatIcon = CATEGORY_ICONS[cat.name?.toLowerCase()] || CATEGORY_ICONS.default
 
   return (
     <motion.div
       variants={{
-        hidden: { opacity: 0, y: 10 },
-        visible: { opacity: 1, y: 0, transition: { duration: 0.3 } }
+        hidden: { opacity: 0, y: 20 },
+        visible: { opacity: 1, y: 0, transition: { duration: 0.4, delay: idx * 0.08 } }
       }}
-      whileHover={{ y: -4, scale: 1.01 }}
-      className="group cursor-pointer relative overflow-hidden rounded-3xl"
-      onMouseMove={handleMouseMove}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => { setIsHovered(false); setMousePos({ x: -100, y: -100 }); }}
+      whileHover={{ y: -6, scale: 1.02 }}
+      transition={{ type: 'spring', stiffness: 200, damping: 15 }}
     >
       <Link
         to={`/category/${cat.slug}`}
-        className="block rounded-3xl transition-all duration-300 relative overflow-hidden"
-        style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}
+        className="block relative rounded-2xl overflow-hidden group"
+        style={{ background: CATEGORY_BG[idx % CATEGORY_BG.length] }}
       >
-        {/* Gradient overlays */}
-        <div className={`absolute inset-0 bg-gradient-to-br ${gradient} opacity-60 group-hover:opacity-100 transition-opacity duration-500`} />
-        <div
-          className="absolute inset-0 pointer-events-none transition-opacity duration-300"
-          style={{
-            background: `radial-gradient(400px circle at ${mousePos.x}px ${mousePos.y}px, ${accent}22, transparent 80%)`,
-            opacity: isHovered ? 1 : 0
-          }}
-        />
-
-        {/* Decorative corner accent */}
-        <div
-          className="absolute -top-8 -right-8 w-24 h-24 rounded-full opacity-20 group-hover:opacity-40 transition-opacity duration-500"
-          style={{ background: `radial-gradient(circle, ${accent}, transparent 70%)` }}
-        />
-
-        {/* Icon circle */}
-        <div className="relative z-10 flex flex-col items-center p-8 text-center">
-          <div
-            className="w-16 h-16 rounded-2xl flex items-center justify-center mb-5 transition-all duration-300 group-hover:scale-110 group-hover:shadow-lg"
-            style={{
-              background: `linear-gradient(135deg, ${accent}22, ${accent}11)`,
-              border: `1px solid ${accent}33`,
-              color: accent,
-            }}
-          >
-            <CatIcon size={28} strokeWidth={1.5} />
+        <div className="relative z-10 p-6 md:p-8 min-h-[140px] flex flex-col justify-between">
+          <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-white/20 backdrop-blur-sm text-white mb-4">
+            <CatIcon size={20} strokeWidth={1.5} />
           </div>
+          <div>
+            <h3 className="font-display font-bold text-lg md:text-xl text-white mb-0.5">{cat.name}</h3>
+            <p className="text-sm text-white/70">{itemCount} {itemCount === 1 ? 'item' : 'items'}</p>
+          </div>
+        </div>
 
-          {children}
+        {/* Decorative circle */}
+        <div className="absolute -bottom-6 -right-6 w-32 h-32 rounded-full bg-white/5 group-hover:scale-150 transition-transform duration-700" />
+        <div className="absolute -top-8 -left-8 w-24 h-24 rounded-full bg-white/5" />
 
-          {/* Arrow indicator on hover */}
-          <motion.div
-            initial={{ opacity: 0, y: 5 }}
-            animate={{ opacity: isHovered ? 1 : 0, y: isHovered ? 0 : 5 }}
-            transition={{ duration: 0.2 }}
-            className="mt-3 flex items-center gap-1 text-xs font-semibold uppercase tracking-wider"
-            style={{ color: accent }}
-          >
-            Explore <ArrowUpRight size={12} />
-          </motion.div>
+        {/* Arrow on hover */}
+        <div className="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 translate-x-2 group-hover:translate-x-0 transition-all duration-300">
+          <ArrowUpRight size={14} className="text-white" />
         </div>
       </Link>
     </motion.div>
-  );
+  )
 }
 
 // ─── 3. Bento Grid Item Card ───
@@ -531,30 +492,7 @@ export default function HomePage() {
                 const itemCount = allProductsForCount.filter(
                   (product) => product.category_id === cat.id || product.category === cat.name
                 ).length;
-                const accent = CATEGORY_ACCENTS[idx % CATEGORY_ACCENTS.length]
-
-                return (
-                  <SpotlightCard key={cat.id} cat={cat} idx={idx}>
-                    <h3 className="font-display font-bold text-xl mb-1 text-primary relative z-10">{cat.name}</h3>
-                    <p className="text-sm relative z-10" style={{ color: 'var(--text-muted)' }}>
-                      {itemCount} {itemCount === 1 ? 'item' : 'items'}
-                    </p>
-                    <div className="mt-4 relative z-10 flex gap-1.5">
-                      {itemCount > 0 && (
-                        <span
-                          className="inline-block text-[10px] font-semibold px-3 py-1 rounded-full"
-                          style={{
-                            background: `${accent}18`,
-                            color: accent,
-                            border: `1px solid ${accent}22`,
-                          }}
-                        >
-                          {itemCount > 9 ? '9+' : itemCount} Products
-                        </span>
-                      )}
-                    </div>
-                  </SpotlightCard>
-                );
+                return <CategoryCard key={cat.id} cat={cat} idx={idx} itemCount={itemCount} />;
               })}
             </motion.div>
 
