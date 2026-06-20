@@ -20,13 +20,19 @@ print("Initialising....")
 # Create tables
 Base.metadata.create_all(bind=engine)
 
-# Add exp column if missing on existing database
+# Add columns if missing on existing database
 try:
     with engine.connect() as conn:
         conn.execute(text("ALTER TABLE users ADD COLUMN exp INTEGER NOT NULL DEFAULT 0"))
         conn.commit()
 except Exception:
-    pass  # Column already exists
+    pass
+try:
+    with engine.connect() as conn:
+        conn.execute(text("ALTER TABLE users ADD COLUMN reset_token VARCHAR(255)"))
+        conn.commit()
+except Exception:
+    pass
 
 # Backfill exp from existing review counts
 try:
@@ -216,6 +222,28 @@ def resend_verification(payload: schemas.EmailRequest, db: Session = Depends(get
     db.commit()
     email_service.send_verification_email(user.email, user.verification_token)
     return {"message": "Verification email sent"}
+
+
+@app.post("/api/auth/forgot-password")
+def forgot_password(payload: schemas.ForgotPasswordRequest, db: Session = Depends(get_db)):
+    user = db.query(models.User).filter(models.User.email == payload.email).first()
+    if not user:
+        return {"message": "If that email exists, a reset link has been sent."}
+    user.reset_token = str(uuid.uuid4())
+    db.commit()
+    email_service.send_password_reset_email(user.email, user.reset_token)
+    return {"message": "If that email exists, a reset link has been sent."}
+
+
+@app.post("/api/auth/reset-password")
+def reset_password(payload: schemas.ResetPasswordRequest, db: Session = Depends(get_db)):
+    user = db.query(models.User).filter(models.User.reset_token == payload.token).first()
+    if not user:
+        raise HTTPException(status_code=400, detail="Invalid or expired reset token")
+    user.hashed_password = auth.hash_password(payload.password)
+    user.reset_token = None
+    db.commit()
+    return {"message": "Password reset successful"}
 
 
 # ===== User Profile Endpoints (NEW) =====

@@ -26,7 +26,7 @@ export default function ProductDetailPage() {
   const [selectedVariants, setSelectedVariants] = useState({})
   const [copied, setCopied] = useState(false)
 
-  const token = productSlug || ''
+  const slug = productSlug || ''
 
   useEffect(() => {
     let cancelled = false
@@ -34,17 +34,13 @@ export default function ProductDetailPage() {
       try {
         setLoading(true)
         setError(null)
-        if (!token) { throw new Error('Missing product token.') }
+        if (!slug) { throw new Error('Missing product slug.') }
 
-        const { data } = await productsApi.getByToken(token)
+        const { data } = await productsApi.getBySlug(slug)
         if (cancelled) return
 
         setProduct(Array.isArray(data) ? data[0] : data)
         setCurrentImageIndex(0)
-
-        if (data && data.view_token && data.view_token !== token) {
-          window.history.replaceState(null, '', `/p/${data.view_token}`)
-        }
       } catch (err) {
         if (!cancelled) {
           console.error("Product fetch error:", err.message)
@@ -55,11 +51,11 @@ export default function ProductDetailPage() {
       }
     }
 
-    if (token) { fetchProductDetails() }
-    else { setLoading(false); setError("Missing product token.") }
+    if (slug) { fetchProductDetails() }
+    else { setLoading(false); setError("Missing product slug.") }
 
     return () => { cancelled = true }
-  }, [token])
+  }, [slug])
 
   useEffect(() => {
     async function fetchReviews() {

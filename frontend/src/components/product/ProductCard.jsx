@@ -5,7 +5,10 @@ import { useAuth } from '../../context/AuthContext'
 import { useCart } from '../../context/CartContext'
 import { useState, useRef } from 'react'
 
-export const generateSlug = (name, id) => `p-${id}`;
+export const generateSlug = (name, id) => {
+  const slug = name?.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || `product-${id}`
+  return `${slug}-${id}`
+}
 
 function productImage(idOrSlug, name) {
   const colors = [
@@ -163,7 +166,7 @@ export default function ProductCard({ product, index = 0, onQuickView }) {
                 )}
               </button>
             )}
-            <Link to={`/p/${product.view_token}`}
+            <Link to={`/product/${product.slug || generateSlug(product.name, product.id)}`}
               className="btn-secondary flex items-center justify-center gap-1.5 text-xs py-2.5 flex-1"
               onClick={e => e.stopPropagation()}>
               <Eye size={12} /> View

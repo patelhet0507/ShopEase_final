@@ -53,6 +53,15 @@ class RoleUpdate(BaseModel):
     role: str
 
 
+class ForgotPasswordRequest(BaseModel):
+    email: EmailStr
+
+
+class ResetPasswordRequest(BaseModel):
+    token: str
+    password: str
+
+
 # ===== Category Schemas =====
 
 class CategoryBasic(BaseModel):

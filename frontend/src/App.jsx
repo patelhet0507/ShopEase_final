@@ -6,6 +6,7 @@ import Layout from './components/layout/Layout'
 import LoginPage from './pages/LoginPage'
 import RegisterPage from './pages/RegisterPage'
 import VerifyEmailPage from './pages/VerifyEmailPage'
+import ResetPasswordPage from './pages/ResetPasswordPage'
 import HomePage from './pages/HomePage'
 import CategoriesPage from './pages/CategoriesPage'
 import CategoryDetailPage from './pages/CategoryDetailPage'
@@ -60,14 +61,16 @@ function AppInner() {
         <Route path="/login" element={<GuestRoute><LoginPage /></GuestRoute>} />
         <Route path="/register" element={<GuestRoute><RegisterPage /></GuestRoute>} />
         <Route path="/verify-email" element={<VerifyEmailPage />} />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
         <Route path="/" element={<Layout />}>
           <Route index element={<HomePage />} />
           <Route path="categories" element={<CategoriesPage />} />
           <Route path="categories/:categorySlug/:subSlug?" element={<CategoryDetailPage />} />
-          <Route path="c/:categoryToken/:subToken?" element={<CategoryDetailPage />} />
+          <Route path="category/:categorySlug" element={<CategoryDetailPage />} />
+          <Route path="category/:categorySlug/:subSlug" element={<CategoryDetailPage />} />
           <Route path="products" element={<ProductsPage />} />
           <Route path="products/:productSlug" element={<ProductDetailPage />} />
-          <Route path="p/:productSlug" element={<ProductDetailPage />} />
+          <Route path="product/:productSlug" element={<ProductDetailPage />} />
           <Route path="cart" element={<PrivateRoute><CartPage /></PrivateRoute>} />
           <Route path="wishlist" element={<PrivateRoute><WishlistPage /></PrivateRoute>} />
           <Route path="checkout" element={<PrivateRoute><CheckoutPage /></PrivateRoute>} />

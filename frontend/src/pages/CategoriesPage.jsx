@@ -105,7 +105,7 @@ export default function CategoriesPage() {
                         <Package size={22} className="text-white" />
                       </div>
                       <Link
-                        to={`/c/${cat.view_token || cat.slug}`}
+                        to={`/category/${cat.slug}`}
                         className="inline-flex items-center gap-1 text-xs font-semibold px-3 py-1.5 rounded-full transition-all hover:scale-105"
                         style={{ background: `${from}20`, color: from }}
                       >
@@ -126,7 +126,7 @@ export default function CategoriesPage() {
                     {cat.subcategories?.slice(0, 4).map(sub => (
                       <Link
                         key={sub.id}
-                        to={`/c/${cat.view_token || cat.slug}/${sub.view_token || sub.slug}`}
+                        to={`/category/${cat.slug}/${sub.slug}`}
                         className="flex items-center justify-between px-3 py-2 rounded-xl transition-colors hover:bg-[var(--surface-raised)]"
                       >
                         <span className="text-sm font-medium" style={{ color: 'var(--text-secondary)' }}>
@@ -144,7 +144,7 @@ export default function CategoriesPage() {
                     
                     {(cat.subcategories?.length || 0) > 4 && (
                       <Link
-                        to={`/c/${cat.view_token || cat.slug}`}
+                        to={`/category/${cat.slug}`}
                         className="block text-center text-xs py-2 rounded-xl transition-colors hover:bg-[var(--surface-raised)]"
                         style={{ color: 'var(--text-muted)' }}
                       >

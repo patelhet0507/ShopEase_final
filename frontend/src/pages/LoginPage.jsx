@@ -171,6 +171,13 @@ export default function LoginPage() {
               required
             />
 
+            <div className="text-right -mt-2">
+              <Link to="/reset-password" className="text-xs font-medium transition-colors hover:underline"
+                style={{ color: 'var(--accent)' }}>
+                Forgot password?
+              </Link>
+            </div>
+
             <motion.button
               type="submit"
               disabled={loading}

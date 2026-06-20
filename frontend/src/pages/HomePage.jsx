@@ -79,7 +79,7 @@ function SpotlightCard({ children, cat, idx }) {
       onMouseLeave={() => setIsHovered(false)}
     >
       <Link
-        to={`/c/${cat.view_token || cat.slug}`}
+        to={`/category/${cat.slug}`}
         className={`block p-8 rounded-3xl card-premium text-center transition-all duration-300 relative overflow-hidden bg-gradient-to-br ${CATEGORY_BADGES[idx % CATEGORY_BADGES.length].color}`}
       >
         <div
@@ -488,7 +488,7 @@ export default function HomePage() {
                     <div className="text-4xl mb-4 relative z-10">{CATEGORY_BADGES[idx % CATEGORY_BADGES.length].icon}</div>
                     <h3 className="font-display font-bold text-xl mb-2 text-primary relative z-10">{cat.name}</h3>
                     <p className="text-sm text-secondary group-hover:text-purple-500 transition-colors relative z-10">
-                      Browse {itemCount} {itemCount === 1 ? 'Category' : 'Categories'}
+                      Browse {itemCount} {itemCount === 1 ? 'Design' : 'Designs'}
                     </p>
                     <motion.div
                       className="absolute inset-0 rounded-3xl bg-white/0 group-hover:bg-white/5 transition-all duration-300"

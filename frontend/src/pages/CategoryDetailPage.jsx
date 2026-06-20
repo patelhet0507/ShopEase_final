@@ -7,33 +7,29 @@ import { FadeIn, Skeleton, EmptyState } from '../components/ui'
 import { motion, AnimatePresence } from 'framer-motion'
 
 export default function CategoryDetailPage() {
-  const { categoryToken, subToken } = useParams()
+  const { categorySlug, subSlug } = useParams()
   const navigate = useNavigate()
   const [category, setCategory] = useState(null)
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
+    if (!categorySlug) { setLoading(false); return }
     setLoading(true)
-    categoriesApi.getByToken(categoryToken)
+    categoriesApi.getBySlug(categorySlug)
       .then(({ data }) => {
         setCategory(data)
         setLoading(false)
-        if (data.view_token && data.view_token !== categoryToken) {
-          const path = subToken && subToken !== 'all'
-            ? `/c/${data.view_token}/${subToken}`
-            : `/c/${data.view_token}`
-          window.history.replaceState(null, '', path)
-        }
       })
       .catch(() => {
-        categoriesApi.getBySlug(categoryToken)
+        // fallback: try by-token (legacy links)
+        categoriesApi.getByToken(categorySlug)
           .then(({ data }) => {
             setCategory(data)
             setLoading(false)
           })
           .catch(() => setLoading(false))
       })
-  }, [categoryToken])
+  }, [categorySlug])
 
   if (loading) {
     return (
@@ -57,22 +53,22 @@ export default function CategoryDetailPage() {
   )
 
   const subcategories = category.subcategories || []
-  const activeSubcategory = subToken
+  const activeSubcategory = subSlug
     ? subcategories.find(
-        sub => sub.view_token === subToken || sub.slug === subToken || String(sub.id) === subToken
+        sub => sub.slug === subSlug || sub.view_token === subSlug || String(sub.id) === subSlug
       )
     : null
 
   const filteredProducts = !category.products ? [] : category.products.filter(product => {
-    if (!subToken || subToken === 'all') return true
+    if (!subSlug || subSlug === 'all') return true
     return String(product.subcategory_id) === String(activeSubcategory?.id)
   })
 
-  const handleSubcategoryToggle = (token) => {
-    if (!token || token === 'all') {
-      navigate(`/c/${category.view_token || category.slug}`, { replace: true })
+  const handleSubcategoryToggle = (slug) => {
+    if (!slug || slug === 'all') {
+      navigate(`/category/${category.slug}`, { replace: true })
     } else {
-      navigate(`/c/${category.view_token || category.slug}/${token}`, { replace: true })
+      navigate(`/category/${category.slug}/${slug}`, { replace: true })
     }
   }
 
@@ -104,15 +100,15 @@ export default function CategoryDetailPage() {
           <button
             onClick={() => handleSubcategoryToggle('all')}
             className={`px-4 py-2 rounded-xl text-sm font-medium transition-all cursor-pointer ${
-              !subToken || subToken === 'all'
+              !subSlug || subSlug === 'all'
                 ? 'text-white'
                 : 'hover:bg-white/5'
             }`}
             style={{
-              background: !subToken || subToken === 'all'
+              background: !subSlug || subSlug === 'all'
                 ? 'linear-gradient(135deg, var(--accent), var(--accent-dark))'
                 : 'var(--surface-raised)',
-              color: !subToken || subToken === 'all' ? 'white' : 'var(--text-secondary)',
+              color: !subSlug || subSlug === 'all' ? 'white' : 'var(--text-secondary)',
               border: '1px solid var(--border)',
             }}
           >
@@ -122,7 +118,7 @@ export default function CategoryDetailPage() {
           {subcategories.map(sub => (
             <button
               key={sub.id}
-              onClick={() => handleSubcategoryToggle(sub.view_token || sub.slug)}
+              onClick={() => handleSubcategoryToggle(sub.slug)}
               className={`px-4 py-2 rounded-xl text-sm font-medium transition-all cursor-pointer ${
                 activeSubcategory?.id === sub.id
                   ? 'text-white'
@@ -134,8 +130,7 @@ export default function CategoryDetailPage() {
                   : 'var(--surface-raised)',
                 color: activeSubcategory?.id === sub.id ? 'white' : 'var(--text-secondary)',
                 border: '1px solid var(--border)',
-              }}
-            >
+              }}>
               {sub.name}
             </button>
           ))}
@@ -147,7 +142,7 @@ export default function CategoryDetailPage() {
         <EmptyState
           icon={Package}
           title="No products found"
-          description={subToken && subToken !== 'all' ? 'No products in this subcategory.' : 'This category has no products yet.'}
+          description={subSlug && subSlug !== 'all' ? 'No products in this subcategory.' : 'This category has no products yet.'}
           action={<Link to="/products" className="btn-primary"><ArrowLeft size={14} /> Browse All Products</Link>}
         />
       ) : (
