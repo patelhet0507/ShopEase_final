@@ -107,23 +107,6 @@ for table in ("categories", "subcategories"):
     except Exception:
         pass
 
-# Widen view_token column to fit JWT tokens (run after all ADD COLUMN)
-for view_table in ("products", "categories", "subcategories"):
-    try:
-        with engine.connect() as conn:
-            conn.execute(text(f"ALTER TABLE {view_table} ALTER COLUMN view_token TYPE VARCHAR(255) USING view_token::VARCHAR(255)"))
-            conn.commit()
-    except Exception:
-        pass
-    # Fallback: drop and recreate column if ALTER TYPE failed (e.g. unique constraint)
-    try:
-        with engine.connect() as conn:
-            conn.execute(text(f"ALTER TABLE {view_table} DROP COLUMN IF EXISTS view_token"))
-            conn.execute(text(f"ALTER TABLE {view_table} ADD COLUMN view_token VARCHAR(255)"))
-            conn.commit()
-    except Exception:
-        pass
-
 print("Database Connected Successfully")
 
 app = FastAPI(title="ShopEase API")
@@ -332,36 +315,24 @@ def update_user_role(user_id: int, payload: schemas.RoleUpdate, db: Session = De
 @app.get("/api/categories/", response_model=List[schemas.CategoryBasic])
 def list_categories(db: Session = Depends(get_db)):
     categories = db.query(models.Category).all()
+    updated = False
 
     reserved = set()
-    updates = []
     for category in categories:
         if not category.slug or category.slug.endswith(f"-{category.id}"):
             new_slug = _make_slug(category.name, models.Category, db, category.id, reserved)
             if new_slug != category.slug:
-                updates.append((category.id, new_slug))
+                category.slug = new_slug
                 reserved.add(new_slug)
+                updated = True
+        category.view_token = auth.create_view_token(category.id)
 
-    if updates:
-        with engine.begin() as conn:
-            for cid, new_slug in updates:
-                conn.execute(
-                    text("UPDATE categories SET slug = :slug, updated_at = now() WHERE id = :id"),
-                    {"slug": new_slug, "id": cid}
-                )
-        db.expire_all()
-        categories = db.query(models.Category).all()
+    if updated:
+        db.commit()
+        for category in categories:
+            db.refresh(category)
 
-    return [
-        {
-            "id": c.id,
-            "name": c.name,
-            "slug": c.slug,
-            "view_token": auth.create_view_token(c.id),
-            "color": c.color,
-        }
-        for c in categories
-    ]
+    return categories
 
 
 @app.get("/api/categories/with-structure")
@@ -396,26 +367,11 @@ def list_categories_with_structure(db: Session = Depends(get_db)):
 
 # Get by slug (NEW: slug-based routing)
 def _enrich_category(category):
-    sub_out = []
-    for s in (category.subcategories or []):
-        out = schemas.SubCategoryBasic.model_validate(s)
-        out.view_token = auth.create_view_token(s.id)
-        sub_out.append(out)
-
-    prod_out = []
-    for p in (category.products or []):
-        out = schemas.ProductBasic.model_validate(p)
-        out.view_token = auth.create_view_token(p.id)
-        prod_out.append(out)
-
-    return {
-        "id": category.id,
-        "name": category.name,
-        "slug": category.slug,
-        "view_token": auth.create_view_token(category.id),
-        "subcategories": sub_out,
-        "products": prod_out,
-    }
+    category.view_token = auth.create_view_token(category.id)
+    if category.products:
+        for p in category.products:
+            p.view_token = auth.create_view_token(p.id)
+    return category
 
 
 @app.get("/api/categories/slug/{slug}", response_model=schemas.CategoryWithProducts)
@@ -470,9 +426,8 @@ def create_category(payload: schemas.CategoryCreate, db: Session = Depends(get_d
     db.add(category)
     db.commit()
     db.refresh(category)
-    out = schemas.CategoryBasic.model_validate(category)
-    out.view_token = auth.create_view_token(category.id)
-    return out
+    category.view_token = auth.create_view_token(category.id)
+    return category
 
 
 @app.put("/api/categories/{category_id}/", response_model=schemas.CategoryBasic)
@@ -493,9 +448,8 @@ def update_category(category_id: int, payload: schemas.CategoryUpdate, db: Sessi
     category.color = payload.color
     db.commit()
     db.refresh(category)
-    out = schemas.CategoryBasic.model_validate(category)
-    out.view_token = auth.create_view_token(category.id)
-    return out
+    category.view_token = auth.create_view_token(category.id)
+    return category
 
 
 @app.delete("/api/categories/{category_id}/", status_code=204)
@@ -514,32 +468,23 @@ def delete_category(category_id: int, db: Session = Depends(get_db)):
 @app.get("/api/subcategories/", response_model=List[schemas.SubCategoryBasic])
 def list_subcategories(db: Session = Depends(get_db)):
     subcategories = db.query(models.SubCategory).all()
+    updated = False
 
     reserved = set()
-    updates = []
     for subcategory in subcategories:
         if not subcategory.slug or subcategory.slug.endswith(f"-{subcategory.id}"):
             new_slug = _make_slug(subcategory.name, models.SubCategory, db, subcategory.id, reserved)
             if new_slug != subcategory.slug:
-                updates.append((subcategory.id, new_slug))
+                subcategory.slug = new_slug
                 reserved.add(new_slug)
+                updated = True
 
-    if updates:
-        with engine.begin() as conn:
-            for sid, new_slug in updates:
-                conn.execute(
-                    text("UPDATE subcategories SET slug = :slug, updated_at = now() WHERE id = :id"),
-                    {"slug": new_slug, "id": sid}
-                )
-        db.expire_all()
-        subcategories = db.query(models.SubCategory).all()
+    if updated:
+        db.commit()
+        for subcategory in subcategories:
+            db.refresh(subcategory)
 
-    result = []
-    for s in subcategories:
-        out = schemas.SubCategoryBasic.model_validate(s)
-        out.view_token = auth.create_view_token(s.id)
-        result.append(out)
-    return result
+    return subcategories
 
 
 # Get by slug (NEW: slug-based routing)
@@ -654,37 +599,24 @@ def list_products(
         query = query.filter(models.Product.subcategory_id == subcategory_id)
 
     products = query.offset(skip).limit(limit).all()
+    updated = False
 
     reserved = set()
-    updates = []
     for product in products:
         if not product.slug or product.slug.endswith(f"-{product.id}"):
             new_slug = _make_slug(product.name, models.Product, db, product.id, reserved)
             if new_slug != product.slug:
-                updates.append((product.id, new_slug))
+                product.slug = new_slug
                 reserved.add(new_slug)
+                updated = True
+        product.view_token = auth.create_view_token(product.id)
 
-    if updates:
-        with engine.begin() as conn:
-            for pid, new_slug in updates:
-                conn.execute(
-                    text("UPDATE products SET slug = :slug, updated_at = now() WHERE id = :id"),
-                    {"slug": new_slug, "id": pid}
-                )
-        db.expire_all()
-        query2 = db.query(models.Product)
-        if category_id:
-            query2 = query2.filter(models.Product.category_id == category_id)
-        if subcategory_id:
-            query2 = query2.filter(models.Product.subcategory_id == subcategory_id)
-        products = query2.offset(skip).limit(limit).all()
+    if updated:
+        db.commit()
+        for product in products:
+            db.refresh(product)
 
-    result = []
-    for p in products:
-        out = schemas.ProductOut.model_validate(p)
-        out.view_token = auth.create_view_token(p.id)
-        result.append(out)
-    return result
+    return products
 
 
 # Get by slug (NEW: slug-based routing)
@@ -693,9 +625,8 @@ def get_product_by_slug(slug: str, db: Session = Depends(get_db)):
     product = db.query(models.Product).filter(models.Product.slug == slug).first()
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
-    out = schemas.ProductOut.model_validate(product)
-    out.view_token = auth.create_view_token(product.id)
-    return out
+    product.view_token = auth.create_view_token(product.id)
+    return product
 
 
 @app.get("/api/products/by-token/{token}", response_model=schemas.ProductOut)
@@ -706,9 +637,8 @@ def get_product_by_token(token: str, db: Session = Depends(get_db)):
     product = db.query(models.Product).filter(models.Product.id == product_id).first()
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
-    out = schemas.ProductOut.model_validate(product)
-    out.view_token = auth.create_view_token(product.id)
-    return out
+    product.view_token = auth.create_view_token(product.id)
+    return product
 
 
 # Get by ID (kept for backward compatibility)
@@ -717,9 +647,8 @@ def get_product(product_id: int, db: Session = Depends(get_db)):
     product = db.query(models.Product).filter(models.Product.id == product_id).first()
     if not product:
         raise HTTPException(status_code=404, detail="Product not found")
-    out = schemas.ProductOut.model_validate(product)
-    out.view_token = auth.create_view_token(product.id)
-    return out
+    product.view_token = auth.create_view_token(product.id)
+    return product
 
 
 @app.post("/api/products/", response_model=schemas.ProductOut)
@@ -745,9 +674,8 @@ def create_product(payload: schemas.ProductCreate, db: Session = Depends(get_db)
     db.add(product)
     db.commit()
     db.refresh(product)
-    out = schemas.ProductOut.model_validate(product)
-    out.view_token = auth.create_view_token(product.id)
-    return out
+    product.view_token = auth.create_view_token(product.id)
+    return product
 
 
 @app.put("/api/products/{product_id}/", response_model=schemas.ProductOut)
@@ -781,9 +709,8 @@ def update_product(product_id: int, payload: schemas.ProductUpdate, db: Session 
     product.updated_at = datetime.utcnow()
     db.commit()
     db.refresh(product)
-    out = schemas.ProductOut.model_validate(product)
-    out.view_token = auth.create_view_token(product.id)
-    return out
+    product.view_token = auth.create_view_token(product.id)
+    return product
 
 
 @app.delete("/api/products/{product_id}/", status_code=204)
@@ -943,13 +870,10 @@ def clear_cart(user_id: int, db: Session = Depends(get_db)):
 @app.get("/api/users/{user_id}/wishlist/", response_model=list[schemas.WishlistItemOut])
 def get_wishlist(user_id: int, db: Session = Depends(get_db)):
     items = db.query(models.WishlistItem).filter(models.WishlistItem.user_id == user_id).all()
-    result = []
     for item in items:
-        out = schemas.WishlistItemOut.model_validate(item)
         if item.product:
-            out.product.view_token = auth.create_view_token(item.product.id)
-        result.append(out)
-    return result
+            item.product.view_token = auth.create_view_token(item.product.id)
+    return items
 
 
 @app.post("/api/users/{user_id}/wishlist/", response_model=schemas.WishlistItemOut)
