@@ -325,12 +325,14 @@ def list_categories(db: Session = Depends(get_db)):
                 category.slug = new_slug
                 reserved.add(new_slug)
                 updated = True
-        category.view_token = auth.create_view_token(category.id)
 
     if updated:
         db.commit()
         for category in categories:
             db.refresh(category)
+
+    for category in categories:
+        category.view_token = auth.create_view_token(category.id)
 
     return categories
 
@@ -609,12 +611,14 @@ def list_products(
                 product.slug = new_slug
                 reserved.add(new_slug)
                 updated = True
-        product.view_token = auth.create_view_token(product.id)
 
     if updated:
         db.commit()
         for product in products:
             db.refresh(product)
+
+    for product in products:
+        product.view_token = auth.create_view_token(product.id)
 
     return products
 
