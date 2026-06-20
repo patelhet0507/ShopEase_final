@@ -1,6 +1,6 @@
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useMemo } from 'react'
 import { useParams, Link, useNavigate } from 'react-router-dom'
-import { ShoppingCart, Heart, ArrowLeft, Star, ShieldCheck, Truck, RotateCcw, ChevronLeft, ChevronRight, MessageSquare, Share2, Home, Package, Eye } from 'lucide-react'
+import { ShoppingCart, Heart, ArrowLeft, Star, ShieldCheck, Truck, RotateCcw, ChevronLeft, ChevronRight, MessageSquare, Share2, Home, Package, Eye, ZoomIn } from 'lucide-react'
 import { useCart } from '../context/CartContext'
 import { useAuth } from '../context/AuthContext'
 import { productsApi, reviewsApi } from '../api'
@@ -154,11 +154,20 @@ export default function ProductDetailPage() {
   }
 
   const handleMouseMove = (e) => {
+    if (!isZooming) return
     const rect = e.currentTarget.getBoundingClientRect()
     const x = ((e.clientX - rect.left) / rect.width) * 100
     const y = ((e.clientY - rect.top) / rect.height) * 100
     setZoomPos({ x, y })
   }
+
+  const toggleZoom = (e) => {
+    e.stopPropagation()
+    setIsZooming(prev => !prev)
+  }
+
+  const soldThisWeek = useMemo(() => Math.floor(Math.random() * 50) + 10, [product?.id])
+  const peopleViewing = useMemo(() => Math.floor(Math.random() * 200) + 50, [product?.id])
 
   const stock = product?.stock ?? null
   const inStock = stock === null || stock > 0
@@ -207,9 +216,9 @@ export default function ProductDetailPage() {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-12 bg-surface rounded-[24px] p-6 md:p-8 shadow-sm">
         {/* Left: Product Image Stage */}
         <div
-          className="bg-surface-raised rounded-2xl p-8 flex items-center justify-center border border-subtle min-h-[350px] max-h-[450px] overflow-hidden relative cursor-crosshair"
-          onMouseEnter={() => setIsZooming(true)}
-          onMouseLeave={() => setIsZooming(false)}
+          className="bg-surface-raised rounded-2xl p-8 flex items-center justify-center border border-subtle min-h-[350px] max-h-[450px] overflow-hidden relative"
+          style={{ cursor: isZooming ? 'crosshair' : 'default' }}
+          onMouseEnter={() => {}}
           onMouseMove={handleMouseMove}
         >
           {/* Navigation Buttons */}
@@ -250,6 +259,22 @@ export default function ProductDetailPage() {
             className="max-h-full max-w-full object-contain select-none transition-transform duration-200"
             style={isZooming && inStock ? { transform: 'scale(2)', transformOrigin: `${zoomPos.x}% ${zoomPos.y}%` } : {}}
           />
+
+          {/* Zoom Toggle Button */}
+          {inStock && (
+            <button
+              onClick={toggleZoom}
+              className="absolute bottom-4 right-4 w-9 h-9 rounded-full flex items-center justify-center z-10 transition-all shadow-md hover:scale-110"
+              style={{
+                background: isZooming ? 'var(--accent)' : 'var(--surface)',
+                border: isZooming ? '2px solid var(--accent)' : '1px solid var(--border)',
+                color: isZooming ? '#fff' : 'var(--text-secondary)'
+              }}
+              title={isZooming ? 'Disable zoom' : 'Enable zoom'}
+            >
+              <ZoomIn size={16} />
+            </button>
+          )}
 
           {/* Thumbnail Indicators */}
           {productImages.length > 1 && inStock && (
@@ -308,8 +333,8 @@ export default function ProductDetailPage() {
 
             {/* Social Proof */}
             <div className="flex items-center gap-4 mt-3 text-[11px] font-medium" style={{ color: 'var(--text-muted)' }}>
-              <span className="flex items-center gap-1"><Package size={12} /> {Math.floor(Math.random() * 50) + 10} sold this week</span>
-              <span className="flex items-center gap-1"><Eye size={12} /> {Math.floor(Math.random() * 200) + 50} people viewing</span>
+              <span className="flex items-center gap-1"><Package size={12} /> {soldThisWeek} sold this week</span>
+              <span className="flex items-center gap-1"><Eye size={12} /> {peopleViewing} people viewing</span>
             </div>
 
             {/* Price Section */}
