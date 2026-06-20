@@ -389,7 +389,7 @@ export default function ProductDetailPage() {
 
           {/* Action Interface Controls Row */}
           <div className="mt-8 border-t border-subtle pt-6">
-            <div className="flex gap-4">
+            <div className="flex gap-3">
               <button
                 onClick={handleAddToCart}
                 disabled={adding || !inStock}
@@ -413,9 +413,7 @@ export default function ProductDetailPage() {
                 {buying ? (
                   <span className="w-5 h-5 border-2 border-white/30 border-t-white rounded-full animate-spin" />
                 ) : (
-                  <>
-                    🚀 Buy Now
-                  </>
+                  <>🚀 Buy Now</>
                 )}
               </button>
 
@@ -449,15 +447,6 @@ export default function ProductDetailPage() {
                     Link copied!
                   </span>
                 )}
-              </button>
-
-              <button
-                onClick={handleBuyNow}
-                disabled={buying || !inStock}
-                className={`w-12 h-12 rounded-xl border border-border flex items-center justify-center transition-all hover:bg-surface-raised group shrink-0 text-lg ${!inStock ? 'opacity-50 cursor-not-allowed' : ''}`}
-                title="Buy now"
-              >
-                🛒
               </button>
             </div>
 
