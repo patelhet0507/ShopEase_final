@@ -56,15 +56,6 @@ function MagneticButton({ children }) {
 }
 
 // ─── 2. Category Card ───
-const CATEGORY_BG = [
-  'linear-gradient(135deg, #8b5cf6, #6d28d9)',
-  'linear-gradient(135deg, #06b6d4, #0891b2)',
-  'linear-gradient(135deg, #10b981, #059669)',
-  'linear-gradient(135deg, #f59e0b, #d97706)',
-  'linear-gradient(135deg, #e11d48, #be123c)',
-  'linear-gradient(135deg, #6366f1, #4f46e5)',
-]
-
 function CategoryCard({ cat, idx, itemCount }) {
   const CatIcon = CATEGORY_ICONS[cat.name?.toLowerCase()] || CATEGORY_ICONS.default
 
@@ -74,31 +65,29 @@ function CategoryCard({ cat, idx, itemCount }) {
         hidden: { opacity: 0, y: 20 },
         visible: { opacity: 1, y: 0, transition: { duration: 0.4, delay: idx * 0.08 } }
       }}
-      whileHover={{ y: -6, scale: 1.02 }}
-      transition={{ type: 'spring', stiffness: 200, damping: 15 }}
+      whileHover={{ y: -4 }}
+      transition={{ type: 'spring', stiffness: 200, damping: 18 }}
     >
       <Link
         to={`/category/${cat.slug}`}
-        className="block relative rounded-2xl overflow-hidden group"
-        style={{ background: CATEGORY_BG[idx % CATEGORY_BG.length] }}
+        className="card-premium block relative rounded-2xl overflow-hidden group"
       >
         <div className="relative z-10 p-6 md:p-8 min-h-[140px] flex flex-col justify-between">
-          <div className="w-10 h-10 rounded-xl flex items-center justify-center bg-white/20 backdrop-blur-sm text-white mb-4">
+          <div className="w-10 h-10 rounded-xl flex items-center justify-center mb-4"
+            style={{ background: 'rgba(var(--accent-rgb), 0.1)', color: 'var(--accent)' }}>
             <CatIcon size={20} strokeWidth={1.5} />
           </div>
           <div>
-            <h3 className="font-display font-bold text-lg md:text-xl text-white mb-0.5">{cat.name}</h3>
-            <p className="text-sm text-white/70">{itemCount} {itemCount === 1 ? 'item' : 'items'}</p>
+            <h3 className="font-display font-bold text-lg md:text-xl mb-0.5"
+              style={{ color: 'var(--text-primary)' }}>{cat.name}</h3>
+            <p className="text-sm" style={{ color: 'var(--text-muted)' }}>{itemCount} {itemCount === 1 ? 'item' : 'items'}</p>
           </div>
         </div>
 
-        {/* Decorative circle */}
-        <div className="absolute -bottom-6 -right-6 w-32 h-32 rounded-full bg-white/5 group-hover:scale-150 transition-transform duration-700" />
-        <div className="absolute -top-8 -left-8 w-24 h-24 rounded-full bg-white/5" />
-
         {/* Arrow on hover */}
-        <div className="absolute top-4 right-4 w-8 h-8 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center opacity-0 group-hover:opacity-100 translate-x-2 group-hover:translate-x-0 transition-all duration-300">
-          <ArrowUpRight size={14} className="text-white" />
+        <div className="absolute top-4 right-4 w-8 h-8 rounded-full flex items-center justify-center opacity-0 group-hover:opacity-100 translate-x-2 group-hover:translate-x-0 transition-all duration-300"
+          style={{ background: 'rgba(var(--accent-rgb), 0.1)', color: 'var(--accent)' }}>
+          <ArrowUpRight size={14} />
         </div>
       </Link>
     </motion.div>
