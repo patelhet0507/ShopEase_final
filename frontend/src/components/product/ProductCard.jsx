@@ -6,8 +6,7 @@ import { useCart } from '../../context/CartContext'
 import { useState, useRef } from 'react'
 
 export const generateSlug = (name, id) => {
-  const slug = name?.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || `product-${id}`
-  return `${slug}-${id}`
+  return name?.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '') || `product-${id}`
 }
 
 function productImage(idOrSlug, name) {
