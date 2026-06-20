@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useEffect, useMemo, useState, useCallback } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   SlidersHorizontal, Search, X, ChevronDown, Package,
@@ -50,6 +50,7 @@ export default function ProductsPage() {
   const [products, setProducts] = useState([])
   const [categories, setCategories] = useState([])
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState(false)
   const [search, setSearch] = useState('')
   const [selectedCategory, setSelectedCategory] = useState(null)
   const [priceRange, setPriceRange] = useState([0, 100000])
@@ -58,8 +59,10 @@ export default function ProductsPage() {
   const [maxPrice, setMaxPrice] = useState(100000)
   const [gridVariant, setGridVariant] = useState('density-modern')
 
-  useEffect(() => {
-    Promise.all([productsApi.list(), categoriesApi.list()]).then(([p, c]) => {
+  const fetchProducts = useCallback(() => {
+    setLoading(true)
+    setError(false)
+    return Promise.all([productsApi.list(), categoriesApi.list()]).then(([p, c]) => {
       const nextProducts = Array.isArray(p.data) ? p.data : []
       const nextCategories = Array.isArray(c.data) ? c.data : []
       setProducts(nextProducts)
@@ -68,8 +71,15 @@ export default function ProductsPage() {
       setMaxPrice(max)
       setPriceRange([0, max])
       setLoading(false)
-    }).catch(() => setLoading(false))
+    }).catch(() => {
+      setError(true)
+      setLoading(false)
+    })
   }, [])
+
+  useEffect(() => {
+    fetchProducts()
+  }, [fetchProducts])
 
   const liveCountMetrics = useMemo(() => {
     const counts = { all: 0 }
@@ -386,6 +396,13 @@ export default function ProductsPage() {
             <div className="grid grid-cols-2 md:grid-cols-3 gap-5">
               {Array.from({ length: 8 }).map((_, i) => <Skeleton key={i} className="h-72" />)}
             </div>
+          ) : error ? (
+            <EmptyState
+              icon={Package}
+              title="Could not load products"
+              description="Our server is waking up — please try again."
+              action={<button onClick={fetchProducts} className="btn-primary">Retry</button>}
+            />
           ) : filtered.length === 0 ? (
             <EmptyState
               icon={Package}
