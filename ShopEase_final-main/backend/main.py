@@ -332,22 +332,23 @@ def update_user_role(user_id: int, payload: schemas.RoleUpdate, db: Session = De
 @app.get("/api/categories/", response_model=List[schemas.CategoryBasic])
 def list_categories(db: Session = Depends(get_db)):
     categories = db.query(models.Category).all()
-    updated = False
 
     reserved = set()
+    updates = []
     for category in categories:
         if not category.slug or category.slug.endswith(f"-{category.id}"):
             new_slug = _make_slug(category.name, models.Category, db, category.id, reserved)
             if new_slug != category.slug:
-                db.execute(
-                    text("UPDATE categories SET slug = :slug, updated_at = now() WHERE id = :id"),
-                    {"slug": new_slug, "id": category.id}
-                )
+                updates.append((category.id, new_slug))
                 reserved.add(new_slug)
-                updated = True
 
-    if updated:
-        db.commit()
+    if updates:
+        with engine.begin() as conn:
+            for cid, new_slug in updates:
+                conn.execute(
+                    text("UPDATE categories SET slug = :slug, updated_at = now() WHERE id = :id"),
+                    {"slug": new_slug, "id": cid}
+                )
         db.expire_all()
         categories = db.query(models.Category).all()
 
@@ -513,22 +514,23 @@ def delete_category(category_id: int, db: Session = Depends(get_db)):
 @app.get("/api/subcategories/", response_model=List[schemas.SubCategoryBasic])
 def list_subcategories(db: Session = Depends(get_db)):
     subcategories = db.query(models.SubCategory).all()
-    updated = False
 
     reserved = set()
+    updates = []
     for subcategory in subcategories:
         if not subcategory.slug or subcategory.slug.endswith(f"-{subcategory.id}"):
             new_slug = _make_slug(subcategory.name, models.SubCategory, db, subcategory.id, reserved)
             if new_slug != subcategory.slug:
-                db.execute(
-                    text("UPDATE subcategories SET slug = :slug, updated_at = now() WHERE id = :id"),
-                    {"slug": new_slug, "id": subcategory.id}
-                )
+                updates.append((subcategory.id, new_slug))
                 reserved.add(new_slug)
-                updated = True
 
-    if updated:
-        db.commit()
+    if updates:
+        with engine.begin() as conn:
+            for sid, new_slug in updates:
+                conn.execute(
+                    text("UPDATE subcategories SET slug = :slug, updated_at = now() WHERE id = :id"),
+                    {"slug": new_slug, "id": sid}
+                )
         db.expire_all()
         subcategories = db.query(models.SubCategory).all()
 
@@ -652,29 +654,30 @@ def list_products(
         query = query.filter(models.Product.subcategory_id == subcategory_id)
 
     products = query.offset(skip).limit(limit).all()
-    updated = False
 
     reserved = set()
+    updates = []
     for product in products:
         if not product.slug or product.slug.endswith(f"-{product.id}"):
             new_slug = _make_slug(product.name, models.Product, db, product.id, reserved)
             if new_slug != product.slug:
-                db.execute(
-                    text("UPDATE products SET slug = :slug, updated_at = now() WHERE id = :id"),
-                    {"slug": new_slug, "id": product.id}
-                )
+                updates.append((product.id, new_slug))
                 reserved.add(new_slug)
-                updated = True
 
-    if updated:
-        db.commit()
+    if updates:
+        with engine.begin() as conn:
+            for pid, new_slug in updates:
+                conn.execute(
+                    text("UPDATE products SET slug = :slug, updated_at = now() WHERE id = :id"),
+                    {"slug": new_slug, "id": pid}
+                )
         db.expire_all()
-        query = db.query(models.Product)
+        query2 = db.query(models.Product)
         if category_id:
-            query = query.filter(models.Product.category_id == category_id)
+            query2 = query2.filter(models.Product.category_id == category_id)
         if subcategory_id:
-            query = query.filter(models.Product.subcategory_id == subcategory_id)
-        products = query.offset(skip).limit(limit).all()
+            query2 = query2.filter(models.Product.subcategory_id == subcategory_id)
+        products = query2.offset(skip).limit(limit).all()
 
     result = []
     for p in products:
