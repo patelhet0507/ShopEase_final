@@ -20,23 +20,10 @@ export default function CartPage() {
     if (saved) setSavedSandbox(JSON.parse(saved))
   }, [user])
 
-  if (!user) {
-    return (
-      <div className="max-w-6xl mx-auto px-4 py-24 text-center">
-        <EmptyState
-          icon={ShoppingBag}
-          title="Sign in to view your cart"
-          description="Your cart is waiting for you."
-          action={<Link to="/login" className="btn-primary">Sign in</Link>}
-        />
-      </div>
-    )
-  }
-
   const cartItems = cart?.items || []
   const totalQuantity = cart?.total_quantity || 0
-  
-  // 🟢 SAFE PARSING METHOD: Supports both database structure configurations seamlessly
+  const isGuest = !user
+
   const resolveItemDetails = (item) => {
     const nestedProduct = item?.product || {}
     return {
@@ -47,7 +34,6 @@ export default function CartPage() {
     }
   }
 
-  // Dynamically calculate reliable subtotal values
   const subtotalValue = cart?.subtotal || cartItems.reduce((acc, rawItem) => {
     const item = resolveItemDetails(rawItem)
     return acc + (item.price * item.quantity)
@@ -60,7 +46,7 @@ export default function CartPage() {
   const shippingCost = isFreeShippingEligible ? 0 : 150
 
   const handleSaveCartToSandbox = () => {
-    if (cartItems.length === 0) return
+    if (cartItems.length === 0 || !user) return
     const updatedSandbox = [...savedSandbox, ...cartItems]
     setSavedSandbox(updatedSandbox)
     localStorage.setItem(`shopease_sandbox_items_${user.id}`, JSON.stringify(updatedSandbox))
@@ -68,6 +54,7 @@ export default function CartPage() {
   }
 
   const handleRestoreSandboxToCart = () => {
+    if (!user) return
     localStorage.removeItem(`shopease_sandbox_items_${user.id}`)
     setSavedSandbox([])
     window.location.reload()

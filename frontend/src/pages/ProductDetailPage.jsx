@@ -78,17 +78,16 @@ export default function ProductDetailPage() {
     fetchReviews()
   }, [product?.id])
 
-  // 🟢 FIXED: Maps parameters exactly to what CartContext expects (productId, quantity)
   const handleAddToCart = async () => {
     if (!product) return
     setAdding(true)
     try {
       const cleanId = parseInt(product.id, 10)
       if (isNaN(cleanId)) {
-        console.error("❌ Add to cart failed: product.id is missing or invalid numerical form")
+        console.error("Add to cart failed: product.id is missing or invalid")
         return
       }
-      await addToCart(cleanId, 1)
+      await addToCart(cleanId, 1, { name: product.name, price: product.price })
     } catch (err) {
       console.error("Failed to add item to context layer:", err)
     } finally {
@@ -102,7 +101,7 @@ export default function ProductDetailPage() {
     try {
       const cleanId = parseInt(product.id, 10)
       if (isNaN(cleanId)) return
-      await addToCart(cleanId, 1)
+      await addToCart(cleanId, 1, { name: product.name, price: product.price })
       navigate('/checkout')
     } catch (err) {
       console.error("Buy now failed:", err)

@@ -3,19 +3,28 @@ import { useNavigate, Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { useCart } from '../context/CartContext'
 import { useAuth } from '../context/AuthContext'
-import { ordersApi } from '../api/index'
+import { ordersApi, authApi } from '../api/index'
+
+function generatePassword() {
+  const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*'
+  let pwd = ''
+  for (let i = 0; i < 12; i++) {
+    pwd += chars.charAt(Math.floor(Math.random() * chars.length))
+  }
+  return pwd
+}
 
 export default function CheckoutPage() {
   const navigate = useNavigate()
-  const { user } = useAuth()
-  const { cart } = useCart()
+  const { user, setUser, login } = useAuth()
+  const { cart, fetchCart, addToCart } = useCart()
   const [loading, setLoading] = useState(false)
   const [formData, setFormData] = useState({
     shipping_name: user?.first_name || '',
     shipping_mobile: user?.mobile_number || '',
     shipping_address: user?.address || '',
+    email: user?.email || '',
   })
-
 
   if (!cart.items || cart.items.length === 0) {
     return (
@@ -39,45 +48,64 @@ export default function CheckoutPage() {
   }
 
   const handleSubmit = async (e) => {
-  e.preventDefault()
-  setLoading(true)
+    e.preventDefault()
+    setLoading(true)
 
-  try {
-    const orderPayload = {
-      shipping_name: formData.shipping_name,
-      shipping_mobile: formData.shipping_mobile,
-      shipping_address: formData.shipping_address,
-      order_items: cart.items.map(item => ({
+    try {
+      let currentUser = user
+
+      // If not logged in, register the user with their email
+      if (!currentUser) {
+        const password = generatePassword()
+        const registerResult = await authApi.register(formData.email, password)
+        const token = registerResult.data?.access_token
+        const newUser = registerResult.data?.user || registerResult.data
+
+        if (token) {
+          localStorage.setItem('token', token)
+        } else {
+          // Try logging in after register
+          const loginResult = await login(formData.email, password)
+          if (!loginResult.success) {
+            alert('Account created but login failed. Please sign in manually.')
+            navigate('/login')
+            return
+          }
+          currentUser = loginResult.user
+          localStorage.setItem('shopease_user', JSON.stringify(currentUser))
+          setUser(currentUser)
+        }
+
+        if (token && newUser) {
+          localStorage.setItem('shopease_user', JSON.stringify(newUser))
+          setUser(newUser)
+          currentUser = newUser
+        }
+      }
+
+      const orderPayload = {
+        shipping_name: formData.shipping_name,
+        shipping_mobile: formData.shipping_mobile,
+        shipping_address: formData.shipping_address,
+        order_items: cart.items.map(item => ({
           product_id: item.product_id,
           quantity: item.quantity,
-      })),
+        })),
+      }
+
+      const response = await ordersApi.create(orderPayload)
+
+      if (response.data?.order_number) {
+        sessionStorage.setItem('last_order', JSON.stringify(response.data))
+        navigate(`/order-confirmation/${response.data.order_number}`)
+      }
+    } catch (error) {
+      const msg = error.response?.data?.detail || error.message || 'Something went wrong'
+      alert(typeof msg === 'string' ? msg : JSON.stringify(msg))
+    } finally {
+      setLoading(false)
     }
-
-    console.log("ORDER PAYLOAD:", orderPayload)
-
-    const response = await ordersApi.create(orderPayload)
-
-    console.log("ORDER RESPONSE:", response.data)
-
-    if (response.data?.order_number) {
-      sessionStorage.setItem('last_order', JSON.stringify(response.data))
-      navigate(`/order-confirmation/${response.data.order_number}`)
-    }
-  } catch (error) {
-    console.error("FULL ORDER ERROR:", error)
-    console.error("RESPONSE:", error.response?.data)
-
-    alert(
-      JSON.stringify(
-        error.response?.data || error.message,
-        null,
-        2
-      )
-    )
-  } finally {
-    setLoading(false)
   }
-}
 
   return (
     <motion.div
@@ -122,6 +150,29 @@ export default function CheckoutPage() {
             <h2 className="text-2xl font-bold mb-6" style={{ color: 'var(--text-primary)' }}>Shipping Information</h2>
 
             <form onSubmit={handleSubmit} className="space-y-6">
+              <div>
+                <label className="block text-sm font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>Email *</label>
+                <input
+                  type="email"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleInputChange}
+                  required
+                  className="w-full px-4 py-3 rounded-lg transition font-medium"
+                  style={{
+                    background: 'var(--surface-raised)',
+                    border: '2px solid var(--border)',
+                    color: 'var(--text-primary)',
+                  }}
+                  placeholder="your@email.com"
+                />
+                {!user && (
+                  <p className="text-xs mt-1.5" style={{ color: 'var(--text-muted)' }}>
+                    This will be used to create your account
+                  </p>
+                )}
+              </div>
+
               <div>
                 <label className="block text-sm font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>Full Name *</label>
                 <input
@@ -187,7 +238,7 @@ export default function CheckoutPage() {
                 disabled={loading}
                 className="btn-primary w-full justify-center py-4 text-lg font-bold"
               >
-                {loading ? 'Creating Order...' : 'Place Order (COD)'}
+                {loading ? 'Processing...' : (user ? 'Place Order (COD)' : 'Create Account & Place Order')}
               </button>
             </form>
           </motion.div>

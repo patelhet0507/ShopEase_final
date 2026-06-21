@@ -71,9 +71,9 @@ function AppInner() {
           <Route path="products" element={<ProductsPage />} />
           <Route path="products/:productSlug" element={<ProductDetailPage />} />
           <Route path="product/:productSlug" element={<ProductDetailPage />} />
-          <Route path="cart" element={<PrivateRoute><CartPage /></PrivateRoute>} />
+          <Route path="cart" element={<CartPage />} />
           <Route path="wishlist" element={<PrivateRoute><WishlistPage /></PrivateRoute>} />
-          <Route path="checkout" element={<PrivateRoute><CheckoutPage /></PrivateRoute>} />
+          <Route path="checkout" element={<CheckoutPage />} />
           <Route path="profile" element={<PrivateRoute><ProfilePage /></PrivateRoute>} />
           <Route path="order-confirmation/:orderNumber" element={<PrivateRoute><OrderConfirmationPage /></PrivateRoute>} />
           <Route path="order-tracking/:orderNumber" element={<PrivateRoute><OrderTrackingPage /></PrivateRoute>} />

@@ -65,10 +65,9 @@ export default function ProductCard({ product, index = 0, onQuickView }) {
 
   const handleAddToCart = async (e) => {
     e.preventDefault(); e.stopPropagation()
-    if (!user) return
     setAdding(true)
     try {
-      await addToCart(Number(product.id), 1)
+      await addToCart(Number(product.id), 1, { name: product.name, price: product.price })
     } catch (err) {
       console.error(err)
     } finally {
@@ -78,7 +77,6 @@ export default function ProductCard({ product, index = 0, onQuickView }) {
 
   const handleWishlist = async (e) => {
     e.preventDefault(); e.stopPropagation()
-    if (!user) return
     await toggleWishlist(product.id)
   }
 
@@ -108,14 +106,12 @@ export default function ProductCard({ product, index = 0, onQuickView }) {
             </div>
           )}
 
-          {user && (
-            <button onClick={handleWishlist}
-              className="absolute top-3 right-3 w-8 h-8 rounded-full flex items-center justify-center z-10 transition-all hover:scale-110"
-              style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
-              <Heart size={13} fill={wishlisted ? 'var(--accent)' : 'none'}
-                stroke={wishlisted ? 'var(--accent)' : 'var(--text-muted)'} />
-            </button>
-          )}
+          <button onClick={handleWishlist}
+            className="absolute top-3 right-3 w-8 h-8 rounded-full flex items-center justify-center z-10 transition-all hover:scale-110"
+            style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}>
+            <Heart size={13} fill={wishlisted ? 'var(--accent)' : 'none'}
+              stroke={wishlisted ? 'var(--accent)' : 'var(--text-muted)'} />
+          </button>
 
           <img
             key={currentImgIndex}
@@ -202,7 +198,7 @@ export default function ProductCard({ product, index = 0, onQuickView }) {
           </div>
 
           <div className="flex gap-2 mt-0.5">
-            {user && inStock && (
+            {inStock && (
               <button onClick={handleAddToCart} disabled={adding}
                 className="btn-primary flex-1 justify-center text-xs py-2.5">
                 {adding ? (
