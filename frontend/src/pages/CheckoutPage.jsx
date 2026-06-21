@@ -3,7 +3,7 @@ import { useNavigate, Link } from 'react-router-dom'
 import { motion } from 'framer-motion'
 import { useCart } from '../context/CartContext'
 import { useAuth } from '../context/AuthContext'
-import { ordersApi, authApi } from '../api/index'
+import { ordersApi, authApi, usersApi } from '../api/index'
 
 function generatePassword() {
   const chars = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*'
@@ -16,7 +16,7 @@ function generatePassword() {
 
 export default function CheckoutPage() {
   const navigate = useNavigate()
-  const { user, setUser, login } = useAuth()
+  const { user, setUser, login, refreshUser } = useAuth()
   const { cart, fetchCart, addToCart } = useCart()
   const [loading, setLoading] = useState(false)
   const [formData, setFormData] = useState({
@@ -96,6 +96,18 @@ export default function CheckoutPage() {
       const response = await ordersApi.create(orderPayload)
 
       if (response.data?.order_number) {
+        // Update user profile with shipping details
+        try {
+          await usersApi.updateProfile({
+            first_name: formData.shipping_name,
+            mobile_number: formData.shipping_mobile,
+            address: formData.shipping_address,
+          })
+          await refreshUser()
+        } catch (profileErr) {
+          console.error('Profile update failed:', profileErr)
+        }
+
         sessionStorage.setItem('last_order', JSON.stringify(response.data))
         navigate(`/order-confirmation/${response.data.order_number}`)
       }
