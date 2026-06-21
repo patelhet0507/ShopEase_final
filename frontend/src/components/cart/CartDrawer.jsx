@@ -73,10 +73,9 @@ export default function CartDrawer({ open, onClose }) {
               ) : (
                 <AnimatePresence initial={false}>
                   {cart.items.map((item, idx) => {
-                    // Safe parsing of subnested database object structure
                     const productData = item.product || {}
-                    const productName = productData.name || "Unknown Product"
-                    const productPrice = productData.price || 0
+                    const productName = productData.name || item.product_name || "Unknown Product"
+                    const productPrice = productData.price || item.product_price || 0
                     const initialLetter = productName ? productName[0] : "?"
 
                     return (
@@ -91,9 +90,9 @@ export default function CartDrawer({ open, onClose }) {
                       >
                         {/* Product Thumbnail */}
                         <div className="w-14 h-14 rounded-xl overflow-hidden flex-shrink-0 bg-gold-gradient/20 flex items-center justify-center text-xs font-bold text-accent">
-                          {productData.images && productData.images.length > 0 ? (
+                          {item.product_image || (productData.images && productData.images.length > 0) ? (
                             <img 
-                              src={productData.images[0]} 
+                              src={item.product_image || productData.images[0]} 
                               alt={productName} 
                               className="w-full h-full object-cover" 
                             />
