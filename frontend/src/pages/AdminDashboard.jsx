@@ -259,6 +259,8 @@ export default function AdminDashboard() {
   const [productSearch, setProductSearch] = useState('')
   const [userSearch, setUserSearch] = useState('')
   const [userRoleFilter, setUserRoleFilter] = useState('all')
+  const [categorySearch, setCategorySearch] = useState('')
+  const [subcategorySearch, setSubcategorySearch] = useState('')
 
   useEffect(() => {
     async function fetchAll() {
@@ -573,16 +575,33 @@ export default function AdminDashboard() {
                   <Plus size={14} /> Add Category
                 </button>
               </div>
-              <AdminTable
-                columns={[
-                  { key: 'id', label: 'ID', render: v => <span className="badge-purple">#{v}</span> },
-                  { key: 'name', label: 'Name' },
-                  { key: 'subcategories', label: 'Subcategories', render: v => <span>{v?.length || 0}</span> },
-                ]}
-                rows={categories}
-                onEdit={(row) => openCategoryModal(row)}
-                onDelete={(row) => handleDelete(row, 'category')}
-              />
+              <div className="relative mb-4">
+                <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--text-muted)' }} />
+                <input
+                  type="text"
+                  placeholder="Search categories by name..."
+                  value={categorySearch}
+                  onChange={e => setCategorySearch(e.target.value)}
+                  className="input-field w-full pl-10 text-sm"
+                />
+              </div>
+              {(() => {
+                const filtered = categorySearch
+                  ? categories.filter(c => c.name?.toLowerCase().includes(categorySearch.toLowerCase()))
+                  : categories
+                return (
+                  <AdminTable
+                    columns={[
+                      { key: 'id', label: 'ID', render: v => <span className="badge-purple">#{v}</span> },
+                      { key: 'name', label: 'Name' },
+                      { key: 'subcategories', label: 'Subcategories', render: v => <span>{v?.length || 0}</span> },
+                    ]}
+                    rows={filtered}
+                    onEdit={(row) => openCategoryModal(row)}
+                    onDelete={(row) => handleDelete(row, 'category')}
+                  />
+                )
+              })()}
             </FadeIn>
           )}
 
@@ -595,16 +614,33 @@ export default function AdminDashboard() {
                   <Plus size={14} /> Add Subcategory
                 </button>
               </div>
-              <AdminTable
-                columns={[
-                  { key: 'id', label: 'ID', render: v => <span className="badge-purple">#{v}</span> },
-                  { key: 'name', label: 'Name' },
-                  { key: 'category_id', label: 'Category', render: v => categories.find(c => c.id === v)?.name || '—' },
-                ]}
-                rows={subcategories}
-                onEdit={(row) => openSubModal(row)}
-                onDelete={(row) => handleDelete(row, 'subcategory')}
-              />
+              <div className="relative mb-4">
+                <Search size={16} className="absolute left-3 top-1/2 -translate-y-1/2" style={{ color: 'var(--text-muted)' }} />
+                <input
+                  type="text"
+                  placeholder="Search subcategories by name..."
+                  value={subcategorySearch}
+                  onChange={e => setSubcategorySearch(e.target.value)}
+                  className="input-field w-full pl-10 text-sm"
+                />
+              </div>
+              {(() => {
+                const filtered = subcategorySearch
+                  ? subcategories.filter(s => s.name?.toLowerCase().includes(subcategorySearch.toLowerCase()))
+                  : subcategories
+                return (
+                  <AdminTable
+                    columns={[
+                      { key: 'id', label: 'ID', render: v => <span className="badge-purple">#{v}</span> },
+                      { key: 'name', label: 'Name' },
+                      { key: 'category_id', label: 'Category', render: v => categories.find(c => c.id === v)?.name || '—' },
+                    ]}
+                    rows={filtered}
+                    onEdit={(row) => openSubModal(row)}
+                    onDelete={(row) => handleDelete(row, 'subcategory')}
+                  />
+                )
+              })()}
             </FadeIn>
           )}
 
