@@ -105,6 +105,7 @@ export function CartProvider({ children }) {
             quantity: Number(quantity),
             product_name: productInfo.name || productInfo.product_name || `Product #${productId}`,
             product_price: productInfo.price || productInfo.product_price || 0,
+            product_image: productInfo.image || '',
           }]
         }
         const updated = {

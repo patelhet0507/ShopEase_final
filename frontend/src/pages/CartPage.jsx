@@ -30,7 +30,8 @@ export default function CartPage() {
       id: item?.id || nestedProduct?.id,
       name: item?.product_name || nestedProduct?.name || 'Unknown Product',
       price: Number(item?.product_price || nestedProduct?.price || 0),
-      quantity: Number(item?.quantity || 1)
+      quantity: Number(item?.quantity || 1),
+      image: item?.product_image || nestedProduct?.images?.[0] || ''
     }
   }
 
@@ -164,10 +165,14 @@ export default function CartPage() {
                     style={{ background: 'var(--surface)', border: '1px solid var(--border)' }}
                   >
                     <div
-                      className="w-20 h-20 rounded-xl flex-shrink-0 overflow-hidden flex items-center justify-center font-bold text-xl text-white"
-                      style={{ background: 'linear-gradient(135deg, rgba(var(--accent-rgb),0.3), rgba(var(--accent-dark-rgb),0.15))' }}
+                      className="w-20 h-20 rounded-xl flex-shrink-0 overflow-hidden flex items-center justify-center font-bold text-xl"
+                      style={{ background: item.image ? 'none' : 'linear-gradient(135deg, rgba(var(--accent-rgb),0.3), rgba(var(--accent-dark-rgb),0.15))' }}
                     >
-                      {(item.name || '?')[0]}
+                      {item.image ? (
+                        <img src={item.image} alt={item.name} className="w-full h-full object-cover" />
+                      ) : (
+                        <span className="text-white">{(item.name || '?')[0]}</span>
+                      )}
                     </div>
 
                     <div className="flex-1 min-w-0">

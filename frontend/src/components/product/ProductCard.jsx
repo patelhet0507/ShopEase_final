@@ -67,7 +67,7 @@ export default function ProductCard({ product, index = 0, onQuickView }) {
     e.preventDefault(); e.stopPropagation()
     setAdding(true)
     try {
-      await addToCart(Number(product.id), 1, { name: product.name, price: product.price })
+      await addToCart(Number(product.id), 1, { name: product.name, price: product.price, image: activeImageUrl })
     } catch (err) {
       console.error(err)
     } finally {

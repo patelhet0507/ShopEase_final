@@ -15,6 +15,8 @@
     const regularPrice = item.price_at_save || null
     const hasPriceDropped = regularPrice && regularPrice > currentPrice
     
+    const productImage = product.images?.[0] || ''
+    
     const priceDropPercentage = hasPriceDropped 
       ? Math.round(((regularPrice - currentPrice) / regularPrice) * 100) 
       : 0
@@ -56,9 +58,13 @@
         )}
 
         {/* Image area */}
-        <div className="relative h-44 flex items-center justify-center font-bold text-4xl text-white select-none"
-          style={{ background: 'linear-gradient(135deg, rgba(var(--accent-rgb),0.2), rgba(var(--accent-light-rgb),0.12))' }}>
-          {product.name?.[0] || '?'}
+        <div className="relative h-44 flex items-center justify-center overflow-hidden select-none"
+          style={{ background: productImage ? 'var(--surface)' : 'linear-gradient(135deg, rgba(var(--accent-rgb),0.2), rgba(var(--accent-light-rgb),0.12))' }}>
+          {productImage ? (
+            <img src={productImage} alt={product.name} className="w-full h-full object-cover" />
+          ) : (
+            <span className="font-bold text-4xl text-white">{product.name?.[0] || '?'}</span>
+          )}
 
           {/* Hover overlay */}
           <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2"
