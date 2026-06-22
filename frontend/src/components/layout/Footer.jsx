@@ -17,7 +17,6 @@ const LINK_GROUPS = [
       { to: '/orders', label: 'My Orders' },
       { to: '/profile', label: 'My Account' },
       { to: '/wishlist', label: 'Wishlist' },
-      { to: '/contact', label: 'Contact' },
     ]
   },
 ]
