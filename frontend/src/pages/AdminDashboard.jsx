@@ -8,6 +8,7 @@ import {
 import { categoriesApi, subcategoriesApi, productsApi, usersApi, ordersApi } from '../api'
 import { FadeIn, StaggerChildren, StaggerItem, Skeleton, Modal } from '../components/ui'
 import { generateSlug } from '../components/product/ProductCard'
+import { useDebounce } from '../hooks/useDebounce'
 
 function getWeekStart() {
   const now = new Date()
@@ -261,6 +262,12 @@ export default function AdminDashboard() {
   const [userRoleFilter, setUserRoleFilter] = useState('all')
   const [categorySearch, setCategorySearch] = useState('')
   const [subcategorySearch, setSubcategorySearch] = useState('')
+
+  const debouncedCategory = useDebounce(categorySearch, 200)
+  const debouncedSubcategory = useDebounce(subcategorySearch, 200)
+  const debouncedProduct = useDebounce(productSearch, 200)
+  const debouncedUser = useDebounce(userSearch, 200)
+  const debouncedOrder = useDebounce(orderSearch, 200)
 
   useEffect(() => {
     async function fetchAll() {
@@ -586,8 +593,8 @@ export default function AdminDashboard() {
                 />
               </div>
               {(() => {
-                const filtered = categorySearch
-                  ? categories.filter(c => c.name?.toLowerCase().includes(categorySearch.toLowerCase()))
+                const filtered = debouncedCategory
+                  ? categories.filter(c => c.name?.toLowerCase().includes(debouncedCategory.toLowerCase()))
                   : categories
                 return (
                   <AdminTable
@@ -625,8 +632,8 @@ export default function AdminDashboard() {
                 />
               </div>
               {(() => {
-                const filtered = subcategorySearch
-                  ? subcategories.filter(s => s.name?.toLowerCase().includes(subcategorySearch.toLowerCase()))
+                const filtered = debouncedSubcategory
+                  ? subcategories.filter(s => s.name?.toLowerCase().includes(debouncedSubcategory.toLowerCase()))
                   : subcategories
                 return (
                   <AdminTable
@@ -664,8 +671,8 @@ export default function AdminDashboard() {
                 />
               </div>
               {(() => {
-                const filtered = productSearch
-                  ? products.filter(p => p.name?.toLowerCase().includes(productSearch.toLowerCase()))
+                const filtered = debouncedProduct
+                  ? products.filter(p => p.name?.toLowerCase().includes(debouncedProduct.toLowerCase()))
                   : products
                 return (
                   <AdminTable
@@ -715,8 +722,8 @@ export default function AdminDashboard() {
                 if (userRoleFilter !== 'all') {
                   filtered = filtered.filter(u => u.role === userRoleFilter)
                 }
-                if (userSearch) {
-                  const q = userSearch.toLowerCase()
+                if (debouncedUser) {
+                  const q = debouncedUser.toLowerCase()
                   filtered = filtered.filter(u =>
                     (u.email && u.email.toLowerCase().includes(q)) ||
                     (u.first_name && u.first_name.toLowerCase().includes(q)) ||
@@ -807,9 +814,9 @@ export default function AdminDashboard() {
                   </thead>
                   <tbody>
                     {orders.filter(order => {
-                      const matchesSearch = !orderSearch
-                        || order.order_number?.toLowerCase().includes(orderSearch.toLowerCase())
-                        || order.shipping_name?.toLowerCase().includes(orderSearch.toLowerCase())
+                      const matchesSearch = !debouncedOrder
+                        || order.order_number?.toLowerCase().includes(debouncedOrder.toLowerCase())
+                        || order.shipping_name?.toLowerCase().includes(debouncedOrder.toLowerCase())
                       const matchesStatus = statusFilter === 'all' || order.status === statusFilter
                       return matchesSearch && matchesStatus
                     }).map((order, i) => {
@@ -889,7 +896,7 @@ export default function AdminDashboard() {
                       </tr>
                     )}
                     {orders.length > 0 && orders.filter(order => {
-                      const ms = !orderSearch || order.order_number?.toLowerCase().includes(orderSearch.toLowerCase()) || order.shipping_name?.toLowerCase().includes(orderSearch.toLowerCase())
+                      const ms = !debouncedOrder || order.order_number?.toLowerCase().includes(debouncedOrder.toLowerCase()) || order.shipping_name?.toLowerCase().includes(debouncedOrder.toLowerCase())
                       const mf = statusFilter === 'all' || order.status === statusFilter
                       return ms && mf
                     }).length === 0 && (

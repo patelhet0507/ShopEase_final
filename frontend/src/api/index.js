@@ -1,4 +1,5 @@
 import axios from 'axios'
+import { getCachedResponse, setCachedResponse, getInFlightPromise, setInFlightPromise } from '../utils/apiCache'
 
 const DEFAULT_API_URL = 'https://shopease-backend-0uzd.onrender.com'
 const BASE_URL = import.meta.env.VITE_API_URL || DEFAULT_API_URL
@@ -28,7 +29,12 @@ api.interceptors.request.use((config) => {
 }, (error) => Promise.reject(error))
 
 api.interceptors.response.use(
-  (response) => response,
+  (response) => {
+    if (response.config.method === 'get' || response.config.method === 'GET') {
+      setCachedResponse(response.config, response.data)
+    }
+    return response
+  },
   (error) => {
     if (error.response && error.response.status === 401) {
       localStorage.removeItem('token')
@@ -38,6 +44,21 @@ api.interceptors.response.use(
     return Promise.reject(error)
   }
 )
+
+// Cache-aware GET wrapper with dedup
+const originalGet = api.get
+api.get = function (url, config) {
+  const fullConfig = { url, method: 'get', params: config?.params }
+  const cached = getCachedResponse(fullConfig)
+  if (cached) return Promise.resolve({ data: cached })
+
+  const inFlight = getInFlightPromise(fullConfig)
+  if (inFlight) return inFlight.then(data => ({ data }))
+
+  const promise = originalGet.call(this, url, config).then(r => r.data)
+  setInFlightPromise(fullConfig, promise)
+  return promise.then(data => ({ data }))
+}
 
 export const authApi = {
   register: (email, password) => api.post('/api/auth/register', { email, password }),
@@ -72,7 +93,7 @@ export const subcategoriesApi = {
   getByToken: (token) => api.get(`/api/subcategories/by-token/${token}`),
   get: (id) => api.get(`/api/subcategories/${id}/`),
   create: (data) => api.post('/api/subcategories/', data),
-  update: (id, data) => api.put(`/api/subcategories/${id}/`),
+  update: (id, data) => api.put(`/api/subcategories/${id}/`, data),
   delete: (id) => api.delete(`/api/subcategories/${id}/`),
 }
 
@@ -124,5 +145,7 @@ export const ordersApi = {
   getEvents: (orderId) => api.get(`/api/orders/${orderId}/events`),
   adminList: () => api.get('/api/admin/orders/'),
 }
+
+export { invalidateCache, clearCache } from '../utils/apiCache'
 
 export default api

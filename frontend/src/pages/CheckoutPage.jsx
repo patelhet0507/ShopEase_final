@@ -20,6 +20,7 @@ export default function CheckoutPage() {
   const { cart, fetchCart, addToCart } = useCart()
   const [loading, setLoading] = useState(false)
   const [needsPassword, setNeedsPassword] = useState(false)
+  const [errors, setErrors] = useState({})
   const [formData, setFormData] = useState({
     shipping_name: user?.first_name || '',
     shipping_mobile: user?.mobile_number || '',
@@ -47,10 +48,23 @@ export default function CheckoutPage() {
   const handleInputChange = (e) => {
     const { name, value } = e.target
     setFormData(prev => ({ ...prev, [name]: value }))
+    if (errors[name]) setErrors(prev => ({ ...prev, [name]: '' }))
+  }
+
+  const validate = () => {
+    const errs = {}
+    if (!formData.email || !/\S+@\S+\.\S+/.test(formData.email)) errs.email = 'Valid email is required'
+    if (!formData.shipping_name || formData.shipping_name.trim().length < 2) errs.shipping_name = 'Name must be at least 2 characters'
+    if (!formData.shipping_mobile || formData.shipping_mobile.trim().length < 7) errs.shipping_mobile = 'Valid mobile number is required'
+    if (!formData.shipping_address || formData.shipping_address.trim().length < 5) errs.shipping_address = 'Address must be at least 5 characters'
+    if (needsPassword && (!formData.password || formData.password.length < 1)) errs.password = 'Password is required'
+    setErrors(errs)
+    return Object.keys(errs).length === 0
   }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    if (!validate()) return
     setLoading(true)
 
     try {
@@ -198,17 +212,18 @@ export default function CheckoutPage() {
                   className="w-full px-4 py-3 rounded-lg transition font-medium"
                   style={{
                     background: 'var(--surface-raised)',
-                    border: '2px solid var(--border)',
+                    border: '2px solid ' + (errors.email ? '#ef4444' : 'var(--border)'),
                     color: 'var(--text-primary)',
                   }}
                   placeholder="your@email.com"
                 />
-                {!user && !needsPassword && (
+                {errors.email && <p className="text-xs mt-1" style={{ color: '#ef4444' }}>{errors.email}</p>}
+                {!user && !needsPassword && !errors.email && (
                   <p className="text-xs mt-1.5" style={{ color: 'var(--text-muted)' }}>
                     This will be used to create your account
                   </p>
                 )}
-                {!user && needsPassword && (
+                {!user && needsPassword && !errors.email && (
                   <p className="text-xs mt-1.5" style={{ color: 'var(--accent)' }}>
                     An account with this email already exists. Enter your password below.
                   </p>
@@ -227,11 +242,12 @@ export default function CheckoutPage() {
                     className="w-full px-4 py-3 rounded-lg transition font-medium"
                     style={{
                       background: 'var(--surface-raised)',
-                      border: '2px solid var(--border)',
+                      border: '2px solid ' + (errors.password ? '#ef4444' : 'var(--border)'),
                       color: 'var(--text-primary)',
                     }}
                     placeholder="Enter your password"
                   />
+                  {errors.password && <p className="text-xs mt-1" style={{ color: '#ef4444' }}>{errors.password}</p>}
                 </div>
               )}
 
@@ -246,11 +262,12 @@ export default function CheckoutPage() {
                   className="w-full px-4 py-3 rounded-lg transition font-medium"
                   style={{
                     background: 'var(--surface-raised)',
-                    border: '2px solid var(--border)',
+                    border: '2px solid ' + (errors.shipping_name ? '#ef4444' : 'var(--border)'),
                     color: 'var(--text-primary)',
                   }}
                   placeholder="John Doe"
                 />
+                {errors.shipping_name && <p className="text-xs mt-1" style={{ color: '#ef4444' }}>{errors.shipping_name}</p>}
               </div>
 
               <div>
@@ -264,11 +281,12 @@ export default function CheckoutPage() {
                   className="w-full px-4 py-3 rounded-lg transition font-medium"
                   style={{
                     background: 'var(--surface-raised)',
-                    border: '2px solid var(--border)',
+                    border: '2px solid ' + (errors.shipping_mobile ? '#ef4444' : 'var(--border)'),
                     color: 'var(--text-primary)',
                   }}
                   placeholder="+91-9999999999"
                 />
+                {errors.shipping_mobile && <p className="text-xs mt-1" style={{ color: '#ef4444' }}>{errors.shipping_mobile}</p>}
               </div>
 
               <div>
@@ -282,11 +300,12 @@ export default function CheckoutPage() {
                   className="w-full px-4 py-3 rounded-lg transition font-medium"
                   style={{
                     background: 'var(--surface-raised)',
-                    border: '2px solid var(--border)',
+                    border: '2px solid ' + (errors.shipping_address ? '#ef4444' : 'var(--border)'),
                     color: 'var(--text-primary)',
                   }}
                   placeholder="123 Main St, City, State 12345"
                 />
+                {errors.shipping_address && <p className="text-xs mt-1" style={{ color: '#ef4444' }}>{errors.shipping_address}</p>}
               </div>
 
               <div className="rounded-lg p-4" style={{ background: 'rgba(var(--accent-rgb),0.08)', border: '2px solid rgba(var(--accent-rgb),0.2)' }}>

@@ -39,6 +39,7 @@ export default function ProfilePage() {
   })
   const [loading, setLoading] = useState(false)
   const [success, setSuccess] = useState(false)
+  const [errors, setErrors] = useState({})
 
   useEffect(() => {
     if (!user) return
@@ -57,10 +58,21 @@ export default function ProfilePage() {
   const handleChange = (e) => {
     const { name, value } = e.target
     setFormData(prev => ({ ...prev, [name]: value }))
+    if (errors[name]) setErrors(prev => ({ ...prev, [name]: '' }))
+  }
+
+  const validate = () => {
+    const errs = {}
+    if (!formData.first_name || formData.first_name.trim().length < 1) errs.first_name = 'First name is required'
+    if (formData.mobile_number && formData.mobile_number.trim().length < 7) errs.mobile_number = 'Enter a valid mobile number'
+    if (formData.address && formData.address.trim().length < 5) errs.address = 'Address must be at least 5 characters'
+    setErrors(errs)
+    return Object.keys(errs).length === 0
   }
 
   const handleSubmit = async (e) => {
     e.preventDefault()
+    if (!validate()) return
     setLoading(true)
     setSuccess(false)
     try {
@@ -197,7 +209,9 @@ export default function ProfilePage() {
                   <div>
                     <label className="block text-sm font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>First Name</label>
                     <input type="text" name="first_name" value={formData.first_name} onChange={handleChange}
-                      className="input-field" placeholder="John" />
+                      className="input-field" placeholder="John"
+                      style={{ borderColor: errors.first_name ? '#ef4444' : undefined }} />
+                    {errors.first_name && <p className="text-xs mt-1" style={{ color: '#ef4444' }}>{errors.first_name}</p>}
                   </div>
                   <div>
                     <label className="block text-sm font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>Last Name</label>
@@ -205,16 +219,20 @@ export default function ProfilePage() {
                       className="input-field" placeholder="Doe" />
                   </div>
                 </div>
-                <div>
-                  <label className="block text-sm font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>Mobile Number</label>
-                  <input type="tel" name="mobile_number" value={formData.mobile_number} onChange={handleChange}
-                    className="input-field" placeholder="+91-9999999999" />
-                </div>
-                <div>
-                  <label className="block text-sm font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>Address</label>
-                  <textarea name="address" value={formData.address} onChange={handleChange} rows="4"
-                    className="input-field resize-none" placeholder="123 Main St, City, State 12345" />
-                </div>
+                  <div>
+                    <label className="block text-sm font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>Mobile Number</label>
+                    <input type="tel" name="mobile_number" value={formData.mobile_number} onChange={handleChange}
+                      className="input-field" placeholder="+91-9999999999"
+                      style={{ borderColor: errors.mobile_number ? '#ef4444' : undefined }} />
+                    {errors.mobile_number && <p className="text-xs mt-1" style={{ color: '#ef4444' }}>{errors.mobile_number}</p>}
+                  </div>
+                  <div>
+                    <label className="block text-sm font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>Address</label>
+                    <textarea name="address" value={formData.address} onChange={handleChange} rows="4"
+                      className="input-field resize-none" placeholder="123 Main St, City, State 12345"
+                      style={{ borderColor: errors.address ? '#ef4444' : undefined }} />
+                    {errors.address && <p className="text-xs mt-1" style={{ color: '#ef4444' }}>{errors.address}</p>}
+                  </div>
                 <button type="submit" disabled={loading}
                   className="btn-primary w-full justify-center py-4 text-lg font-bold">
                   {loading ? 'Saving...' : 'Save Changes'}

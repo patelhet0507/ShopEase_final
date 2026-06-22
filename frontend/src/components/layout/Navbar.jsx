@@ -5,6 +5,7 @@ import { useAuth } from '../../context/AuthContext'
 import { useCart } from '../../context/CartContext'
 import { useTheme } from '../../context/ThemeContext'
 import { motion, AnimatePresence } from 'framer-motion'
+import { throttle } from '../../utils/throttle'
 
 const NAV_LINKS = [
   { to: '/', label: 'Home' },
@@ -26,7 +27,7 @@ export default function Navbar() {
   const [bounceBadge, setBounceBadge] = useState(false)
 
   useEffect(() => {
-    const handler = () => setScrolled(window.scrollY > 20)
+    const handler = throttle(() => setScrolled(window.scrollY > 20), 100)
     window.addEventListener('scroll', handler)
     return () => window.removeEventListener('scroll', handler)
   }, [])

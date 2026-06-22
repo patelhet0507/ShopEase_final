@@ -7,6 +7,7 @@ import {
 import { categoriesApi, productsApi } from '../api'
 import ProductCard from '../components/product/ProductCard'
 import { Skeleton, EmptyState } from '../components/ui'
+import { useDebounce } from '../hooks/useDebounce'
 
 const SORT_OPTIONS = [
   { value: 'default', label: 'Default' },
@@ -58,6 +59,7 @@ export default function ProductsPage() {
   const [sidebarOpen, setSidebarOpen] = useState(false)
   const [maxPrice, setMaxPrice] = useState(100000)
   const [gridVariant, setGridVariant] = useState('density-modern')
+  const debouncedSearch = useDebounce(search, 300)
 
   const fetchProducts = useCallback(() => {
     setLoading(true)
@@ -85,9 +87,9 @@ export default function ProductsPage() {
     const counts = { all: 0 }
     categories.forEach(c => { counts[c.id] = 0 })
     products.forEach(p => {
-      const matchesSearch = !search ||
-        (p.name || '').toLowerCase().includes(search.toLowerCase()) ||
-        (p.description || '').toLowerCase().includes(search.toLowerCase())
+      const matchesSearch = !debouncedSearch ||
+        (p.name || '').toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+        (p.description || '').toLowerCase().includes(debouncedSearch.toLowerCase())
       const matchesPrice = Number(p.price || 0) >= priceRange[0] && Number(p.price || 0) <= priceRange[1]
       if (matchesSearch && matchesPrice) {
         counts.all++
@@ -95,14 +97,14 @@ export default function ProductsPage() {
       }
     })
     return counts
-  }, [products, categories, search, priceRange])
+  }, [products, categories, debouncedSearch, priceRange])
 
   const filtered = useMemo(() => {
     let result = [...products]
-    if (search) {
+    if (debouncedSearch) {
       result = result.filter(p =>
-        (p.name || '').toLowerCase().includes(search.toLowerCase()) ||
-        (p.description || '').toLowerCase().includes(search.toLowerCase())
+        (p.name || '').toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+        (p.description || '').toLowerCase().includes(debouncedSearch.toLowerCase())
       )
     }
     if (selectedCategory) result = result.filter(p => Number(p.category_id) === Number(selectedCategory))
@@ -112,7 +114,7 @@ export default function ProductsPage() {
     else if (sort === 'name_asc') result.sort((a, b) => (a.name || '').localeCompare(b.name || ''))
     else if (sort === 'name_desc') result.sort((a, b) => (b.name || '').localeCompare(a.name || ''))
     return result
-  }, [products, search, selectedCategory, priceRange, sort])
+  }, [products, debouncedSearch, selectedCategory, priceRange, sort])
 
   const activeFilters = [
     selectedCategory && categories.find(c => Number(c.id) === Number(selectedCategory))?.name,

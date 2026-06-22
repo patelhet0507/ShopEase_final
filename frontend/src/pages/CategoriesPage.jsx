@@ -4,6 +4,7 @@ import { motion } from 'framer-motion'
 import { Package, ChevronRight, Search, Layers } from 'lucide-react'
 import { categoriesApi } from '../api'
 import { FadeIn, Skeleton, EmptyState } from '../components/ui'
+import { useDebounce } from '../hooks/useDebounce'
 
 const CATEGORY_COLORS = [
   ['var(--accent)', 'var(--accent-dark)'],
@@ -20,6 +21,7 @@ export default function CategoriesPage() {
   const [categories, setCategories] = useState([])
   const [loading, setLoading] = useState(true)
   const [search, setSearch] = useState('')
+  const debouncedSearch = useDebounce(search, 200)
 
   useEffect(() => {
     categoriesApi.listWithStructure().then(({ data }) => {
@@ -29,8 +31,8 @@ export default function CategoriesPage() {
   }, [])
 
   const filtered = categories.filter(c =>
-    c.name.toLowerCase().includes(search.toLowerCase()) ||
-    c.subcategories?.some(s => s.name.toLowerCase().includes(search.toLowerCase()))
+    c.name.toLowerCase().includes(debouncedSearch.toLowerCase()) ||
+    c.subcategories?.some(s => s.name.toLowerCase().includes(debouncedSearch.toLowerCase()))
   )
 
   return (

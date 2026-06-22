@@ -7,14 +7,14 @@ from typing import List, Optional
 
 class UserCreate(BaseModel):
     email: EmailStr
-    password: str
+    password: str = Field(..., min_length=6, max_length=128)
 
 
 class UserUpdate(BaseModel):
-    first_name: Optional[str] = None
-    last_name: Optional[str] = None
-    address: Optional[str] = None
-    mobile_number: Optional[str] = None
+    first_name: Optional[str] = Field(None, min_length=1, max_length=100)
+    last_name: Optional[str] = Field(None, min_length=1, max_length=100)
+    address: Optional[str] = Field(None, max_length=500)
+    mobile_number: Optional[str] = Field(None, min_length=5, max_length=20)
 
 
 class UserOut(BaseModel):
@@ -36,7 +36,7 @@ class UserOut(BaseModel):
 
 class LoginRequest(BaseModel):
     email: EmailStr
-    password: str
+    password: str = Field(..., min_length=1, max_length=128)
 
 
 class TokenOut(BaseModel):
@@ -76,17 +76,17 @@ class CategoryBasic(BaseModel):
 
 
 class CategoryCreate(BaseModel):
-    name: str
-    slug: str
-    description: Optional[str] = None
-    color: Optional[str] = None
+    name: str = Field(..., min_length=1, max_length=100)
+    slug: str = Field(..., min_length=1, max_length=100)
+    description: Optional[str] = Field(None, max_length=500)
+    color: Optional[str] = Field(None, max_length=50)
 
 
 class CategoryUpdate(BaseModel):
-    name: str
-    slug: str
-    description: Optional[str] = None
-    color: Optional[str] = None
+    name: str = Field(..., min_length=1, max_length=100)
+    slug: str = Field(..., min_length=1, max_length=100)
+    description: Optional[str] = Field(None, max_length=500)
+    color: Optional[str] = Field(None, max_length=50)
 
 
 class SubCategoryBasic(BaseModel):
@@ -101,17 +101,17 @@ class SubCategoryBasic(BaseModel):
 
 
 class SubCategoryCreate(BaseModel):
-    name: str
-    slug: str
-    category_id: int
-    description: Optional[str] = None
+    name: str = Field(..., min_length=1, max_length=100)
+    slug: str = Field(..., min_length=1, max_length=100)
+    category_id: int = Field(..., ge=1)
+    description: Optional[str] = Field(None, max_length=500)
 
 
 class SubCategoryUpdate(BaseModel):
-    name: str
-    slug: str
-    category_id: int
-    description: Optional[str] = None
+    name: str = Field(..., min_length=1, max_length=100)
+    slug: str = Field(..., min_length=1, max_length=100)
+    category_id: int = Field(..., ge=1)
+    description: Optional[str] = Field(None, max_length=500)
 
 
 class CategoryWithSubcategories(BaseModel):
@@ -170,25 +170,25 @@ class ProductBasic(BaseModel):
 
 
 class ProductCreate(BaseModel):
-    name: str
-    slug: str
-    price: int
-    description: str
+    name: str = Field(..., min_length=1, max_length=200)
+    slug: str = Field(..., min_length=1, max_length=200)
+    price: int = Field(..., ge=0)
+    description: str = Field(..., max_length=2000)
     images: Optional[List[str]] = []
-    stock: int = 0
-    category_id: int
-    subcategory_id: int
+    stock: int = Field(0, ge=0)
+    category_id: int = Field(..., ge=1)
+    subcategory_id: int = Field(..., ge=0)
 
 
 class ProductUpdate(BaseModel):
-    name: Optional[str] = None
-    slug: Optional[str] = None
-    price: Optional[int] = None
-    description: Optional[str] = None
+    name: Optional[str] = Field(None, min_length=1, max_length=200)
+    slug: Optional[str] = Field(None, min_length=1, max_length=200)
+    price: Optional[int] = Field(None, ge=0)
+    description: Optional[str] = Field(None, max_length=2000)
     images: Optional[List[str]] = None
-    stock: Optional[int] = None
-    category_id: Optional[int] = None
-    subcategory_id: Optional[int] = None
+    stock: Optional[int] = Field(None, ge=0)
+    category_id: Optional[int] = Field(None, ge=1)
+    subcategory_id: Optional[int] = Field(None, ge=0)
 
 
 class ProductOut(BaseModel):
@@ -225,12 +225,12 @@ class CategoryWithProducts(BaseModel):
 # ===== Cart Schemas =====
 
 class CartItemCreate(BaseModel):
-    product_id: int
-    quantity: int
+    product_id: int = Field(..., ge=1)
+    quantity: int = Field(..., ge=1, le=99)
 
 
 class CartItemUpdate(BaseModel):
-    quantity: int
+    quantity: int = Field(..., ge=1, le=99)
 
 
 class CartItemOut(BaseModel):
@@ -269,9 +269,9 @@ class ReviewCreate(BaseModel):
 
 
 class ReviewUpdate(BaseModel):
-    rating: int
-    title: str
-    comment: str
+    rating: int = Field(..., ge=1, le=5)
+    title: str = Field(..., min_length=1, max_length=200)
+    comment: str = Field(..., min_length=1, max_length=2000)
 
 
 class ReviewOut(BaseModel):
@@ -294,15 +294,15 @@ class ReviewOut(BaseModel):
 # ===== Order Schemas (NEW) =====
 
 class OrderItemCreate(BaseModel):
-    product_id: int
-    quantity: int
+    product_id: int = Field(..., ge=1)
+    quantity: int = Field(..., ge=1, le=99)
 
 
 class OrderCreate(BaseModel):
-    shipping_address: str
-    shipping_mobile: str
-    shipping_name: str
-    order_items: List[OrderItemCreate]
+    shipping_address: str = Field(..., min_length=5, max_length=500)
+    shipping_mobile: str = Field(..., min_length=5, max_length=20)
+    shipping_name: str = Field(..., min_length=1, max_length=100)
+    order_items: List[OrderItemCreate] = Field(..., min_length=1)
 
 
 class OrderItemOut(BaseModel):

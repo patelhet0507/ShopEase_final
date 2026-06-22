@@ -1,6 +1,9 @@
 import os
-from fastapi import Depends, HTTPException, Query, Header, status
+import time
+from collections import defaultdict
+from fastapi import Depends, HTTPException, Query, Header, status, Request
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.middleware.trustedhost import TrustedHostMiddleware
 from sqlalchemy.orm import Session, joinedload
 from sqlalchemy import func, text
 from typing import List
@@ -14,6 +17,25 @@ from datetime import datetime
 import uuid
 import secrets
 import email_service
+
+# ─── Rate Limiter ───
+_rate_limit_store: dict = defaultdict(list)
+RATE_LIMIT_WINDOW = 60  # seconds
+RATE_LIMIT_MAX = 30     # max requests per window
+
+def rate_limit(max_requests: int = RATE_LIMIT_MAX, window: int = RATE_LIMIT_WINDOW):
+    def limiter(request: Request):
+        client_ip = request.client.host if request.client else "unknown"
+        now = time.time()
+        timestamps = _rate_limit_store[client_ip]
+        # Remove expired timestamps
+        _rate_limit_store[client_ip] = [t for t in timestamps if now - t < window]
+        if len(_rate_limit_store[client_ip]) >= max_requests:
+            raise HTTPException(status_code=429, detail="Too many requests. Please try again later.")
+        _rate_limit_store[client_ip].append(now)
+    return limiter
+
+auth_rate_limit = rate_limit(max_requests=10, window=60)  # 10 auth requests per minute
 
 print("Initialising....")
 
@@ -192,7 +214,7 @@ async def get_current_user(authorization: str = Header(None), user_id: int = Que
 # ===== Auth Endpoints =====
 
 @app.post("/api/auth/register", response_model=schemas.TokenOut, status_code=201)
-def register(payload: schemas.UserCreate, db: Session = Depends(get_db)):
+def register(payload: schemas.UserCreate, db: Session = Depends(get_db), _: None = Depends(auth_rate_limit)):
     existing = db.query(models.User).filter(models.User.email == payload.email).first()
     if existing:
         raise HTTPException(status_code=400, detail="Email already registered")
@@ -219,7 +241,7 @@ def register(payload: schemas.UserCreate, db: Session = Depends(get_db)):
 
 
 @app.post("/api/auth/login", response_model=schemas.TokenOut)
-def login(payload: schemas.LoginRequest, db: Session = Depends(get_db)):
+def login(payload: schemas.LoginRequest, db: Session = Depends(get_db), _: None = Depends(auth_rate_limit)):
     user = db.query(models.User).filter(models.User.email == payload.email).first()
     if not user or not auth.verify_password(payload.password, user.hashed_password):
         raise HTTPException(status_code=401, detail="Invalid email or password")
@@ -254,7 +276,7 @@ def resend_verification(payload: schemas.EmailRequest, db: Session = Depends(get
 
 
 @app.post("/api/auth/forgot-password")
-def forgot_password(payload: schemas.ForgotPasswordRequest, db: Session = Depends(get_db)):
+def forgot_password(payload: schemas.ForgotPasswordRequest, db: Session = Depends(get_db), _: None = Depends(auth_rate_limit)):
     user = db.query(models.User).filter(models.User.email == payload.email).first()
     if not user:
         return {"message": "If that email exists, a reset link has been sent."}
@@ -265,7 +287,7 @@ def forgot_password(payload: schemas.ForgotPasswordRequest, db: Session = Depend
 
 
 @app.post("/api/auth/reset-password")
-def reset_password(payload: schemas.ResetPasswordRequest, db: Session = Depends(get_db)):
+def reset_password(payload: schemas.ResetPasswordRequest, db: Session = Depends(get_db), _: None = Depends(auth_rate_limit)):
     user = db.query(models.User).filter(models.User.reset_token == payload.token).first()
     if not user:
         raise HTTPException(status_code=400, detail="Invalid or expired reset token")
