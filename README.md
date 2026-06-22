@@ -106,12 +106,6 @@ backend/
 └── seed_prod.py      # Production seed
 ```
 
-## Environment Variables
-
-| Variable | Default | Description |
-|---|---|---|
-| `VITE_API_URL` | `https://shopease-backend-0uzd.onrender.com` | Backend API URL |
-
 ## Getting Started
 
 ```bash
