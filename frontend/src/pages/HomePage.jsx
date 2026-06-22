@@ -332,12 +332,13 @@ export default function HomePage() {
             transition={{ duration: 0.6 }}
             className="inline-flex items-center gap-2 px-4 py-2 rounded-full text-xs font-semibold mb-8"
             style={{ 
-              background: 'var(--neon-glow)',
-              border: '1px solid var(--border)',
-              color: 'var(--text-primary)'
+              background: 'var(--surface-raised)',
+              border: '1px solid var(--border-warm)',
+              color: 'var(--accent)',
+              boxShadow: '0 2px 8px rgba(0,0,0,0.08)'
             }}
           >
-            <Sparkles size={13} className="text-purple-500" />
+            <Sparkles size={13} style={{ color: 'var(--accent)' }} />
             New arrivals every week
           </motion.div>
 
