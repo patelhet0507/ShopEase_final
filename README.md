@@ -1,128 +1,307 @@
-# ShopEase — Premium E-Commerce Platform
+<div align="center">
+  <br/>
+  <img src="https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB" />
+  <img src="https://img.shields.io/badge/Vite-646CFF?style=for-the-badge&logo=vite&logoColor=white" />
+  <img src="https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white" />
+  <img src="https://img.shields.io/badge/FastAPI-005571?style=for-the-badge&logo=fastapi&logoColor=white" />
+  <img src="https://img.shields.io/badge/PostgreSQL-316192?style=for-the-badge&logo=postgresql&logoColor=white" />
+  <img src="https://img.shields.io/badge/Framer_Motion-0055FF?style=for-the-badge&logo=framer&logoColor=white" />
+  <img src="https://img.shields.io/badge/Vercel-000000?style=for-the-badge&logo=vercel&logoColor=white" />
+  <img src="https://img.shields.io/badge/Render-46E3B7?style=for-the-badge&logo=render&logoColor=white" />
+  <img src="https://img.shields.io/badge/JWT-000000?style=for-the-badge&logo=JSON%20web%20tokens&logoColor=white" />
+  <img src="https://img.shields.io/badge/WebGL-990000?style=for-the-badge&logo=webgl&logoColor=white" />
+  <br/><br/>
+</div>
 
-A full-featured e-commerce application with a warm earthy theme, built with React + Vite frontend and FastAPI + PostgreSQL backend.
+<div align="center">
+  <h1><code>✦ ShopEase ✦</code></h1>
+  <p><strong>Premium E-Commerce Platform</strong></p>
+  <p><em>Curated. Elegant. Secure.</em></p>
+  <br/>
 
-## Tech Stack
+  <!-- Stats badges -->
+  <img src="https://img.shields.io/badge/Status-Active-22c55e?style=flat-square" />
+  <img src="https://img.shields.io/badge/Frontend-React_18-61DAFB?style=flat-square&logo=react" />
+  <img src="https://img.shields.io/badge/Backend-FastAPI-009688?style=flat-square&logo=fastapi" />
+  <img src="https://img.shields.io/badge/DB-PostgreSQL-4169E1?style=flat-square&logo=postgresql" />
+  <img src="https://img.shields.io/badge/Auth-JWT-000000?style=flat-square&logo=jsonwebtokens" />
+  <img src="https://img.shields.io/badge/3D-WebGL-990000?style=flat-square&logo=webgl" />
+  <img src="https://img.shields.io/badge/License-MIT-yellow?style=flat-square" />
 
-**Frontend:** React 18, Vite, Tailwind CSS, Framer Motion, Motion (React Bits), OGL (WebGL), Lenis, Axios
-**Backend:** FastAPI, SQLAlchemy, PostgreSQL, JWT auth, Cloudinary-ready image storage
-**Deployment:** Frontend on Vercel, Backend on Render
+  <br/><br/>
 
-## Features
+  <!-- Feature status table -->
+  <table>
+    <tr>
+      <td align="right"><strong>Frontend</strong></td>
+      <td><code>████████████████████████ 100%</code></td>
+      <td>React 18 + Vite + Tailwind</td>
+    </tr>
+    <tr>
+      <td align="right"><strong>Backend</strong></td>
+      <td><code>████████████████████████ 100%</code></td>
+      <td>FastAPI + SQLAlchemy</td>
+    </tr>
+    <tr>
+      <td align="right"><strong>Security</strong></td>
+      <td><code>████████████████████████ 100%</code></td>
+      <td>JWT · bcrypt · Rate-Limiting · Validation</td>
+    </tr>
+    <tr>
+      <td align="right"><strong>UI/UX</strong></td>
+      <td><code>████████████████████████ 100%</code></td>
+      <td>Framer Motion · WebGL · React Bits</td>
+    </tr>
+  </table>
 
-### Shopping
-- Browse products with category/subcategory filtering
-- Product search with debounced input
-- Price range filter, sorting, grid view variants
-- Product detail page with image carousel, zoom toggle, social proof
-- Compare price with discount badge on product cards
+  <br/>
+  <p><code>────── ⋆⋅☆⋅⋆ ──────</code></p>
+</div>
 
-### Cart & Checkout
-- Guest cart (localStorage) — no login required to add items
-- Authenticated cart synced with backend
-- Cart drawer (slide-out panel) from any page
-- Full checkout flow with email, shipping details, order placement
-- Auto-registration for guest checkout (random password, never shown)
-- "Email already registered" flow — prompts for password, signs in
+## ✨ The Experience
 
-### User System
-- JWT-based authentication (register, login, email verification)
-- Password reset flow
-- Profile management with inline editing
-- Experience/levelling system based on reviews
-- Wishlist with price-drop detection
+<details open>
+  <summary><strong>🛍️ Shopping</strong></summary>
+  <br/>
+  
+  | Feature | What It Does |
+  |---|---|
+  | 🏷️ **Smart Product Cards** | Discount badges, compare-price strikethrough, stock indicators, sold-out overlay, auto-rotate images, spring hover |
+  | 🔍 **Debounced Search** | 300ms debounce on all search inputs — filter products, categories, admin tables without lag |
+  | 🎚️ **Rich Filtering** | Category & subcategory tree, price range slider, multiple sort modes, grid view variants |
+  | 📸 **Detail Page** | Image carousel, zoom toggle, breadcrumbs, stock progress bar, compare-price savings badge, social proof counters stabilized with `useMemo` |
+  
+</details>
 
-### Admin Dashboard
-- Stats cards (orders, revenue, products, users)
-- Manage products, categories, subcategories, users, orders
-- Image URL management with drag-to-reorder
-- Search bars on every management tab
-- Role management (user/admin)
+<details open>
+  <summary><strong>🛒 Cart & Checkout</strong></summary>
+  <br/>
 
-### Visual Effects
-- **Lightfall** (WebGL) — animated particle streaks in hero section
-- **Carousel** (React Bits) — draggable, autoplay card carousel
-- **Smooth scroll** via Lenis on scroll-stack sections
-- Animated page transitions (Framer Motion)
-- Spring hover animations on cards
-- Flash sale countdown timer
-- Live social proof toast stream
-- Dark/light theme toggle with warm earthy palette
+  | Feature | What It Does |
+  |---|---|
+  | 🚶 **Guest Cart** | LocalStorage-based cart — add items, update quantities, remove — zero login required |
+  | ☁️ **Synced Cart** | When logged in, cart syncs to your account via API |
+  | 🎭 **Smart Checkout** | New email → silent account creation with random password. Existing email → password prompt + login. Profile auto-fills from checkout |
+  | 🖼️ **Cart Drawer** | Slide-out panel from any page with smooth spring animation |
+  
+</details>
 
-### Performance
-- In-memory API response cache with TTL (60s)
-- Request deduplication (reuses in-flight promises)
-- Debounced search inputs (300ms)
-- Throttled scroll handlers (100ms)
-### Security
+<details open>
+  <summary><strong>👤 Users & Community</strong></summary>
+  <br/>
 
-- **Rate limiting** — in-memory throttling on all auth endpoints (`/api/auth/register`, `/login`, `/forgot-password`, `/reset-password`): max 10 requests per minute per IP, returns HTTP 429 with `Too many requests` message
-- **Input validation** — Pydantic `Field` constraints on every schema: `min_length`/`max_length` on strings (names, emails, addresses), `ge=1`/`le=99` on numeric fields (prices, stock, quantities, ratings), preventing SQL injection, XSS, and malformed data at the API boundary
-- **JWT authentication** — access tokens issued on login/register; every protected endpoint validates the token via `auth.verify_access_token()`; 401 responses trigger automatic frontend logout + redirect to `/login`
-- **Password hashing** — bcrypt via `passlib`; plaintext passwords never stored or logged
-- **No secrets in frontend** — API URL is configurable via `VITE_API_URL` env var with a public default; no API keys, tokens, or database credentials in source code
-- **CORS** — configured in FastAPI middleware to restrict origins
-- **User role enforcement** — admin-only endpoints check `current_user.role` before allowing access to user management, product creation, order status updates
-- **Email verification** — new accounts start unverified; verification email with unique token required before full access
-- **View tokens** — product detail pages use single-use `view_token` for unlisted/shared product access, preventing unauthorized enumeration
+  | Feature | What It Does |
+  |---|---|
+  | 🔐 **JWT Auth** | Login, register, email verification, password reset — all secured with rate-limited endpoints |
+  | ⭐ **Review Levelling** | Earn EXP for reviews: New Reviewer → Regular → Verified → Expert → Top → Legendary |
+  | ❤️ **Wishlist** | Save items, price-drop alerts, bulk move to cart with 🎉 particle celebration |
+  | ✏️ **Profile Editing** | Inline edit form with validation, verification status card, resend verification |
+  
+</details>
 
-## Theme
+<details open>
+  <summary><strong>📊 Admin Power</strong></summary>
+  <br/>
 
-Warm earthy palette — works in light and dark mode.
+  | Feature | What It Does |
+  |---|---|
+  | 📈 **Live Stats** | Orders, revenue, products, users, weekly orders — all calculated in real-time |
+  | 🗂️ **Full CRUD** | Manage products, categories, subcategories — each with debounced search |
+  | 🖼️ **Image Gallery** | Drag-to-reorder image URLs with visual canvas |
+  | 👥 **User Management** | Role assignment, search by email/name, user listing |
+  | 📦 **Order Management** | Status updates, tracking notes, event history, order search |
+  
+</details>
 
-| Variable | Light | Dark |
-|---|---|---|
-| `--bg` | #EFEAE0 | #1A1815 |
-| `--surface` | #F9F6F0 | #24201A |
-| `--accent` | #A37644 | #D4AF7A |
-| `--border-warm` | rgba(138,106,70,0.3) | rgba(193,154,107,0.15) |
+<details open>
+  <summary><strong>🎨 Visual Effects</strong></summary>
+  <br/>
 
-## Project Structure
+  | Feature | Tech |
+  |---|---|
+  | 🌌 **Lightfall Hero** | WebGL particle streaks via OGL — follows your cursor with dampened easing |
+  | 🎠 **Card Carousel** | React Bits Carousel — draggable, autoplay, 3D rotateY on each card |
+  | 📜 **Smooth Scroll** | Lenis-powered smooth scrolling on interactive sections |
+  | ⏰ **Flash Sale Timer** | Live countdown to midnight with animated progress bar |
+  | 📢 **Social Toasts** | Rolling notification stream — "Someone in Mumbai just bought..." |
+  | 🌓 **Theme Toggle** | Light/dark mode with warm gold-amber palette, CSS custom properties |
+  | 🔄 **Page Transitions** | Framer Motion spring animations throughout |
+  
+</details>
+
+<details open>
+  <summary><strong>⚡ Performance</strong></summary>
+  <br/>
+
+  ```
+  ┌──────────────────────────────────────────────┐
+  │            PERFORMANCE OPTIMIZATIONS           │
+  ├──────────────────────────────────────────────┤
+  │  🧠  API Cache         60s TTL in-memory      │
+  │  🔗  Request Dedup     Shares in-flight GETs   │
+  │  ⏳  Debounce           300ms on search inputs  │
+  │  🦶  Throttle           100ms on scroll events  │
+  │  💀  Skeleton Screens   Every data view        │
+  │  📦  Code Splitting     Vite auto-chunks       │
+  └──────────────────────────────────────────────┘
+  ```
+
+</details>
+
+<br/>
+
+<p align="center"><code>────── ⋆⋅☆⋅⋆ ──────</code></p>
+
+## 🛡️ Security Architecture
 
 ```
-frontend/
-├── src/
-│   ├── api/           # Axios client + API modules
-│   ├── components/
-│   │   ├── cart/      # CartDrawer
-│   │   ├── layout/    # Navbar, Footer, Lightfall, Carousel, ScrollStack
-│   │   ├── product/   # ProductCard, ImageCarousel, ProductVariants
-│   │   └── ui/        # Skeleton, Modal, Toast, FloatingInput, badges
-│   ├── context/       # AuthContext, CartContext, ThemeContext
-│   ├── hooks/         # useDebounce
-│   ├── pages/         # All route pages
-│   └── utils/         # apiCache, throttle
-├── public/
-└── ...
-
-backend/
-├── main.py           # FastAPI app + all routes
-├── models.py         # SQLAlchemy models
-├── schemas.py        # Pydantic schemas
-├── auth.py           # JWT helpers
-├── database.py       # DB connection
-├── email_service.py  # Email sending
-├── seed.py           # Development seed
-└── seed_prod.py      # Production seed
+ ┌─────────────────────────────────────────────────────────────────────┐
+ │                        SECURITY LAYER MAP                           │
+ ├─────────────────────────────────────────────────────────────────────┤
+ │                                                                     │
+ │  🚦 Rate Limiting                                                    │
+ │  ├── 10 requests / minute per IP on auth endpoints                  │
+ │  ├── Returns 429 Too Many Requests when exceeded                    │
+ │  └── Applies to: register · login · forgot-password · reset-password│
+ │                                                                     │
+ │  🧪 Input Validation                                                │
+ │  ├── Pydantic Field constraints on ALL schemas                      │
+ │  ├── min_length / max_length on strings                             │
+ │  ├── ge=1 / le=99 on numeric fields                                 │
+ │  └── Blocks SQL injection, XSS, malformed data at API boundary      │
+ │                                                                     │
+ │  🔑 Authentication                                                  │
+ │  ├── JWT access tokens on login / register                          │
+ │  ├── Every protected endpoint validates via verify_access_token()   │
+ │  └── 401 responses → auto frontend logout → redirect to /login      │
+ │                                                                     │
+ │  🔒 Password Security                                               │
+ │  ├── bcrypt hashing via passlib                                     │
+ │  └── Plaintext never stored, logged, or transmitted                 │
+ │                                                                     │
+ │  👮 Role Enforcement                                                │
+ │  ├── Admin-only endpoints check current_user.role at runtime        │
+ │  └── User management, product CRUD, order status — admin only       │
+ │                                                                     │
+ │  ✉️ Email Verification                                              │
+ │  ├── Accounts start is_verified=False                               │
+ │  └── Unique token link required before full access                  │
+ │                                                                     │
+ │  🚫 Zero Secrets in Frontend                                        │
+ │  ├── API URL: public default, configurable via env var              │
+ │  └── No API keys, tokens, or DB credentials in source               │
+ │                                                                     │
+ │  🎫 View Tokens                                                     │
+ │  ├── Single-use tokens for unlisted/shared product access           │
+ │  └── Prevents sequential ID enumeration                             │
+ │                                                                     │
+ └─────────────────────────────────────────────────────────────────────┘
 ```
 
-## Getting Started
+<br/>
+
+<p align="center"><code>────── ⋆⋅☆⋅⋆ ──────</code></p>
+
+## 🎨 Theme System
+
+<div align="center">
+
+### ✦ Warm Earthy Palette ✦
+
+```
+  ┌───────────────────────┬──────────────┬──────────────┐
+  │     Token             │  ☀️ Light    │  🌙 Dark     │
+  ├───────────────────────┼──────────────┼──────────────┤
+  │  --bg                 │  #EFEAE0     │  #1A1815     │
+  │  --surface            │  #F9F6F0     │  #24201A     │
+  │  --surface-raised     │  #EAE3D5     │  #2E2A24     │
+  │  --accent             │  #A37644     │  #D4AF7A     │
+  │  --accent-light       │  #CFAB7E     │  #E8C794     │
+  │  --accent-dark        │  #63401A     │  #A68860     │
+  │  --border-warm        │  rgba(...)   │  rgba(...)   │
+  │  --text-primary       │  #1F1914     │  #F9F6F1     │
+  └───────────────────────┴──────────────┴──────────────┘
+```
+
+</div>
+
+<br/>
+
+<p align="center"><code>────── ⋆⋅☆⋅⋆ ──────</code></p>
+
+## 🗂️ Code Map
+
+```
+📦 frontend
+ ┣ 📂 src
+ ┃ ┣ 📂 api               Axios client · authApi · usersApi · productsApi · categoriesApi · cartApi · ordersApi · reviewsApi · wishlistApi
+ ┃ ┣ 📂 components
+ ┃ ┃ ┣ 📂 cart             CartDrawer — slide-out panel with spring animation
+ ┃ ┃ ┣ 📂 layout           Navbar · Footer · Lightfall (WebGL) · Carousel (React Bits)
+ ┃ ┃ ┣ 📂 product          ProductCard · ImageCarousel · ProductVariants · generateSlug
+ ┃ ┃ ┗ 📂 ui               Skeleton · Modal · Toast · FloatingInput · Badge · StarRating · EmptyState
+ ┃ ┣ 📂 context            AuthContext · CartContext · ThemeContext
+ ┃ ┣ 📂 hooks              useDebounce
+ ┃ ┣ 📂 pages              Home · Products · ProductDetail · Cart · Checkout · Orders · OrderConfirmation
+ ┃ ┃                       · OrderTracking · Wishlist · Categories · CategoryDetail · Login · Register
+ ┃ ┃                       · Profile · AdminDashboard · ResetPassword · VerifyEmail · NotFound
+ ┃ ┗ 📂 utils              apiCache (in-memory + dedup) · throttle
+ ┣ 📜 index.html
+ ┣ 📜 package.json
+ ┗ 📜 vite.config.js
+
+📦 backend
+ ┣ 📜 main.py              FastAPI app · 30+ endpoints · middleware · rate limiter
+ ┣ 📜 models.py            User · Product · Category · Subcategory · CartItem · Wishlist · Order · Review
+ ┣ 📜 schemas.py           Pydantic models with Field validation
+ ┣ 📜 auth.py              JWT create/verify · password hashing · view tokens
+ ┣ 📜 database.py          Engine · SessionLocal · get_db
+ ┣ 📜 email_service.py     Verification emails · password reset emails
+ ┣ 📜 seed.py              Development seed data
+ ┣ 📜 seed_prod.py         Production seed data
+ ┗ 📜 requirements.txt
+```
+
+<br/>
+
+<p align="center"><code>────── ⋆⋅☆⋅⋆ ──────</code></p>
+
+## 🚀 Quick Start
+
+### Frontend
 
 ```bash
-# Frontend
 cd frontend
 npm install
 npm run dev
+```
 
-# Backend
+### Backend
+
+```bash
 cd backend
 pip install -r requirements.txt
 python -m uvicorn main:app --reload
 ```
 
-## Build
+### Build for Production
 
 ```bash
 cd frontend
-npm run build
+npm run build     # → dist/
 ```
+
+<br/>
+
+<p align="center"><code>────── ⋆⋅☆⋅⋆ ──────</code></p>
+
+<div align="center">
+  <br/>
+  <p>
+    <img src="https://img.shields.io/badge/Made%20with-React-61DAFB?style=for-the-badge&logo=react" />
+    <img src="https://img.shields.io/badge/Made%20with-FastAPI-009688?style=for-the-badge&logo=fastapi" />
+    <img src="https://img.shields.io/badge/Made%20with-❤️-red?style=for-the-badge" />
+  </p>
+  <p><em>Built with passion, precision, and a warm cup of ☕</em></p>
+  <br/>
+</div>
