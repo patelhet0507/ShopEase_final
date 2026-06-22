@@ -8,7 +8,6 @@ import { Skeleton } from '../components/ui'
 import { FiLayers, FiCircle, FiFileText, FiLayout, FiCode } from 'react-icons/fi'
 import Carousel from '../components/layout/Carousel'
 import Lightfall from '../components/layout/Lightfall'
-import Footer from '../components/layout/Footer'
 
 const FEATURES = [
   { icon: Truck, title: 'Fast Shipping', desc: '24-hour processing with free worldwide shipping', size: 'md:col-span-2' },
@@ -640,8 +639,6 @@ export default function HomePage() {
           </motion.div>
         </div>
       </section>
-
-      <Footer />
     </div>
   )
 }
