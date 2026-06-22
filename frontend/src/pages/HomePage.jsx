@@ -8,6 +8,7 @@ import { Skeleton } from '../components/ui'
 import { FiLayers, FiCircle, FiFileText, FiLayout, FiCode } from 'react-icons/fi'
 import Carousel from '../components/layout/Carousel'
 import Lightfall from '../components/layout/Lightfall'
+import Footer from '../components/layout/Footer'
 
 const FEATURES = [
   { icon: Truck, title: 'Fast Shipping', desc: '24-hour processing with free worldwide shipping', size: 'md:col-span-2' },
@@ -289,38 +290,37 @@ export default function HomePage() {
       {/* ─── Hero Section ─── */}
       <section className="relative pt-20 pb-24 px-4 overflow-hidden">
         {/* Lightfall Background */}
-        <div className="absolute inset-0 -z-10">
+        <div className="absolute inset-0 z-0">
           <Lightfall
-            speed={0.3}
-            streakCount={4}
-            streakWidth={0.8}
-            streakLength={0.7}
-            glow={0.6}
-            density={0.4}
-            twinkle={0.6}
-            zoom={3.5}
-            backgroundGlow={0.3}
-            opacity={0.5}
+            speed={0.5}
+            streakCount={6}
+            streakWidth={1.2}
+            streakLength={1}
+            glow={1.2}
+            density={0.6}
+            twinkle={1}
+            zoom={2.5}
+            backgroundGlow={0.6}
+            opacity={0.8}
             mouseInteraction={true}
-            mouseStrength={0.3}
+            mouseStrength={0.5}
             mouseRadius={0.8}
           />
         </div>
-        <div className="absolute top-0 right-0 w-[600px] h-[600px] rounded-full opacity-5"
+        <div className="absolute top-0 right-0 w-[600px] h-[600px] rounded-full opacity-5 z-[1]"
           style={{ 
             background: 'radial-gradient(circle, var(--accent) 0%, transparent 70%)',
             filter: 'blur(100px)',
           }}
         />
-        <div className="absolute -bottom-40 left-1/4 w-[400px] h-[400px] rounded-full opacity-4"
-          style={{ 
-            background: 'radial-gradient(circle, var(--accent-dark) 0%, transparent 70%)',
+        <div className="absolute -bottom-40 left-1/4 w-[400px] h-[400px] rounded-full opacity-4 z-[1]"
+          style={{ background: 'radial-gradient(circle, var(--accent-dark) 0%, transparent 70%)',
             filter: 'blur(100px)',
           }}
         />
 
         <motion.div
-          className="max-w-5xl mx-auto text-center relative z-10"
+          className="max-w-5xl mx-auto text-center relative z-20"
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
@@ -412,71 +412,6 @@ export default function HomePage() {
 
       {/* FLASH SALE INTERACTIVE BLOCK ROW */}
       <FlashSaleSection />
-
-      {/* ─── Carousel: The ShopEase Story ─── */}
-      <section className="py-20 px-4 border-t border-subtle">
-        <div className="max-w-6xl mx-auto">
-          <motion.div
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            transition={{ duration: 0.6 }}
-            viewport={{ once: true }}
-            className="text-center mb-16"
-          >
-            <h2 className="section-heading text-4xl md:text-5xl mb-4">The ShopEase Story</h2>
-            <p className="text-secondary max-w-2xl mx-auto">Discover what makes us different</p>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-            viewport={{ once: true }}
-            className="flex justify-center"
-          >
-            <Carousel
-              baseWidth={320}
-              autoplay={true}
-              autoplayDelay={4000}
-              pauseOnHover={true}
-              loop={true}
-              round={false}
-              items={[
-                {
-                  title: 'Curated Selection',
-                  description: 'Every product hand-picked by experts who share your taste for quality and thoughtful design.',
-                  id: 1,
-                  icon: <FiLayers className="carousel-icon" />
-                },
-                {
-                  title: 'Global Delivery',
-                  description: 'From Mumbai to New York, we deliver premium products worldwide with speed and care.',
-                  id: 2,
-                  icon: <FiCircle className="carousel-icon" />
-                },
-                {
-                  title: 'Sustainable & Ethical',
-                  description: 'We partner with brands committed to ethical production and eco-friendly materials.',
-                  id: 3,
-                  icon: <FiFileText className="carousel-icon" />
-                },
-                {
-                  title: 'Protected Shopping',
-                  description: 'Secure payments, easy returns, and dedicated support every step of the way.',
-                  id: 4,
-                  icon: <FiLayout className="carousel-icon" />
-                },
-                {
-                  title: 'Premium Community',
-                  description: 'Join thousands of customers who trust ShopEase for quality and exceptional service.',
-                  id: 5,
-                  icon: <FiCode className="carousel-icon" />
-                }
-              ]}
-            />
-          </motion.div>
-        </div>
-      </section>
 
       {/* ─── Featured Products ─── */}
       {products.length > 0 && (
@@ -639,6 +574,73 @@ export default function HomePage() {
           </MagneticButton>
         </motion.div>
       </section>
+
+      {/* ─── Carousel: The ShopEase Story ─── */}
+      <section className="py-20 px-4 border-t border-subtle">
+        <div className="max-w-6xl mx-auto">
+          <motion.div
+            initial={{ opacity: 0 }}
+            whileInView={{ opacity: 1 }}
+            transition={{ duration: 0.6 }}
+            viewport={{ once: true }}
+            className="text-center mb-16"
+          >
+            <h2 className="section-heading text-4xl md:text-5xl mb-4">The ShopEase Story</h2>
+            <p className="text-secondary max-w-2xl mx-auto">Discover what makes us different</p>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+            viewport={{ once: true }}
+            className="flex justify-center"
+          >
+            <Carousel
+              baseWidth={320}
+              autoplay={true}
+              autoplayDelay={4000}
+              pauseOnHover={true}
+              loop={true}
+              round={false}
+              items={[
+                {
+                  title: 'Curated Selection',
+                  description: 'Every product hand-picked by experts who share your taste for quality and thoughtful design.',
+                  id: 1,
+                  icon: <FiLayers className="carousel-icon" />
+                },
+                {
+                  title: 'Global Delivery',
+                  description: 'From Mumbai to New York, we deliver premium products worldwide with speed and care.',
+                  id: 2,
+                  icon: <FiCircle className="carousel-icon" />
+                },
+                {
+                  title: 'Sustainable & Ethical',
+                  description: 'We partner with brands committed to ethical production and eco-friendly materials.',
+                  id: 3,
+                  icon: <FiFileText className="carousel-icon" />
+                },
+                {
+                  title: 'Protected Shopping',
+                  description: 'Secure payments, easy returns, and dedicated support every step of the way.',
+                  id: 4,
+                  icon: <FiLayout className="carousel-icon" />
+                },
+                {
+                  title: 'Premium Community',
+                  description: 'Join thousands of customers who trust ShopEase for quality and exceptional service.',
+                  id: 5,
+                  icon: <FiCode className="carousel-icon" />
+                }
+              ]}
+            />
+          </motion.div>
+        </div>
+      </section>
+
+      <Footer />
     </div>
   )
 }
