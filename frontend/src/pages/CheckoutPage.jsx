@@ -19,11 +19,13 @@ export default function CheckoutPage() {
   const { user, setUser, login, refreshUser } = useAuth()
   const { cart, fetchCart, addToCart } = useCart()
   const [loading, setLoading] = useState(false)
+  const [needsPassword, setNeedsPassword] = useState(false)
   const [formData, setFormData] = useState({
     shipping_name: user?.first_name || '',
     shipping_mobile: user?.mobile_number || '',
     shipping_address: user?.address || '',
     email: user?.email || '',
+    password: '',
   })
 
   if (!cart.items || cart.items.length === 0) {
@@ -54,32 +56,55 @@ export default function CheckoutPage() {
     try {
       let currentUser = user
 
-      // If not logged in, register the user with their email
       if (!currentUser) {
-        const password = generatePassword()
-        const registerResult = await authApi.register(formData.email, password)
-        const token = registerResult.data?.access_token
-        const newUser = registerResult.data?.user || registerResult.data
-
-        if (token) {
-          localStorage.setItem('token', token)
-        } else {
-          // Try logging in after register
-          const loginResult = await login(formData.email, password)
+        if (needsPassword) {
+          // User entered password for existing account
+          const loginResult = await login(formData.email, formData.password)
           if (!loginResult.success) {
-            alert('Account created but login failed. Please sign in manually.')
-            navigate('/login')
+            alert('Invalid password. Please try again.')
+            setLoading(false)
             return
           }
           currentUser = loginResult.user
           localStorage.setItem('shopease_user', JSON.stringify(currentUser))
           setUser(currentUser)
-        }
+        } else {
+          // Try registering with random password
+          const password = generatePassword()
+          try {
+            const registerResult = await authApi.register(formData.email, password)
+            const token = registerResult.data?.access_token
+            const newUser = registerResult.data?.user || registerResult.data
 
-        if (token && newUser) {
-          localStorage.setItem('shopease_user', JSON.stringify(newUser))
-          setUser(newUser)
-          currentUser = newUser
+            if (token) {
+              localStorage.setItem('token', token)
+            }
+
+            if (token && newUser) {
+              localStorage.setItem('shopease_user', JSON.stringify(newUser))
+              setUser(newUser)
+              currentUser = newUser
+            } else {
+              const loginResult = await login(formData.email, password)
+              if (!loginResult.success) {
+                alert('Account created but login failed. Please sign in manually.')
+                navigate('/login')
+                return
+              }
+              currentUser = loginResult.user
+              localStorage.setItem('shopease_user', JSON.stringify(currentUser))
+              setUser(currentUser)
+            }
+          } catch (regError) {
+            const errMsg = regError.response?.data?.detail || ''
+            // Email already registered — ask for password
+            if (errMsg.toLowerCase().includes('already') || errMsg.toLowerCase().includes('exists') || regError.response?.status === 400) {
+              setNeedsPassword(true)
+              setLoading(false)
+              return
+            }
+            throw regError
+          }
         }
       }
 
@@ -178,12 +203,37 @@ export default function CheckoutPage() {
                   }}
                   placeholder="your@email.com"
                 />
-                {!user && (
+                {!user && !needsPassword && (
                   <p className="text-xs mt-1.5" style={{ color: 'var(--text-muted)' }}>
                     This will be used to create your account
                   </p>
                 )}
+                {!user && needsPassword && (
+                  <p className="text-xs mt-1.5" style={{ color: 'var(--accent)' }}>
+                    An account with this email already exists. Enter your password below.
+                  </p>
+                )}
               </div>
+
+              {!user && needsPassword && (
+                <div>
+                  <label className="block text-sm font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>Password *</label>
+                  <input
+                    type="password"
+                    name="password"
+                    value={formData.password}
+                    onChange={handleInputChange}
+                    required
+                    className="w-full px-4 py-3 rounded-lg transition font-medium"
+                    style={{
+                      background: 'var(--surface-raised)',
+                      border: '2px solid var(--border)',
+                      color: 'var(--text-primary)',
+                    }}
+                    placeholder="Enter your password"
+                  />
+                </div>
+              )}
 
               <div>
                 <label className="block text-sm font-semibold mb-2" style={{ color: 'var(--text-primary)' }}>Full Name *</label>
@@ -250,7 +300,7 @@ export default function CheckoutPage() {
                 disabled={loading}
                 className="btn-primary w-full justify-center py-4 text-lg font-bold"
               >
-                {loading ? 'Processing...' : (user ? 'Place Order (COD)' : 'Create Account & Place Order')}
+                {loading ? 'Processing...' : (user ? 'Place Order (COD)' : needsPassword ? 'Sign In & Place Order' : 'Create Account & Place Order')}
               </button>
             </form>
           </motion.div>
