@@ -1,11 +1,13 @@
 import { useEffect, useState, useRef } from 'react'
 import { Link } from 'react-router-dom'
 import { motion, AnimatePresence } from 'framer-motion'
-import { ArrowRight, Sparkles, Truck, Lock, Award, Zap, Flame, Clock, Monitor, Shirt, Home, Palette, BookOpen, Music, Cpu, Smartphone, Headphones, Watch, Gamepad2, Dumbbell, Car, UtensilsCrossed, Gem, ShoppingBag, ArrowUpRight, Handshake, Globe, Recycle, Shield } from 'lucide-react'
+import { ArrowRight, Sparkles, Truck, Lock, Award, Zap, Flame, Clock, Monitor, Shirt, Home, Palette, BookOpen, Music, Cpu, Smartphone, Headphones, Watch, Gamepad2, Dumbbell, Car, UtensilsCrossed, Gem, ShoppingBag, ArrowUpRight } from 'lucide-react'
 import { productsApi, categoriesApi } from '../api'
 import ProductCard from '../components/product/ProductCard'
 import { Skeleton } from '../components/ui'
-import ScrollStack, { ScrollStackItem } from '../components/layout/ScrollStack'
+import { FiLayers, FiCircle, FiFileText, FiLayout, FiCode } from 'react-icons/fi'
+import Carousel from '../components/layout/Carousel'
+import Lightfall from '../components/layout/Lightfall'
 
 const FEATURES = [
   { icon: Truck, title: 'Fast Shipping', desc: '24-hour processing with free worldwide shipping', size: 'md:col-span-2' },
@@ -286,6 +288,24 @@ export default function HomePage() {
 
       {/* ─── Hero Section ─── */}
       <section className="relative pt-20 pb-24 px-4 overflow-hidden">
+        {/* Lightfall Background */}
+        <div className="absolute inset-0 -z-10">
+          <Lightfall
+            speed={0.3}
+            streakCount={4}
+            streakWidth={0.8}
+            streakLength={0.7}
+            glow={0.6}
+            density={0.4}
+            twinkle={0.6}
+            zoom={3.5}
+            backgroundGlow={0.3}
+            opacity={0.5}
+            mouseInteraction={true}
+            mouseStrength={0.3}
+            mouseRadius={0.8}
+          />
+        </div>
         <div className="absolute top-0 right-0 w-[600px] h-[600px] rounded-full opacity-5"
           style={{ 
             background: 'radial-gradient(circle, var(--accent) 0%, transparent 70%)',
@@ -393,9 +413,9 @@ export default function HomePage() {
       {/* FLASH SALE INTERACTIVE BLOCK ROW */}
       <FlashSaleSection />
 
-      {/* ─── Scroll Stack: The ShopEase Story ─── */}
-      <section className="py-20 px-4">
-        <div className="max-w-4xl mx-auto">
+      {/* ─── Carousel: The ShopEase Story ─── */}
+      <section className="py-20 px-4 border-t border-subtle">
+        <div className="max-w-6xl mx-auto">
           <motion.div
             initial={{ opacity: 0 }}
             whileInView={{ opacity: 1 }}
@@ -404,77 +424,57 @@ export default function HomePage() {
             className="text-center mb-16"
           >
             <h2 className="section-heading text-4xl md:text-5xl mb-4">The ShopEase Story</h2>
-            <p className="text-secondary max-w-2xl mx-auto">Scroll through our journey — each card reveals a chapter</p>
+            <p className="text-secondary max-w-2xl mx-auto">Discover what makes us different</p>
           </motion.div>
 
-          <ScrollStack
-            useWindowScroll={true}
-            stackPosition="15%"
-            itemDistance={80}
-            itemScale={0.04}
-            rotationAmount={0.5}
-            blurAmount={1.5}
+          <motion.div
+            initial={{ opacity: 0, y: 30 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.6, delay: 0.2 }}
+            viewport={{ once: true }}
+            className="flex justify-center"
           >
-            <ScrollStackItem>
-              <div className="h-full flex flex-col justify-center p-8 md:p-12 rounded-[40px]"
-                style={{ background: 'linear-gradient(135deg, #1a1a2e, #16213e)' }}>
-                <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-6"
-                  style={{ background: 'rgba(168,85,247,0.2)' }}>
-                  <Handshake size={28} className="text-purple-400" />
-                </div>
-                <h3 className="text-2xl md:text-3xl font-bold text-white mb-4">Curated with Passion</h3>
-                <p className="text-lg text-white/60 leading-relaxed max-w-xl">
-                  Every product in our collection is hand-selected by experts who share your taste for quality.
-                  We believe in the power of thoughtful curation.
-                </p>
-              </div>
-            </ScrollStackItem>
-
-            <ScrollStackItem>
-              <div className="h-full flex flex-col justify-center p-8 md:p-12 rounded-[40px]"
-                style={{ background: 'linear-gradient(135deg, #0f3460, #1a1a2e)' }}>
-                <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-6"
-                  style={{ background: 'rgba(52,211,153,0.2)' }}>
-                  <Globe size={28} className="text-emerald-400" />
-                </div>
-                <h3 className="text-2xl md:text-3xl font-bold text-white mb-4">Global Reach, Local Love</h3>
-                <p className="text-lg text-white/60 leading-relaxed max-w-xl">
-                  From Mumbai to New York, we deliver premium products worldwide with a personal touch.
-                  Fast shipping, tracked every step of the way.
-                </p>
-              </div>
-            </ScrollStackItem>
-
-            <ScrollStackItem>
-              <div className="h-full flex flex-col justify-center p-8 md:p-12 rounded-[40px]"
-                style={{ background: 'linear-gradient(135deg, #2d1b69, #1a1a2e)' }}>
-                <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-6"
-                  style={{ background: 'rgba(251,191,36,0.2)' }}>
-                  <Recycle size={28} className="text-amber-400" />
-                </div>
-                <h3 className="text-2xl md:text-3xl font-bold text-white mb-4">Sustainable by Design</h3>
-                <p className="text-lg text-white/60 leading-relaxed max-w-xl">
-                  We partner with brands committed to ethical production and eco-friendly materials.
-                  Looking good should never cost the earth.
-                </p>
-              </div>
-            </ScrollStackItem>
-
-            <ScrollStackItem>
-              <div className="h-full flex flex-col justify-center p-8 md:p-12 rounded-[40px]"
-                style={{ background: 'linear-gradient(135deg, #7c3aed, #4c1d95)' }}>
-                <div className="w-14 h-14 rounded-2xl flex items-center justify-center mb-6"
-                  style={{ background: 'rgba(255,255,255,0.15)' }}>
-                  <Shield size={28} className="text-white" />
-                </div>
-                <h3 className="text-2xl md:text-3xl font-bold text-white mb-4">Protected, Always</h3>
-                <p className="text-lg text-white/60 leading-relaxed max-w-xl">
-                  Secure payments, easy returns, and dedicated support. Shop with confidence knowing
-                  we've got your back every step of the way.
-                </p>
-              </div>
-            </ScrollStackItem>
-          </ScrollStack>
+            <Carousel
+              baseWidth={320}
+              autoplay={true}
+              autoplayDelay={4000}
+              pauseOnHover={true}
+              loop={true}
+              round={false}
+              items={[
+                {
+                  title: 'Curated Selection',
+                  description: 'Every product hand-picked by experts who share your taste for quality and thoughtful design.',
+                  id: 1,
+                  icon: <FiLayers className="carousel-icon" />
+                },
+                {
+                  title: 'Global Delivery',
+                  description: 'From Mumbai to New York, we deliver premium products worldwide with speed and care.',
+                  id: 2,
+                  icon: <FiCircle className="carousel-icon" />
+                },
+                {
+                  title: 'Sustainable & Ethical',
+                  description: 'We partner with brands committed to ethical production and eco-friendly materials.',
+                  id: 3,
+                  icon: <FiFileText className="carousel-icon" />
+                },
+                {
+                  title: 'Protected Shopping',
+                  description: 'Secure payments, easy returns, and dedicated support every step of the way.',
+                  id: 4,
+                  icon: <FiLayout className="carousel-icon" />
+                },
+                {
+                  title: 'Premium Community',
+                  description: 'Join thousands of customers who trust ShopEase for quality and exceptional service.',
+                  id: 5,
+                  icon: <FiCode className="carousel-icon" />
+                }
+              ]}
+            />
+          </motion.div>
         </div>
       </section>
 
